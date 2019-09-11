@@ -25,7 +25,27 @@
 
 Invenio module that allows the creation of applications building workflows
 
-TODO: Please provide feature overview of module
+Example execution
+
+.Development environment
+
+```
+$ inveniobuilder --flavor RDM --project-name my-site init
+$ inveniobuilder --flavor RDM --project-name my-site build --base --app --dev
+$ inveniobuilder --flavor RDM --project-name my-site server --dev --bg
+$ inveniobuilder --flavor RDM --project-name my-site setup --dev
+$ # USE AWAY! :)
+```
+
+.Production environment
+
+```
+$ inveniobuilder --flavor RDM --project-name my-site init
+$ inveniobuilder --flavor RDM --project-name my-site build --base --app
+$ inveniobuilder --flavor RDM --project-name my-site server --bg
+$ inveniobuilder --flavor RDM --project-name my-site setup
+$ # USE AWAY! :)
+```
 
 Further documentation is available on
 https://invenio-scripts.readthedocs.io/

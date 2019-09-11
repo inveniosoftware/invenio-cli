@@ -41,7 +41,11 @@ setup_requires = [
 ]
 
 install_requires = [
+    'cookiecutter>=1.6.0,<1.7.0',
+    'click>=7.0,<7.1',
+    'docker>=4.0.2,<4.1.0',
     'Flask-BabelEx>=0.9.3',
+    'pipenv==2018.11.26'
 ]
 
 packages = find_packages()
@@ -68,6 +72,9 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
+        'console_scripts': [
+            'inveniobuilder = invenio_scripts.cli:cli',
+        ],
         'invenio_base.apps': [
             'invenio_scripts = invenio_scripts:InvenioScripts',
         ],
