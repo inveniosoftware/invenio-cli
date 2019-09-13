@@ -32,9 +32,10 @@ Example execution
 ```
 $ inveniobuilder --flavor RDM --project-name my-site init
 $ inveniobuilder --flavor RDM --project-name my-site build --base --app --dev
-$ inveniobuilder --flavor RDM --project-name my-site server --dev --bg
+$ inveniobuilder --flavor RDM --project-name my-site server --dev --bg [--stop]
 $ inveniobuilder --flavor RDM --project-name my-site setup --dev
 $ # USE AWAY! :)
+$ inveniobuilder --flavor RDM --project-name my-site destroy --dev
 ```
 
 .Production environment
@@ -42,9 +43,10 @@ $ # USE AWAY! :)
 ```
 $ inveniobuilder --flavor RDM --project-name my-site init
 $ inveniobuilder --flavor RDM --project-name my-site build --base --app
-$ inveniobuilder --flavor RDM --project-name my-site server --bg
+$ inveniobuilder --flavor RDM --project-name my-site server --bg [--stop]
 $ inveniobuilder --flavor RDM --project-name my-site setup
 $ # USE AWAY! :)
+$ inveniobuilder --flavor RDM --project-name my-site destroy
 ```
 
 Further documentation is available on
