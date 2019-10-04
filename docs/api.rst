@@ -1,18 +1,18 @@
 ..
     Copyright (C) 2019 CERN.
 
-    Invenio-Scripts is free software; you can redistribute it and/or modify
+    Invenio-Cli is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
 
 
 API Docs
 ========
 
-.. automodule:: invenio_scripts.ext
+.. automodule:: invenio_cli.ext
    :members:
 
 Views
 -----
 
-.. automodule:: invenio_scripts.views
+.. automodule:: invenio_cli.views
    :members:

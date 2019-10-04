@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019 CERN.
 #
-# Invenio-Scripts is free software; you can redistribute it and/or modify it
+# Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Invenio module that allows the creation of applications building workflows"""
@@ -53,12 +53,12 @@ packages = find_packages()
 
 # Get the version string. Cannot be done with import!
 g = {}
-with open(os.path.join('invenio_scripts', 'version.py'), 'rt') as fp:
+with open(os.path.join('invenio_cli', 'version.py'), 'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
 setup(
-    name='invenio-scripts',
+    name='invenio-cli',
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
@@ -66,23 +66,23 @@ setup(
     license='MIT',
     author='CERN',
     author_email='info@inveniosoftware.org',
-    url='https://github.com/inveniosoftware/invenio-scripts',
+    url='https://github.com/inveniosoftware/invenio-cli',
     packages=packages,
     zip_safe=False,
     include_package_data=True,
     platforms='any',
     entry_points={
         'console_scripts': [
-            'inveniobuilder = invenio_scripts.cli:cli',
+            'inveniobuilder = invenio_cli.cli:cli',
         ],
         'invenio_base.apps': [
-            'invenio_scripts = invenio_scripts:InvenioScripts',
+            'invenio_cli = invenio_cli:InvenioCli',
         ],
         'invenio_base.blueprints': [
-            'invenio_scripts = invenio_scripts.views:blueprint',
+            'invenio_cli = invenio_cli.views:blueprint',
         ],
         'invenio_i18n.translations': [
-            'messages = invenio_scripts',
+            'messages = invenio_cli',
         ],
         # TODO: Edit these entry points to fit your needs.
         # 'invenio_access.actions': [],

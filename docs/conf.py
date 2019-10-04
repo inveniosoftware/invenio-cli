@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019 CERN.
 #
-# Invenio-Scripts is free software; you can redistribute it and/or modify it
+# Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Sphinx configuration."""
@@ -47,7 +47,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Invenio-Scripts'
+project = u'Invenio-Cli'
 copyright = u'2019, CERN'
 author = u'CERN'
 
@@ -60,7 +60,7 @@ author = u'CERN'
 # Get the version string. Cannot be done with import!
 g = {}
 with open(os.path.join(os.path.dirname(__file__), '..',
-                       'invenio_scripts', 'version.py'),
+                       'invenio_cli', 'version.py'),
           'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
@@ -119,13 +119,13 @@ html_theme = 'alabaster'
 html_theme_options = {
     'description': 'Invenio module that allows the creation of applications building workflows',
     'github_user': 'inveniosoftware',
-    'github_repo': 'invenio-scripts',
+    'github_repo': 'invenio-cli',
     'github_button': False,
     'github_banner': True,
     'show_powered_by': False,
     'extra_nav_links': {
-        'invenio-scripts@GitHub': 'https://github.com/inveniosoftware/invenio-scripts',
-        'invenio-scripts@PyPI': 'https://pypi.python.org/pypi/invenio-scripts/',
+        'invenio-cli@GitHub': 'https://github.com/inveniosoftware/invenio-cli',
+        'invenio-cli@PyPI': 'https://pypi.python.org/pypi/invenio-cli/',
     }
 }
 
@@ -230,7 +230,7 @@ html_sidebars = {
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'invenio-scripts_namedoc'
+htmlhelp_basename = 'invenio-cli_namedoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -252,7 +252,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'invenio-scripts.tex', u'invenio-scripts Documentation',
+    (master_doc, 'invenio-cli.tex', u'invenio-cli Documentation',
      u'CERN', 'manual'),
 ]
 
@@ -282,7 +282,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'invenio-scripts', u'invenio-scripts Documentation',
+    (master_doc, 'invenio-cli', u'invenio-cli Documentation',
      [author], 1)
 ]
 
@@ -296,8 +296,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'invenio-scripts', u'Invenio-Scripts Documentation',
-     author, 'invenio-scripts', 'Invenio module that allows the creation of applications building workflows',
+    (master_doc, 'invenio-cli', u'Invenio-Cli Documentation',
+     author, 'invenio-cli', 'Invenio module that allows the creation of applications building workflows',
      'Miscellaneous'),
 ]
 

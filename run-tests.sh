@@ -3,10 +3,10 @@
 #
 # Copyright (C) 2019 CERN.
 #
-# Invenio-Scripts is free software; you can redistribute it and/or modify it
+# Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-pydocstyle invenio_scripts tests docs && \
+pydocstyle invenio_cli tests docs && \
 isort -rc -c -df && \
 check-manifest --ignore ".travis-*" && \
 sphinx-build -qnNW docs docs/_build/html && \

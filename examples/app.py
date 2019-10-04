@@ -2,14 +2,14 @@
 #
 # Copyright (C) 2019 CERN.
 #
-# Invenio-Scripts is free software; you can redistribute it and/or modify it
+# Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Minimal Flask application example.
 
 SPHINX-START
 
-First install Invenio-Scripts, setup the application and load
+First install Invenio-Cli, setup the application and load
 fixture data by running:
 
 .. code-block:: console
@@ -46,11 +46,11 @@ from __future__ import absolute_import, print_function
 from flask import Flask
 from flask_babelex import Babel
 
-from invenio_scripts import InvenioScripts
-from invenio_scripts.views import blueprint
+from invenio_cli import InvenioCli
+from invenio_cli.views import blueprint
 
 # Create Flask application
 app = Flask(__name__)
 Babel(app)
-InvenioScripts(app)
+InvenioCli(app)
 app.register_blueprint(blueprint)
