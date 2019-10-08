@@ -1,22 +1,33 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019 CERN.
+# Copyright (C) 2019 Northwestern University,
+#                    Galter Health Sciences Library & Learning Center.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-import click
-import docker
+"""Invenio module to ease the creation and management of applications."""
+
 import signal
 import subprocess
 
+import click
+import docker
 from cookiecutter.main import cookiecutter
 
-from .utils import cookiecutter_repo, DockerCompose
+from .utils import DockerCompose, cookiecutter_repo
 
 
 class InvenioAppBuilder(object):
+    """Current application building properties."""
+
     def __init__(self, name='RDM', project_name='my-site'):
+        r"""Initialize builder.
+
+        :param name: Flavour name.
+        :param project_name: Project name.
+        """
         self.name = name.upper()
         self.project_name = project_name
 
@@ -28,12 +39,14 @@ class InvenioAppBuilder(object):
               help='Project name as declared in cookiecutter')
 @click.pass_context
 def cli(ctx, flavor, project_name):
+    """Initialize CLI context."""
     ctx.obj = InvenioAppBuilder(name=flavor, project_name=project_name)
 
 
 @cli.command()
 @click.pass_obj
 def init(app_builder):
+    """Initializes the application according to the chosen flavour."""
     print('Initializing {flavor} application...'.format(
         flavor=app_builder.name))
     cookiecutter(**cookiecutter_repo(app_builder.name))
@@ -52,6 +65,7 @@ def init(app_builder):
 @click.option('--lock/--no-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
 def build(app_builder, base, app, dev, lock):
+    """Locks the dependencies and builds the corresponding docker images."""
     print('Building {flavor} application...'.format(flavor=app_builder.name))
     if lock:
         # Lock dependencies
@@ -104,6 +118,7 @@ def build(app_builder, base, app, dev, lock):
               help='Application environment (dev/prod)')
 @click.pass_obj
 def setup(app_builder, dev):
+    """Sets up the application for the first time (DB, ES, queue, etc.)."""
     print('Setting up environment for {flavor} application...'
           .format(flavor=app_builder.name))
     if dev:
@@ -132,7 +147,7 @@ def setup(app_builder, dev):
               help='Start or Stop application and services')
 @click.pass_obj
 def server(app_builder, dev, bg, start):
-
+    """Starts the application server."""
     print('Starting/Stopping server for {flavor} application...'
           .format(flavor=app_builder.name))
     if start:
@@ -174,6 +189,7 @@ def server(app_builder, dev, bg, start):
               help='Application environment (dev/prod)')
 @click.pass_obj
 def destroy(app_builder, dev):
+    """Removes all associated resources (containers, images, volumes)."""
     print('Destroying {flavor} application...'
           .format(flavor=app_builder.name))
     DockerCompose.destroy_containers(dev=dev, cwd=app_builder.project_name)
@@ -182,6 +198,7 @@ def destroy(app_builder, dev):
 @cli.command()
 @click.pass_obj
 def upgrade(app_builder):
+    """Upgrades the current application to the specified newer version."""
     print('Upgrading server for {flavor} application...'
           .format(flavor=app_builder.name))
     print('ERROR: Not supported yet...')
