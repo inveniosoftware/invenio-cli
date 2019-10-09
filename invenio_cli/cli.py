@@ -14,42 +14,51 @@ import subprocess
 
 import click
 import docker
+from configparser import ConfigParser
 from cookiecutter.main import cookiecutter
 
 from .utils import DockerCompose, cookiecutter_repo
 
 
-class InvenioAppBuilder(object):
+class InvenioCli(object):
     """Current application building properties."""
 
-    def __init__(self, name='RDM', project_name='my-site'):
+    def __init__(self, flavour='RDM'):
         r"""Initialize builder.
 
         :param name: Flavour name.
         :param project_name: Project name.
         """
-        self.name = name.upper()
-        self.project_name = project_name
+        self.flavour = flavour.upper()
+        self.config = ConfigParser()
 
 
 @click.group()
-@click.option('--flavor', default='RDM',
-              help='Invenio flavor. Can be RDM or ILS')
-@click.option('--project-name', default='my-site',
-              help='Project name as declared in cookiecutter')
+@click.argument('flavour', default='RDM')
 @click.pass_context
-def cli(ctx, flavor, project_name):
+def cli(ctx, flavour):
     """Initialize CLI context."""
-    ctx.obj = InvenioAppBuilder(name=flavor, project_name=project_name)
+    ctx.obj = InvenioCli(flavour=flavour)
 
 
 @cli.command()
 @click.pass_obj
-def init(app_builder):
+def init(cli_obj):
     """Initializes the application according to the chosen flavour."""
-    print('Initializing {flavor} application...'.format(
-        flavor=app_builder.name))
-    cookiecutter(**cookiecutter_repo(app_builder.name))
+    print('Initializing {flavour} application...'.format(
+        flavour=cli_obj.flavour))
+    context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
+    config = cli_obj.config
+    config.read('{path}/invenio.cfg'.format(path=context))
+
+    if 'cli' not in config.sections():
+        config.add_section('cli')
+
+    config.set('cli', 'cwd', context)
+    config.set('cli', 'flavour', cli_obj.flavour)
+
+    with open("{path}/invenio.cfg".format(path=context), 'w') as configfile:
+        config.write(configfile)
 
 
 @cli.command()
