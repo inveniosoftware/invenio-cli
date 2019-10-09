@@ -75,7 +75,7 @@ def init(cli_obj):
               help='Lock dependencies or avoid this step')
 def build(app_builder, base, app, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
-    print('Building {flavor} application...'.format(flavor=app_builder.name))
+    print('Building {flavour} application...'.format(flavour=app_builder.name))
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
@@ -93,8 +93,8 @@ def build(app_builder, base, app, dev, lock):
         DockerCompose.create_containers(dev=True, cwd=app_builder.project_name)
     else:
         if base:
-            print('Building {flavor} base docker image...'.format(
-                flavor=app_builder.name))
+            print('Building {flavour} base docker image...'.format(
+                flavour=app_builder.name))
             # docker build -f Dockerfile.base -t my-site-base:latest .
             client = docker.from_env()
             client.images.build(
@@ -104,8 +104,8 @@ def build(app_builder, base, app, dev, lock):
                     project_name=app_builder.project_name),
             )
         if app:
-            print('Building {flavor} app docker image...'.format(
-                flavor=app_builder.name))
+            print('Building {flavour} app docker image...'.format(
+                flavour=app_builder.name))
             # docker build -t my-site:latest .
             # FIXME: Reuse client
             client = docker.from_env()
@@ -128,8 +128,8 @@ def build(app_builder, base, app, dev, lock):
 @click.pass_obj
 def setup(app_builder, dev):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
-    print('Setting up environment for {flavor} application...'
-          .format(flavor=app_builder.name))
+    print('Setting up environment for {flavour} application...'
+          .format(flavour=app_builder.name))
     if dev:
         # FIXME: Scripts should be changed by commands run here
         subprocess.call(
@@ -157,8 +157,8 @@ def setup(app_builder, dev):
 @click.pass_obj
 def server(app_builder, dev, bg, start):
     """Starts the application server."""
-    print('Starting/Stopping server for {flavor} application...'
-          .format(flavor=app_builder.name))
+    print('Starting/Stopping server for {flavour} application...'
+          .format(flavour=app_builder.name))
     if start:
         def signal_handler(sig, frame):
             print('SIGINT, stopping server...')
@@ -199,8 +199,8 @@ def server(app_builder, dev, bg, start):
 @click.pass_obj
 def destroy(app_builder, dev):
     """Removes all associated resources (containers, images, volumes)."""
-    print('Destroying {flavor} application...'
-          .format(flavor=app_builder.name))
+    print('Destroying {flavour} application...'
+          .format(flavour=app_builder.name))
     DockerCompose.destroy_containers(dev=dev, cwd=app_builder.project_name)
 
 
@@ -208,6 +208,6 @@ def destroy(app_builder, dev):
 @click.pass_obj
 def upgrade(app_builder):
     """Upgrades the current application to the specified newer version."""
-    print('Upgrading server for {flavor} application...'
-          .format(flavor=app_builder.name))
+    print('Upgrading server for {flavour} application...'
+          .format(flavour=app_builder.name))
     print('ERROR: Not supported yet...')
