@@ -11,13 +11,19 @@
 
 import signal
 import subprocess
-from configparser import ConfigParser
+import sys
 
 import click
 import docker
 from cookiecutter.main import cookiecutter
 
 from .utils import DockerCompose, cookiecutter_repo
+
+# In order to have Python 2.7 lowers compatibility.
+if sys.version_info[0] == 2:
+    from ConfigParser import ConfigParser
+else:
+    from configparser import ConfigParser
 
 
 class InvenioCli(object):
