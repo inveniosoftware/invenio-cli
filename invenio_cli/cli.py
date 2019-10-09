@@ -11,10 +11,10 @@
 
 import signal
 import subprocess
+from configparser import ConfigParser
 
 import click
 import docker
-from configparser import ConfigParser
 from cookiecutter.main import cookiecutter
 
 from .utils import DockerCompose, cookiecutter_repo
