@@ -190,8 +190,8 @@ def setup(cli_obj, dev):
 
 
 @cli.command()
-@click.option('--dev', default=False, is_flag=True,
-              help='Application environment (dev/prod)')
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
 @click.option('--bg', default=False, is_flag=True,
               help='Run the containers in foreground')
 @click.option('--start/--stop', default=True, is_flag=True,
