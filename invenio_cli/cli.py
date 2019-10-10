@@ -236,8 +236,8 @@ def run(cli_obj, dev, bg, start):
 
 
 @cli.command()
-@click.option('--dev', default=False, is_flag=True,
-              help='Application environment (dev/prod)')
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
 @click.pass_obj
 def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
