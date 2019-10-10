@@ -197,14 +197,14 @@ def setup(cli_obj, dev):
 @click.option('--start/--stop', default=True, is_flag=True,
               help='Start or Stop application and services')
 @click.pass_obj
-def server(app_builder, dev, bg, start):
+def run(cli_obj, dev, bg, start):
     """Starts the application server."""
     print('Starting/Stopping server for {flavour} application...'
-          .format(flavour=app_builder.name))
+          .format(flavour=cli_obj.flavour))
     if start:
         def signal_handler(sig, frame):
             print('SIGINT, stopping server...')
-            DockerCompose.stop_containers(cwd=app_builder.project_name)
+            DockerCompose.stop_containers(cwd=cli_obj.cwd)
 
         signal.signal(signal.SIGINT, signal_handler)
 
@@ -212,7 +212,7 @@ def server(app_builder, dev, bg, start):
             # FIXME: Scripts should be changed by commands run here
             DockerCompose.start_containers(
                 dev=True,
-                cwd=app_builder.project_name,
+                cwd=cli_obj.cwd,
                 bg=bg
             )
             # FIXME: if previous container creation is not bg it blocks
@@ -222,17 +222,17 @@ def server(app_builder, dev, bg, start):
             # FIXME: HAndle crtl+c and avoid exceptions
             subprocess.call(
                 ['/bin/bash', 'scripts/server'],
-                cwd=app_builder.project_name
+                cwd=cli_obj.cwd
             )
         else:
             DockerCompose.start_containers(
                 dev=False,
-                cwd=app_builder.project_name,
+                cwd=cli_obj.cwd,
                 bg=bg
             )
 
     else:
-        DockerCompose.stop_containers(cwd=app_builder.project_name)
+        DockerCompose.stop_containers(cwd=cli_obj.cwd)
 
 
 @cli.command()
