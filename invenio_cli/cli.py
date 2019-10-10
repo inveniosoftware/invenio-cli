@@ -168,15 +168,15 @@ def build(cli_obj, base, app, dev, lock):
 @click.option('--dev', default=False, is_flag=True,
               help='Application environment (dev/prod)')
 @click.pass_obj
-def setup(app_builder, dev):
+def setup(cli_obj, dev):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     print('Setting up environment for {flavour} application...'
-          .format(flavour=app_builder.name))
+          .format(flavour=cli_obj.flavour))
     if dev:
         # FIXME: Scripts should be changed by commands run here
         subprocess.call(
             ['/bin/bash', 'scripts/setup', '--dev'],
-            cwd=app_builder.project_name
+            cwd=cli_obj.cwd
         )
     else:
         # FIXME: Scripts should be changed by commands run here
@@ -185,7 +185,7 @@ def setup(app_builder, dev):
             ['docker-compose', 'exec', 'web-api',
                 '/bin/bash', '-c',
                 '/bin/bash /opt/invenio/src/scripts/setup'],
-            cwd=app_builder.project_name
+            cwd=cli_obj.cwd
         )
 
 
