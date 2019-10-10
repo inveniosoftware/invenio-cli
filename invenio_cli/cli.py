@@ -115,52 +115,52 @@ def init(cli_obj):
               help='If specified, it will build a development environment')
 @click.option('--lock/--no-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-def build(app_builder, base, app, dev, lock):
+def build(cli_obj, base, app, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
-    print('Building {flavour} application...'.format(flavour=app_builder.name))
+    print('Building {flavour} application...'.format(flavour=cli_obj.flavour))
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
-        subprocess.call(['pipenv', 'lock'], cwd=app_builder.project_name)
+        subprocess.call(['pipenv', 'lock'], cwd=cli_obj.cwd)
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
         print('Bootstrapping development server...')
         subprocess.call(
             ['/bin/bash', 'scripts/bootstrap', '--dev'],
-            cwd=app_builder.project_name
+            cwd=cli_obj.cwd
         )
 
         print('Creating development services...')
-        DockerCompose.create_containers(dev=True, cwd=app_builder.project_name)
+        DockerCompose.create_containers(dev=True, cwd=cli_obj.cwd)
     else:
         if base:
             print('Building {flavour} base docker image...'.format(
-                flavour=app_builder.name))
+                flavour=cli_obj.flavour))
             # docker build -f Dockerfile.base -t my-site-base:latest .
             client = docker.from_env()
             client.images.build(
-                path=app_builder.project_name,
+                path=cli_obj.cwd,
                 dockerfile='Dockerfile.base',
                 tag='{project_name}-base:latest'.format(
-                    project_name=app_builder.project_name),
+                    project_name=cli_obj.cwd),
             )
         if app:
             print('Building {flavour} app docker image...'.format(
-                flavour=app_builder.name))
+                flavour=cli_obj.flavour))
             # docker build -t my-site:latest .
             # FIXME: Reuse client
             client = docker.from_env()
             client.images.build(
-                path=app_builder.project_name,
+                path=cli_obj.cwd,
                 dockerfile='Dockerfile',
                 tag='{project_name}:latest'.format(
-                    project_name=app_builder.project_name),
+                    project_name=cli_obj.cwd),
             )
         print('Creating full services...')
         DockerCompose.create_containers(
             dev=False,
-            cwd=app_builder.project_name
+            cwd=cli_obj.cwd
         )
 
 
