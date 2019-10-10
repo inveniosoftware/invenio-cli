@@ -248,8 +248,8 @@ def destroy(cli_obj, dev):
 
 @cli.command()
 @click.pass_obj
-def upgrade(app_builder):
+def upgrade(cli_obj):
     """Upgrades the current application to the specified newer version."""
     print('Upgrading server for {flavour} application...'
-          .format(flavour=app_builder.name))
+          .format(flavour=cli_obj.flavour))
     print('ERROR: Not supported yet...')
