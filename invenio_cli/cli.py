@@ -239,11 +239,11 @@ def run(cli_obj, dev, bg, start):
 @click.option('--dev', default=False, is_flag=True,
               help='Application environment (dev/prod)')
 @click.pass_obj
-def destroy(app_builder, dev):
+def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
     print('Destroying {flavour} application...'
-          .format(flavour=app_builder.name))
-    DockerCompose.destroy_containers(dev=dev, cwd=app_builder.project_name)
+          .format(flavour=cli_obj.flavour))
+    DockerCompose.destroy_containers(dev=dev, cwd=cli_obj.cwd)
 
 
 @cli.command()
