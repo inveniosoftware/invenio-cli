@@ -105,14 +105,14 @@ def init(cli_obj):
 
 @cli.command()
 @click.pass_obj
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
 @click.option('--base', default=False, is_flag=True,
               help='If specified, it will build the base docker image ' +
                    '(not compatible with --dev)')
 @click.option('--app', default=False, is_flag=True,
               help='If specified, it will build the application docker ' +
                    'image (not compatible with --dev)')
-@click.option('--dev', default=False, is_flag=True,
-              help='If specified, it will build a development environment')
 @click.option('--lock/--no-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
 def build(cli_obj, base, app, dev, lock):
