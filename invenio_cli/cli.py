@@ -9,6 +9,8 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import logging
+import os
 import signal
 import subprocess
 import sys
@@ -25,22 +27,51 @@ if sys.version_info[0] == 2:
 else:
     from configparser import ConfigParser
 
+CONFIG_FILENAME = '.invenio'
+
 
 class InvenioCli(object):
     """Current application building properties."""
 
-    def __init__(self, flavour='RDM'):
+    def __init__(self, flavour=None):
         r"""Initialize builder.
 
-        :param name: Flavour name.
-        :param project_name: Project name.
+        :param flavour: Flavour name.
         """
-        self.flavour = flavour.upper()
+        self.cwd = None
         self.config = ConfigParser()
+        self.config.read(CONFIG_FILENAME)
+
+        # There is a .invenio config file
+        if os.path.isfile(CONFIG_FILENAME):
+            try:
+                config_flavour = self.config['cli']['flavour']
+                # Provided flavour differs from the one in .invenio
+                if flavour and flavour != config_flavour:
+                    logging.error('Config flavour in .invenio differs form ' +
+                                  'the specified')
+                    exit(1)
+                # Use .invenio configured flavour
+                self.flavour = config_flavour
+            except KeyError:
+                logging.error('Flavour not configured')
+                exit(1)
+            try:
+                self.cwd = self.config['cli']['cwd']
+            except KeyError:
+                logging.debug('Working directory not configured')
+        elif flavour:
+            # There is no .invenio file but the flavour was provided via CLI
+            self.flavour = flavour
+        else:
+            # No value for flavour in .invenio nor CLI
+            logging.error('No flavour specified.')
+            exit(1)
 
 
 @click.group()
-@click.argument('flavour', default='RDM')
+@click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
+              default=None, required=False)
 @click.pass_context
 def cli(ctx, flavour):
     """Initialize CLI context."""
@@ -55,16 +86,21 @@ def init(cli_obj):
         flavour=cli_obj.flavour))
     context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
     config = cli_obj.config
-    config.read('{path}/invenio.cfg'.format(path=context))
 
-    if 'cli' not in config.sections():
-        config.add_section('cli')
+    with open(CONFIG_FILENAME, 'w') as configfile:
+        # Read config file
+        config.read(CONFIG_FILENAME)
 
-    config.set('cli', 'cwd', context)
-    config.set('cli', 'flavour', cli_obj.flavour)
+        if 'cli' in config.sections():
+            logging.error('An invenio-cli configuration file ' +
+                          '({config})'.format(config=CONFIG_FILENAME) +
+                          'already exists. Cannot override')
 
-    with open("{path}/invenio.cfg".format(path=context), 'w') as configfile:
-        config.write(configfile)
+        else:
+            config['cli'] = {}
+            config['cli']['cwd'] = context
+            config['cli']['flavour'] = cli_obj.flavour
+            config.write(configfile)
 
 
 @cli.command()
