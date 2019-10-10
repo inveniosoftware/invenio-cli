@@ -165,8 +165,8 @@ def build(cli_obj, base, app, dev, lock):
 
 
 @cli.command()
-@click.option('--dev', default=False, is_flag=True,
-              help='Application environment (dev/prod)')
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
 @click.pass_obj
 def setup(cli_obj, dev):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
