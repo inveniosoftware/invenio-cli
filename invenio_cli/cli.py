@@ -113,7 +113,7 @@ def init(cli_obj):
 @click.option('--app', default=False, is_flag=True,
               help='If specified, it will build the application docker ' +
                    'image (not compatible with --dev)')
-@click.option('--lock/--no-lock', default=True, is_flag=True,
+@click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
 def build(cli_obj, base, app, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
