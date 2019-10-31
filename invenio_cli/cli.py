@@ -121,7 +121,10 @@ def build(cli_obj, base, app, dev, lock):
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
-        subprocess.call(['pipenv', 'lock'], cwd=cli_obj.cwd)
+        command = ['pipenv', 'lock']
+        if dev:
+            command.append('--pre')
+        subprocess.call(command, cwd=cli_obj.cwd)
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
