@@ -33,10 +33,13 @@ class DockerCompose(object):
 
         if dev:
             command[2] = 'docker-compose.dev.yml'
+
         if bg:
             command.append('-d')
-
-        subprocess.call(command, cwd=cwd)
+            subprocess.call(command, cwd=cwd)
+        else:
+            subprocess.Popen(command, cwd=cwd,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     def stop_containers(cwd):
         """Stop currently running containers."""
