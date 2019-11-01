@@ -47,7 +47,8 @@ class DockerCompose(object):
 
     def destroy_containers(dev, cwd):
         """Stop and remove all containers, volumes and images."""
-        command = ['docker-compose', '-f', 'docker-compose.yml', 'down']
+        command = ['docker-compose', '-f', 'docker-compose.yml',
+                   'down', '--volumes']
         if dev:
             command[2] = 'docker-compose.dev.yml'
 
