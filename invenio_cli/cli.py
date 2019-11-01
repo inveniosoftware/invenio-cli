@@ -39,6 +39,8 @@ class InvenioCli(object):
         :param flavour: Flavour name.
         """
         self.cwd = None
+        self.flavour = None
+        self.name = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
 
@@ -58,6 +60,7 @@ class InvenioCli(object):
                 exit(1)
             try:
                 self.cwd = self.config['cli']['cwd']
+                self.name = self.cwd.split('/')[-1] if self.cwd else None
             except KeyError:
                 logging.debug('Working directory not configured')
         elif flavour:
@@ -148,7 +151,7 @@ def build(cli_obj, base, app, pre, dev, lock):
                 path=cli_obj.cwd,
                 dockerfile='Dockerfile.base',
                 tag='{project_name}-base:latest'.format(
-                    project_name=cli_obj.cwd),
+                    project_name=cli_obj.name)
             )
         if app:
             print('Building {flavour} app docker image...'.format(
@@ -160,7 +163,7 @@ def build(cli_obj, base, app, pre, dev, lock):
                 path=cli_obj.cwd,
                 dockerfile='Dockerfile',
                 tag='{project_name}:latest'.format(
-                    project_name=cli_obj.cwd),
+                    project_name=cli_obj.name)
             )
         print('Creating full services...')
         DockerCompose.create_containers(
