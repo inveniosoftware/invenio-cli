@@ -26,29 +26,45 @@
 
 Invenio module that allows the creation of applications building workflows
 
-Example execution
+Usage
+=====
 
-.Development environment
+Development environment
+-----------------------
 
-```
-$ inveniobuilder --flavor RDM --project-name my-site init
-$ inveniobuilder --flavor RDM --project-name my-site build --base --app --dev
-$ inveniobuilder --flavor RDM --project-name my-site server --dev --bg [--stop]
-$ inveniobuilder --flavor RDM --project-name my-site setup --dev
-$ # USE AWAY! :)
-$ inveniobuilder --flavor RDM --project-name my-site destroy --dev
-```
+.. code-block:: console
 
-.Production environment
+    # Initialize environment
+    $ invenio-cli --flavour=RDM init
 
-```
-$ inveniobuilder --flavor RDM --project-name my-site init
-$ inveniobuilder --flavor RDM --project-name my-site build --base --app
-$ inveniobuilder --flavor RDM --project-name my-site server --bg [--stop]
-$ inveniobuilder --flavor RDM --project-name my-site setup
-$ # USE AWAY! :)
-$ inveniobuilder --flavor RDM --project-name my-site destroy
-```
+    # Build Docker images
+    $ invenio-cli build --dev --pre --lock
 
-Further documentation is available on
-https://invenio-cli.readthedocs.io/
+    # Run server and services
+    $ invenio-cli run --dev --bg
+
+    # Setup databases and Elasticsearch
+    $ invenio-cli setup --dev
+
+    # Destroy the instances
+    $ invenio-cli destroy --dev
+
+    # Get more help
+    $ invenio-cli --help
+
+Production environment
+----------------------
+
+Just like the above, except with ``--prod``:
+
+.. code-block:: console
+
+    # Initialize environment
+    $ invenio-cli --flavour=RDM init
+
+    # Build Docker images
+    $ invenio-cli build --prod --lock
+
+    ...
+
+Further documentation is available on https://invenio-cli.readthedocs.io/
