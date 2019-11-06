@@ -20,23 +20,26 @@ class DockerCompose(object):
     def create_containers(dev, cwd):
         """Create images according to the specified environment."""
         command = ['docker-compose',
-                   '-f', 'docker-compose.yml', 'up', '--no-start']
+                   '-f', 'docker-compose.full.yml', 'up', '--no-start']
         if dev:
-            command[2] = 'docker-compose.dev.yml'
+            command[2] = 'docker-compose.yml'
 
         subprocess.call(command, cwd=cwd)
 
     def start_containers(dev, cwd, bg):
         """Start containers according to the specified environment."""
         command = ['docker-compose',
-                   '-f', 'docker-compose.yml', 'up', '--no-recreate']
+                   '-f', 'docker-compose.full.yml', 'up', '--no-recreate']
 
         if dev:
-            command[2] = 'docker-compose.dev.yml'
+            command[2] = 'docker-compose.yml'
+
         if bg:
             command.append('-d')
-
-        subprocess.call(command, cwd=cwd)
+            subprocess.call(command, cwd=cwd)
+        else:
+            subprocess.Popen(command, cwd=cwd,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     def stop_containers(cwd):
         """Stop currently running containers."""
@@ -44,9 +47,10 @@ class DockerCompose(object):
 
     def destroy_containers(dev, cwd):
         """Stop and remove all containers, volumes and images."""
-        command = ['docker-compose', '-f', 'docker-compose.yml', 'down']
+        command = ['docker-compose', '-f', 'docker-compose.full.yml',
+                   'down', '--volumes']
         if dev:
-            command[2] = 'docker-compose.dev.yml'
+            command[2] = 'docker-compose.yml'
 
         subprocess.call(command, cwd=cwd)
 
@@ -57,5 +61,5 @@ def cookiecutter_repo(flavor):
         return {
                 'template': 'https://github.com/inveniosoftware/' +
                             'cookiecutter-invenio-rdm.git',
-                'checkout': 'dev'
+                'checkout': 'v1.0.0a1'
             }

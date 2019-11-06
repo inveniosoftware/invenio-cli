@@ -39,6 +39,8 @@ class InvenioCli(object):
         :param flavour: Flavour name.
         """
         self.cwd = None
+        self.flavour = None
+        self.name = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
 
@@ -58,6 +60,7 @@ class InvenioCli(object):
                 exit(1)
             try:
                 self.cwd = self.config['cli']['cwd']
+                self.name = self.cwd.split('/')[-1] if self.cwd else None
             except KeyError:
                 logging.debug('Working directory not configured')
         elif flavour:
@@ -107,21 +110,26 @@ def init(cli_obj):
 @click.pass_obj
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--base', default=False, is_flag=True,
+@click.option('--base/--skip-base', default=True, is_flag=True,
               help='If specified, it will build the base docker image ' +
                    '(not compatible with --dev)')
-@click.option('--app', default=False, is_flag=True,
+@click.option('--app/--skip-app', default=True, is_flag=True,
               help='If specified, it will build the application docker ' +
                    'image (not compatible with --dev)')
+@click.option('--pre', default=False, is_flag=True,
+              help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-def build(cli_obj, base, app, dev, lock):
+def build(cli_obj, base, app, pre, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
     print('Building {flavour} application...'.format(flavour=cli_obj.flavour))
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
-        subprocess.call(['pipenv', 'lock'], cwd=cli_obj.cwd)
+        command = ['pipenv', 'lock']
+        if pre:
+            command.append('--pre')
+        subprocess.call(command, cwd=cli_obj.cwd)
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
@@ -143,7 +151,7 @@ def build(cli_obj, base, app, dev, lock):
                 path=cli_obj.cwd,
                 dockerfile='Dockerfile.base',
                 tag='{project_name}-base:latest'.format(
-                    project_name=cli_obj.cwd),
+                    project_name=cli_obj.name)
             )
         if app:
             print('Building {flavour} app docker image...'.format(
@@ -155,7 +163,7 @@ def build(cli_obj, base, app, dev, lock):
                 path=cli_obj.cwd,
                 dockerfile='Dockerfile',
                 tag='{project_name}:latest'.format(
-                    project_name=cli_obj.cwd),
+                    project_name=cli_obj.name)
             )
         print('Creating full services...')
         DockerCompose.create_containers(
