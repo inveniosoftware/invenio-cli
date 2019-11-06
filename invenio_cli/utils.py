@@ -61,5 +61,5 @@ def cookiecutter_repo(flavor):
         return {
                 'template': 'https://github.com/inveniosoftware/' +
                             'cookiecutter-invenio-rdm.git',
-                'checkout': 'v1.0.0a1'
+                'checkout': 'v1.0.0a2'
             }
