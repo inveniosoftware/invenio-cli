@@ -1,5 +1,6 @@
 # Translations template for invenio-cli.
 # Copyright (C) 2019 CERN
+# Copyright (C) 2019 Northwestern University.
 # This file is distributed under the same license as the invenio-cli
 # project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
