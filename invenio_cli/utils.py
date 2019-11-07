@@ -17,16 +17,16 @@ class DockerCompose(object):
     """Utility class to interact with docker-compose."""
 
     # FIXME: Change name to create_images
-    def create_containers(dev, cwd):
+    def create_containers(dev):
         """Create images according to the specified environment."""
         command = ['docker-compose',
                    '-f', 'docker-compose.full.yml', 'up', '--no-start']
         if dev:
             command[2] = 'docker-compose.yml'
 
-        subprocess.call(command, cwd=cwd)
+        subprocess.call(command)
 
-    def start_containers(dev, cwd, bg):
+    def start_containers(dev, bg):
         """Start containers according to the specified environment."""
         command = ['docker-compose',
                    '-f', 'docker-compose.full.yml', 'up', '--no-recreate']
@@ -36,23 +36,23 @@ class DockerCompose(object):
 
         if bg:
             command.append('-d')
-            subprocess.call(command, cwd=cwd)
+            subprocess.call(command, )
         else:
-            subprocess.Popen(command, cwd=cwd,
+            subprocess.Popen(command,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    def stop_containers(cwd):
+    def stop_containers():
         """Stop currently running containers."""
-        subprocess.call(['docker-compose', 'stop'], cwd=cwd)
+        subprocess.call(['docker-compose', 'stop'])
 
-    def destroy_containers(dev, cwd):
+    def destroy_containers(dev):
         """Stop and remove all containers, volumes and images."""
         command = ['docker-compose', '-f', 'docker-compose.full.yml',
                    'down', '--volumes']
         if dev:
             command[2] = 'docker-compose.yml'
 
-        subprocess.call(command, cwd=cwd)
+        subprocess.call(command)
 
 
 def cookiecutter_repo(flavor):

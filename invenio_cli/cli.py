@@ -17,6 +17,7 @@ import sys
 
 import click
 import docker
+from pathlib import Path
 from cookiecutter.main import cookiecutter
 
 from .utils import DockerCompose, cookiecutter_repo
@@ -28,6 +29,8 @@ else:
     from configparser import ConfigParser
 
 CONFIG_FILENAME = '.invenio'
+CLI_SECTION = 'cli'
+FLAVOUR_ITEM = 'flavour'
 
 
 class InvenioCli(object):
@@ -38,7 +41,6 @@ class InvenioCli(object):
 
         :param flavour: Flavour name.
         """
-        self.cwd = None
         self.flavour = None
         self.name = None
         self.config = ConfigParser()
@@ -47,7 +49,7 @@ class InvenioCli(object):
         # There is a .invenio config file
         if os.path.isfile(CONFIG_FILENAME):
             try:
-                config_flavour = self.config['cli']['flavour']
+                config_flavour = self.config[CLI_SECTION][FLAVOUR_ITEM]
                 # Provided flavour differs from the one in .invenio
                 if flavour and flavour != config_flavour:
                     logging.error('Config flavour in .invenio differs form ' +
@@ -58,11 +60,7 @@ class InvenioCli(object):
             except KeyError:
                 logging.error('Flavour not configured')
                 exit(1)
-            try:
-                self.cwd = self.config['cli']['cwd']
-                self.name = self.cwd.split('/')[-1] if self.cwd else None
-            except KeyError:
-                logging.debug('Working directory not configured')
+            # FIXME: obtain cookicutter config along with project name into self.name
         elif flavour:
             # There is no .invenio file but the flavour was provided via CLI
             self.flavour = flavour
@@ -90,19 +88,20 @@ def init(cli_obj):
     context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
     config = cli_obj.config
 
-    with open(CONFIG_FILENAME, 'w') as configfile:
+    file_fullpath = Path(context) / CONFIG_FILENAME
+
+    with open(file_fullpath, 'w') as configfile:
         # Read config file
         config.read(CONFIG_FILENAME)
 
-        if 'cli' in config.sections():
+        if CLI_SECTION in config.sections():
             logging.error('An invenio-cli configuration file ' +
                           '({config})'.format(config=CONFIG_FILENAME) +
                           'already exists. Cannot override')
 
         else:
-            config['cli'] = {}
-            config['cli']['cwd'] = context
-            config['cli']['flavour'] = cli_obj.flavour
+            config[CLI_SECTION] = {}
+            config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
             config.write(configfile)
 
 
@@ -129,18 +128,15 @@ def build(cli_obj, base, app, pre, dev, lock):
         command = ['pipenv', 'lock']
         if pre:
             command.append('--pre')
-        subprocess.call(command, cwd=cli_obj.cwd)
+        subprocess.call(command)
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
         print('Bootstrapping development server...')
-        subprocess.call(
-            ['/bin/bash', 'scripts/bootstrap', '--dev'],
-            cwd=cli_obj.cwd
-        )
+        subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'])
 
         print('Creating development services...')
-        DockerCompose.create_containers(dev=True, cwd=cli_obj.cwd)
+        DockerCompose.create_containers(dev=True)
     else:
         if base:
             print('Building {flavour} base docker image...'.format(
@@ -148,7 +144,6 @@ def build(cli_obj, base, app, pre, dev, lock):
             # docker build -f Dockerfile.base -t my-site-base:latest .
             client = docker.from_env()
             client.images.build(
-                path=cli_obj.cwd,
                 dockerfile='Dockerfile.base',
                 tag='{project_name}-base:latest'.format(
                     project_name=cli_obj.name)
@@ -160,16 +155,12 @@ def build(cli_obj, base, app, pre, dev, lock):
             # FIXME: Reuse client
             client = docker.from_env()
             client.images.build(
-                path=cli_obj.cwd,
                 dockerfile='Dockerfile',
                 tag='{project_name}:latest'.format(
                     project_name=cli_obj.name)
             )
         print('Creating full services...')
-        DockerCompose.create_containers(
-            dev=False,
-            cwd=cli_obj.cwd
-        )
+        DockerCompose.create_containers(dev=False)
 
 
 @cli.command()
@@ -182,19 +173,13 @@ def setup(cli_obj, dev):
           .format(flavour=cli_obj.flavour))
     if dev:
         # FIXME: Scripts should be changed by commands run here
-        subprocess.call(
-            ['/bin/bash', 'scripts/setup', '--dev'],
-            cwd=cli_obj.cwd
-        )
+        subprocess.call(['/bin/bash', 'scripts/setup', '--dev'])
     else:
         # FIXME: Scripts should be changed by commands run here
         print('Setting up instance...')
-        subprocess.call(
-            ['docker-compose', 'exec', 'web-api',
-                '/bin/bash', '-c',
-                '/bin/bash /opt/invenio/src/scripts/setup'],
-            cwd=cli_obj.cwd
-        )
+        subprocess.call(['docker-compose', 'exec', 'web-api',
+                         '/bin/bash', '-c',
+                         '/bin/bash /opt/invenio/src/scripts/setup'])
 
 
 @cli.command()
@@ -212,35 +197,24 @@ def run(cli_obj, dev, bg, start):
     if start:
         def signal_handler(sig, frame):
             print('SIGINT, stopping server...')
-            DockerCompose.stop_containers(cwd=cli_obj.cwd)
+            DockerCompose.stop_containers()
 
         signal.signal(signal.SIGINT, signal_handler)
 
         if dev:
             # FIXME: Scripts should be changed by commands run here
-            DockerCompose.start_containers(
-                dev=True,
-                cwd=cli_obj.cwd,
-                bg=bg
-            )
+            DockerCompose.start_containers(dev=True, bg=bg)
             # FIXME: if previous container creation is not bg it blocks
             # will never reach. Should use Popen if not bg
             # TODO: Run in background / foreground (--bg) Difficult to find
             # the process to stop. Should not be allowed?
             # FIXME: HAndle crtl+c and avoid exceptions
-            subprocess.call(
-                ['/bin/bash', 'scripts/server'],
-                cwd=cli_obj.cwd
-            )
+            subprocess.call(['/bin/bash', 'scripts/server'])
         else:
-            DockerCompose.start_containers(
-                dev=False,
-                cwd=cli_obj.cwd,
-                bg=bg
-            )
+            DockerCompose.start_containers(dev=False, bg=bg)
 
     else:
-        DockerCompose.stop_containers(cwd=cli_obj.cwd)
+        DockerCompose.stop_containers()
 
 
 @cli.command()
@@ -251,7 +225,7 @@ def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
     print('Destroying {flavour} application...'
           .format(flavour=cli_obj.flavour))
-    DockerCompose.destroy_containers(dev=dev, cwd=cli_obj.cwd)
+    DockerCompose.destroy_containers(dev=dev)
 
 
 @cli.command()
