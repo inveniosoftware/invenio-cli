@@ -13,12 +13,12 @@ import os
 import signal
 import subprocess
 import sys
+from pathlib import Path
 
 import click
 import docker
-from pathlib import Path
-from cookiecutter.main import cookiecutter
 from cookiecutter.exceptions import OutputDirExistsException
+from cookiecutter.main import cookiecutter
 
 from .utils import DockerCompose, cookiecutter_repo
 
@@ -60,7 +60,8 @@ class InvenioCli(object):
             except KeyError:
                 logging.error('Flavour not configured')
                 exit(1)
-            # FIXME: obtain cookicutter config along with project name into self.name
+            # FIXME: obtain cookicutter config along with project
+            # name into self.name
         elif flavour:
             # There is no .invenio file but the flavour was provided via CLI
             self.flavour = flavour
