@@ -18,6 +18,7 @@ import click
 import docker
 from pathlib import Path
 from cookiecutter.main import cookiecutter
+from cookiecutter.exceptions import OutputDirExistsException
 
 from .utils import DockerCompose, cookiecutter_repo
 
@@ -84,24 +85,21 @@ def init(cli_obj):
     """Initializes the application according to the chosen flavour."""
     print('Initializing {flavour} application...'.format(
         flavour=cli_obj.flavour))
-    context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
-    config = cli_obj.config
+    try:
+        context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
+        config = cli_obj.config
 
-    file_fullpath = Path(context) / CONFIG_FILENAME
+        file_fullpath = Path(context) / CONFIG_FILENAME
 
-    with open(file_fullpath, 'w') as configfile:
-        # Read config file
-        config.read(CONFIG_FILENAME)
-
-        if CLI_SECTION in config.sections():
-            logging.error('An invenio-cli configuration file ' +
-                          '({config})'.format(config=CONFIG_FILENAME) +
-                          'already exists. Cannot override')
-
-        else:
+        with open(file_fullpath, 'w') as configfile:
+            # Read config file
+            config.read(CONFIG_FILENAME)
             config[CLI_SECTION] = {}
             config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
             config.write(configfile)
+
+    except OutputDirExistsException as e:
+        print(str(e))
 
 
 @cli.command()
