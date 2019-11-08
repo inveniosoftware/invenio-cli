@@ -133,7 +133,7 @@ def build(cli_obj, base, app, pre, dev, lock):
         subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'])
 
         print('Creating development services...')
-        DockerCompose.create_containers(dev=True)
+        DockerCompose.create_images(dev=True)
     else:
         if base:
             print('Building {flavour} base docker image...'.format(
@@ -157,7 +157,7 @@ def build(cli_obj, base, app, pre, dev, lock):
                     project_name=cli_obj.name)
             )
         print('Creating full services...')
-        DockerCompose.create_containers(dev=False)
+        DockerCompose.create_images(dev=False)
 
 
 @cli.command()

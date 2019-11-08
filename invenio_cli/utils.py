@@ -15,8 +15,7 @@ import subprocess
 class DockerCompose(object):
     """Utility class to interact with docker-compose."""
 
-    # FIXME: Change name to create_images
-    def create_containers(dev):
+    def create_images(dev):
         """Create images according to the specified environment."""
         command = ['docker-compose',
                    '-f', 'docker-compose.full.yml', 'up', '--no-start']
