@@ -13,6 +13,7 @@ import os
 import signal
 import subprocess
 import sys
+from configparser import ConfigParser
 from pathlib import Path
 
 import click
@@ -21,12 +22,6 @@ from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
 from .utils import Cookiecutter, DockerCompose
-
-# In order to have Python 2.7 lowers compatibility.
-if sys.version_info[0] == 2:
-    from ConfigParser import ConfigParser
-else:
-    from configparser import ConfigParser
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
