@@ -20,7 +20,7 @@ import docker
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .utils import DockerCompose, cookiecutter_repo
+from .utils import Cookiecutter, DockerCompose
 
 # In order to have Python 2.7 lowers compatibility.
 if sys.version_info[0] == 2:
@@ -31,6 +31,7 @@ else:
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
 FLAVOUR_ITEM = 'flavour'
+COOKIECUTTER_SECTION = 'cookiecutter'
 
 
 class InvenioCli(object):
@@ -86,8 +87,14 @@ def init(cli_obj):
     """Initializes the application according to the chosen flavour."""
     print('Initializing {flavour} application...'.format(
         flavour=cli_obj.flavour))
+    cookie = Cookiecutter()
+
     try:
-        context = cookiecutter(**cookiecutter_repo(cli_obj.flavour))
+        context = cookiecutter(
+            config_file=cookie.create_and_dump_config(),
+            **cookie.repository(cli_obj.flavour)
+        )
+
         config = cli_obj.config
 
         file_fullpath = Path(context) / CONFIG_FILENAME
@@ -97,10 +104,19 @@ def init(cli_obj):
             config.read(CONFIG_FILENAME)
             config[CLI_SECTION] = {}
             config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
+            config[COOKIECUTTER_SECTION] = {}
+
+            replay = cookie.get_replay()
+            for key, value in replay[COOKIECUTTER_SECTION].items():
+                config[COOKIECUTTER_SECTION][key] = value
+
             config.write(configfile)
 
     except OutputDirExistsException as e:
         print(str(e))
+
+    finally:
+        cookie.remove_config()
 
 
 @cli.command()

@@ -9,7 +9,13 @@
 
 """Invenio CLI Utility classes and functions."""
 
+import json
 import subprocess
+import tempfile
+from pathlib import Path
+
+import yaml
+from cookiecutter.config import DEFAULT_CONFIG
 
 
 class DockerCompose(object):
@@ -53,11 +59,50 @@ class DockerCompose(object):
         subprocess.call(command)
 
 
-def cookiecutter_repo(flavor):
-    """Utility function. Returns the Cookiecutter repository of a flavour."""
-    if flavor.upper() == 'RDM':
-        return {
-                'template': 'https://github.com/inveniosoftware/' +
-                            'cookiecutter-invenio-rdm.git',
-                'checkout': 'v1.0.0a2'
-            }
+class Cookiecutter(object):
+    """Cookiecutter helper object for InvenioCLI."""
+
+    def __init__(self):
+        """Cookiecutter helper constructor."""
+        self.tmp_file = None
+        self.template = None
+
+    def repository(self, flavor):
+        """Get the cookiecutter repository of a flavour."""
+        if flavor.upper() == 'RDM':
+            repo = {
+                    'template': 'https://github.com/inveniosoftware/' +
+                                'cookiecutter-invenio-rdm.git',
+                    'checkout': 'v1.0.0a2'
+                }
+            self.template = 'cookiecutter-invenio-rdm.json'
+            return repo
+
+    def create_and_dump_config(self):
+        """Create a tmp file to store cookicutters used configuration."""
+        if not self.tmp_file:
+            self.tmp_file = \
+                tempfile.NamedTemporaryFile(mode='w+', delete=False)
+
+        config = DEFAULT_CONFIG.copy()
+        # Bug when dumping default {} it's read a string
+        config['default_context'] = None
+        config['replay_dir'] = tempfile.gettempdir()
+
+        yaml.dump(config, self.tmp_file)
+
+        return self.tmp_file.name
+
+    def get_replay(self):
+        """Retrieve cookiecutters user input values."""
+        replay_path = Path(tempfile.gettempdir()) / self.template
+
+        with open(replay_path) as replay_file:
+            return json.load(replay_file)
+
+        return {}
+
+    def remove_config(self):
+        """Remove the tmp file."""
+        if self.tmp_file:
+            self.tmp_file.close()

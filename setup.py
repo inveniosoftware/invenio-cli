@@ -46,7 +46,8 @@ install_requires = [
     'click>=7.0,<7.1',
     'docker>=4.0.2,<4.1.0',
     'Flask-BabelEx>=0.9.3',
-    'pipenv==2018.11.26'
+    'pipenv==2018.11.26',
+    'PyYAML>=5.1.2,<5.2.0'
 ]
 
 packages = find_packages()
