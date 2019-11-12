@@ -26,6 +26,7 @@ from .filesystem import get_created_files
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
+NAME_ITEM = 'project_name'
 FLAVOUR_ITEM = 'flavour'
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
@@ -58,8 +59,11 @@ class InvenioCli(object):
             except KeyError:
                 logging.error('Flavour not configured')
                 exit(1)
-            # FIXME: obtain cookicutter config along with project
-            # name into self.name
+            try:
+                self.name = self.config[CLI_SECTION][NAME_ITEM]
+            except KeyError:
+                logging.error('Project name not configured')
+                exit(1)
         elif flavour:
             # There is no .invenio file but the flavour was provided via CLI
             self.flavour = flavour
@@ -102,6 +106,7 @@ def init(cli_obj):
 
             # CLI parameters
             config[CLI_SECTION] = {}
+            config[CLI_SECTION][NAME_ITEM] = context.split(os.path.sep)[-1]
             config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
             config[COOKIECUTTER_SECTION] = {}
             # Cookiecutter user input
