@@ -12,7 +12,6 @@ import logging
 import os
 import signal
 import subprocess
-import sys
 from configparser import ConfigParser
 from pathlib import Path
 
@@ -21,12 +20,13 @@ import docker
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .utils import Cookiecutter, DockerCompose
+from .utils import Cookiecutter, DockerCompose, get_created_files
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
 FLAVOUR_ITEM = 'flavour'
 COOKIECUTTER_SECTION = 'cookiecutter'
+FILES_SECTION = 'files'
 
 
 class InvenioCli(object):
@@ -95,15 +95,20 @@ def init(cli_obj):
         file_fullpath = Path(context) / CONFIG_FILENAME
 
         with open(file_fullpath, 'w') as configfile:
-            # Read config file
+            # Open config file
             config.read(CONFIG_FILENAME)
+
+            # CLI parameters
             config[CLI_SECTION] = {}
             config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
             config[COOKIECUTTER_SECTION] = {}
-
+            # Cookiecutter user input
             replay = cookie.get_replay()
             for key, value in replay[COOKIECUTTER_SECTION].items():
                 config[COOKIECUTTER_SECTION][key] = value
+            # Generated files
+            config[FILES_SECTION] = get_created_files(
+                    config[COOKIECUTTER_SECTION]['project_shortname'])
 
             config.write(configfile)
 
