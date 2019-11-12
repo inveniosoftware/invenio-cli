@@ -23,6 +23,7 @@ from cookiecutter.main import cookiecutter
 from .cookicutter_config import CookiecutterConfig
 from .docker_compose import DockerCompose
 from .filesystem import get_created_files
+from .log import LogPipe
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -31,11 +32,18 @@ FLAVOUR_ITEM = 'flavour'
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
+LEVELS = {'debug': logging.DEBUG,
+          'info': logging.INFO,
+          'warning': logging.WARNING,
+          'error': logging.ERROR,
+          'critical': logging.CRITICAL}
+
 
 class InvenioCli(object):
     """Current application building properties."""
 
-    def __init__(self, flavour=None):
+    def __init__(self, flavour=None, loglevel=LEVELS['warning'],
+                 verbose=False):
         r"""Initialize builder.
 
         :param flavour: Flavour name.
@@ -44,6 +52,8 @@ class InvenioCli(object):
         self.name = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
+        self.verbose = verbose
+        self.loglevel = loglevel
 
         # There is a .invenio config file
         if os.path.isfile(CONFIG_FILENAME):
@@ -76,10 +86,19 @@ class InvenioCli(object):
 @click.group()
 @click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
               default=None, required=False)
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('-V', default=False, is_flag=True, required=False,
+              help='Verbose mode, puts the application in debug mode on the \
+                  terminal output.')
 @click.pass_context
-def cli(ctx, flavour):
+def cli(ctx, flavour, log_level, v):
     """Initialize CLI context."""
-    ctx.obj = InvenioCli(flavour=flavour)
+    ctx.obj = InvenioCli(
+        flavour=flavour,
+        loglevel=LEVELS[log_level],
+        verbose=v
+    )
 
 
 @cli.command()
@@ -143,21 +162,26 @@ def init(cli_obj):
 def build(cli_obj, base, app, pre, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
     print('Building {flavour} application...'.format(flavour=cli_obj.flavour))
+
+    # Open logging pipe
+    logpipe = LogPipe(cli_obj.loglevel)
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
         command = ['pipenv', 'lock']
         if pre:
             command.append('--pre')
-        subprocess.call(command)
+        # No need for `with` context since call is a blocking op
+        subprocess.call(command, stdout=logpipe, stderr=logpipe)
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
         print('Bootstrapping development server...')
-        subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'])
+        subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'],
+                        stdout=logpipe, stderr=logpipe)
 
         print('Creating development services...')
-        DockerCompose.create_images(dev=True)
+        DockerCompose.create_images(dev=True, loglevel=cli_obj.loglevel)
     else:
         if base:
             print('Building {flavour} base docker image...'.format(
@@ -181,7 +205,10 @@ def build(cli_obj, base, app, pre, dev, lock):
                     project_name=cli_obj.name)
             )
         print('Creating full services...')
-        DockerCompose.create_images(dev=False)
+        DockerCompose.create_images(dev=False, loglevel=cli_obj.loglevel)
+
+    # Close logging pipe
+    logpipe.close()
 
 
 @cli.command()
@@ -192,15 +219,23 @@ def setup(cli_obj, dev):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     print('Setting up environment for {flavour} application...'
           .format(flavour=cli_obj.flavour))
+
+    # Open logging pipe
+    logpipe = LogPipe(cli_obj.loglevel)
     if dev:
         # FIXME: Scripts should be changed by commands run here
-        subprocess.call(['/bin/bash', 'scripts/setup', '--dev'])
+        subprocess.call(['/bin/bash', 'scripts/setup', '--dev'],
+                        stdout=logpipe, stderr=logpipe)
     else:
         # FIXME: Scripts should be changed by commands run here
         print('Setting up instance...')
         subprocess.call(['docker-compose', 'exec', 'web-api',
                          '/bin/bash', '-c',
-                         '/bin/bash /opt/invenio/src/scripts/setup'])
+                         '/bin/bash /opt/invenio/src/scripts/setup'],
+                        stdout=logpipe, stderr=logpipe)
+
+    # Close logging pipe
+    logpipe.close()
 
 
 @cli.command()
@@ -213,29 +248,36 @@ def setup(cli_obj, dev):
 @click.pass_obj
 def run(cli_obj, dev, bg, start):
     """Starts the application server."""
-    print('Starting/Stopping server for {flavour} application...'
-          .format(flavour=cli_obj.flavour))
     if start:
+        print('Starting server...')
+
         def signal_handler(sig, frame):
             print('SIGINT, stopping server...')
-            DockerCompose.stop_containers()
+            DockerCompose.stop_containers(cli_obj.loglevel)
 
         signal.signal(signal.SIGINT, signal_handler)
 
         if dev:
+            print()
             # FIXME: Scripts should be changed by commands run here
-            DockerCompose.start_containers(dev=True, bg=bg)
-            # FIXME: if previous container creation is not bg it blocks
-            # will never reach. Should use Popen if not bg
+            DockerCompose.start_containers(dev=True, bg=bg,
+                                           loglevel=cli_obj.loglevel)
             # TODO: Run in background / foreground (--bg) Difficult to find
             # the process to stop. Should not be allowed?
             # FIXME: HAndle crtl+c and avoid exceptions
-            subprocess.call(['/bin/bash', 'scripts/server'])
+            # Open logging pipe
+            logpipe = LogPipe(cli_obj.loglevel)
+            subprocess.call(['/bin/bash', 'scripts/server'],
+                            stdout=logpipe, stderr=logpipe)
+            # Close logging pipe
+            logpipe.close()
         else:
-            DockerCompose.start_containers(dev=False, bg=bg)
+            DockerCompose.start_containers(dev=False, bg=bg,
+                                           loglevel=cli_obj.loglevel)
 
     else:
-        DockerCompose.stop_containers()
+        print('Starting server...')
+        DockerCompose.stop_containers(loglevel=cli_obj.loglevel)
 
 
 @cli.command()
@@ -246,7 +288,7 @@ def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
     print('Destroying {flavour} application...'
           .format(flavour=cli_obj.flavour))
-    DockerCompose.destroy_containers(dev=dev)
+    DockerCompose.destroy_containers(dev=dev, loglevel=cli_obj.loglevel)
 
 
 @cli.command()
