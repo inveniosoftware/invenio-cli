@@ -16,7 +16,6 @@ from configparser import ConfigParser
 from pathlib import Path
 
 import click
-import docker
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
@@ -27,8 +26,8 @@ from .log import LogPipe
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
-NAME_ITEM = 'project_name'
-FLAVOUR_ITEM = 'flavour'
+# NOTE: If modifying the list check the impact int he `init` command.
+CLI_ITEMS = ['project_name', 'flavour', 'logifle']
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
@@ -54,25 +53,21 @@ class InvenioCli(object):
         self.config.read(CONFIG_FILENAME)
         self.verbose = verbose
         self.loglevel = loglevel
+        self.logfile = None
 
         # There is a .invenio config file
         if os.path.isfile(CONFIG_FILENAME):
             try:
-                config_flavour = self.config[CLI_SECTION][FLAVOUR_ITEM]
-                # Provided flavour differs from the one in .invenio
-                if flavour and flavour != config_flavour:
-                    logging.error('Config flavour in .invenio differs form ' +
-                                  'the specified')
-                    exit(1)
-                # Use .invenio configured flavour
-                self.flavour = config_flavour
+                for item in CLI_ITEMS:
+                    setattr(self, CLI_ITEMS, self.config[CLI_SECTION][item])
             except KeyError:
-                logging.error('Flavour not configured')
+                logging.error(
+                    '{item} not configured in CLI section'.format(item=item))
                 exit(1)
-            try:
-                self.name = self.config[CLI_SECTION][NAME_ITEM]
-            except KeyError:
-                logging.error('Project name not configured')
+            # Provided flavour differs from the one in .invenio
+            if flavour and flavour != self.flavour:
+                logging.error('Config flavour in .invenio differs form ' +
+                              'the specified')
                 exit(1)
         elif flavour:
             # There is no .invenio file but the flavour was provided via CLI
@@ -124,10 +119,14 @@ def init(cli_obj):
 
             # CLI parameters
             config[CLI_SECTION] = {}
-            config[CLI_SECTION][NAME_ITEM] = context.split(os.path.sep)[-1]
-            config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
-            config[COOKIECUTTER_SECTION] = {}
+            config[CLI_SECTION]['flavour'] = cli_obj.flavour
+            config[CLI_SECTION]['project_name'] = \
+                context.split(os.path.sep)[-1]
+            config[CLI_SECTION]['logfile'] = \
+                '{path}/logs/invenio-cli.log'.format(path=context)
+
             # Cookiecutter user input
+            config[COOKIECUTTER_SECTION] = {}
             replay = cookie_config.get_replay()
             for key, value in replay[COOKIECUTTER_SECTION].items():
                 config[COOKIECUTTER_SECTION][key] = value
@@ -163,7 +162,10 @@ def build(cli_obj, base, app, pre, dev, lock):
     print('Building {flavour} application...'.format(flavour=cli_obj.flavour))
 
     # Open logging pipe
-    logpipe = LogPipe(cli_obj.loglevel)
+    logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
+    # Initialize docker client
+    docker_compose = DockerCompose(dev=dev, loglevel=cli_obj.loglevel,
+                                   logfile=cli_obj.logfile)
     if lock:
         # Lock dependencies
         print('Locking dependencies...')
@@ -179,15 +181,12 @@ def build(cli_obj, base, app, pre, dev, lock):
         subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'],
                         stdout=logpipe, stderr=logpipe)
 
-        print('Creating development services...')
-        DockerCompose.create_images(dev=True, loglevel=cli_obj.loglevel)
     else:
         if base:
             print('Building {flavour} base docker image...'.format(
                 flavour=cli_obj.flavour))
             # docker build -f Dockerfile.base -t my-site-base:latest .
-            client = docker.from_env()
-            client.images.build(
+            docker_compose.built_image(
                 dockerfile='Dockerfile.base',
                 tag='{project_name}-base:latest'.format(
                     project_name=cli_obj.name)
@@ -196,15 +195,15 @@ def build(cli_obj, base, app, pre, dev, lock):
             print('Building {flavour} app docker image...'.format(
                 flavour=cli_obj.flavour))
             # docker build -t my-site:latest .
-            # FIXME: Reuse client
-            client = docker.from_env()
-            client.images.build(
+            docker_compose.built_image(
                 dockerfile='Dockerfile',
                 tag='{project_name}:latest'.format(
                     project_name=cli_obj.name)
             )
-        print('Creating full services...')
-        DockerCompose.create_images(dev=False, loglevel=cli_obj.loglevel)
+
+        print('Creating {mode} services...'.format(
+                        mode='development' if dev else 'semi-production'))
+        docker_compose.create_images()
 
     # Close logging pipe
     logpipe.close()
@@ -220,7 +219,7 @@ def setup(cli_obj, dev):
           .format(flavour=cli_obj.flavour))
 
     # Open logging pipe
-    logpipe = LogPipe(cli_obj.loglevel)
+    logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
     if dev:
         # FIXME: Scripts should be changed by commands run here
         subprocess.call(['/bin/bash', 'scripts/setup', '--dev'],
@@ -240,13 +239,15 @@ def setup(cli_obj, dev):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--bg', default=False, is_flag=True,
+@click.option('--bg', default=True, is_flag=True,
               help='Run the containers in foreground')
 @click.option('--start/--stop', default=True, is_flag=True,
               help='Start or Stop application and services')
 @click.pass_obj
 def run(cli_obj, dev, bg, start):
     """Starts the application server."""
+    docker_compose = DockerCompose(dev=dev, bg=bg, logfile=cli_obj.logfile,
+                                   loglevel=cli_obj.loglevel)
     if start:
         print('Starting server...')
 
@@ -254,17 +255,14 @@ def run(cli_obj, dev, bg, start):
             print('Stopping server...')
             # Close logging pipe
             logpipe.close()
-            DockerCompose.stop_containers(cli_obj.loglevel)
+            docker_compose.stop_containers()
 
         signal.signal(signal.SIGINT, signal_handler)
 
+        docker_compose.start_containers()
         if dev:
-            print()
-            DockerCompose.start_containers(dev=True, bg=bg,
-                                           loglevel=cli_obj.loglevel)
-
             # Open logging pipe
-            logpipe = LogPipe(cli_obj.loglevel)
+            logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
 
             # FIXME: Scripts should be changed by commands run here
             if bg:
@@ -274,9 +272,6 @@ def run(cli_obj, dev, bg, start):
                 server.wait()
             else:
                 server = subprocess.call(['/bin/bash', 'scripts/server'])
-        else:
-            DockerCompose.start_containers(dev=False, bg=bg,
-                                           loglevel=cli_obj.loglevel)
 
     else:
         print('Stopping server...')
@@ -291,7 +286,9 @@ def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
     print('Destroying {flavour} application...'
           .format(flavour=cli_obj.flavour))
-    DockerCompose.destroy_containers(dev=dev, loglevel=cli_obj.loglevel)
+    docker_compose = DockerCompose(dev=dev, loglevel=cli_obj.loglevel,
+                                   logfile=cli_obj.logfile)
+    docker_compose.destroy_containers()
 
 
 @cli.command()
