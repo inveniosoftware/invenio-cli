@@ -252,25 +252,29 @@ def run(cli_obj, dev, bg, start):
         print('Starting server...')
 
         def signal_handler(sig, frame):
-            print('SIGINT, stopping server...')
+            print('Stopping server...')
+            # Close logging pipe
+            logpipe.close()
             DockerCompose.stop_containers(cli_obj.loglevel)
 
         signal.signal(signal.SIGINT, signal_handler)
 
         if dev:
             print()
-            # FIXME: Scripts should be changed by commands run here
             DockerCompose.start_containers(dev=True, bg=bg,
                                            loglevel=cli_obj.loglevel)
-            # TODO: Run in background / foreground (--bg) Difficult to find
-            # the process to stop. Should not be allowed?
-            # FIXME: HAndle crtl+c and avoid exceptions
+
             # Open logging pipe
             logpipe = LogPipe(cli_obj.loglevel)
-            subprocess.call(['/bin/bash', 'scripts/server'],
-                            stdout=logpipe, stderr=logpipe)
-            # Close logging pipe
-            logpipe.close()
+
+            # FIXME: Scripts should be changed by commands run here
+            if bg:
+                server = subprocess.Popen(['/bin/bash', 'scripts/server'],
+                                          stdout=logpipe, stderr=logpipe)
+                print('Server up and running...')
+                server.wait()
+            else:
+                server = subprocess.call(['/bin/bash', 'scripts/server'])
         else:
             DockerCompose.start_containers(dev=False, bg=bg,
                                            loglevel=cli_obj.loglevel)
