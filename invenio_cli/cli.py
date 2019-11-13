@@ -100,8 +100,9 @@ def cli(ctx, flavour, log_level, v):
 @click.pass_obj
 def init(cli_obj):
     """Initializes the application according to the chosen flavour."""
-    print('Initializing {flavour} application...'.format(
-        flavour=cli_obj.flavour))
+    click.secho('Initializing {flavour} application...'.format(
+        flavour=cli_obj.flavour), fg='green')
+
     cookie_config = CookiecutterConfig()
 
     try:
@@ -138,7 +139,7 @@ def init(cli_obj):
             config.write(configfile)
 
     except OutputDirExistsException as e:
-        print(str(e))
+        click.secho(str(e), fg='red')
 
     finally:
         cookie_config.remove_config()
@@ -160,7 +161,8 @@ def init(cli_obj):
               help='Lock dependencies or avoid this step')
 def build(cli_obj, base, app, pre, dev, lock):
     """Locks the dependencies and builds the corresponding docker images."""
-    print('Building {flavour} application...'.format(flavour=cli_obj.flavour))
+    click.secho('Building {flavour} application...'.format(
+                flavour=cli_obj.flavour), fg='green')
 
     # Open logging pipe
     logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
@@ -169,7 +171,7 @@ def build(cli_obj, base, app, pre, dev, lock):
                                    logfile=cli_obj.logfile)
     if lock:
         # Lock dependencies
-        print('Locking dependencies...')
+        click.secho('Locking dependencies...', fg='green')
         command = ['pipenv', 'lock']
         if pre:
             command.append('--pre')
@@ -178,14 +180,14 @@ def build(cli_obj, base, app, pre, dev, lock):
 
     if dev:
         # FIXME: Scripts should be changed by commands run here
-        print('Bootstrapping development server...')
+        click.secho('Bootstrapping development server...', fg='green')
         subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'],
                         stdout=logpipe, stderr=logpipe)
 
     else:
         if base:
-            print('Building {flavour} base docker image...'.format(
-                flavour=cli_obj.flavour))
+            click.secho('Building {flavour} base docker image...'.format(
+                flavour=cli_obj.flavour), fg='green')
             # docker build -f Dockerfile.base -t my-site-base:latest .
             docker_compose.built_image(
                 dockerfile='Dockerfile.base',
@@ -193,8 +195,8 @@ def build(cli_obj, base, app, pre, dev, lock):
                     project_name=cli_obj.name)
             )
         if app:
-            print('Building {flavour} app docker image...'.format(
-                flavour=cli_obj.flavour))
+            click.secho('Building {flavour} app docker image...'.format(
+                flavour=cli_obj.flavour), fg='green')
             # docker build -t my-site:latest .
             docker_compose.built_image(
                 dockerfile='Dockerfile',
@@ -202,8 +204,9 @@ def build(cli_obj, base, app, pre, dev, lock):
                     project_name=cli_obj.name)
             )
 
-        print('Creating {mode} services...'.format(
-                        mode='development' if dev else 'semi-production'))
+        click.secho('Creating {mode} services...'
+                    .format(mode='development' if dev else 'semi-production'),
+                    fg='green')
         docker_compose.create_images()
 
     # Close logging pipe
@@ -216,8 +219,8 @@ def build(cli_obj, base, app, pre, dev, lock):
 @click.pass_obj
 def setup(cli_obj, dev):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
-    print('Setting up environment for {flavour} application...'
-          .format(flavour=cli_obj.flavour))
+    click.secho('Setting up environment for {flavour} application...'
+                .format(flavour=cli_obj.flavour), fg='green')
 
     # Open logging pipe
     logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
@@ -227,7 +230,7 @@ def setup(cli_obj, dev):
                         stdout=logpipe, stderr=logpipe)
     else:
         # FIXME: Scripts should be changed by commands run here
-        print('Setting up instance...')
+        click.secho('Setting up instance...', fg='green')
         subprocess.call(['docker-compose', 'exec', 'web-api',
                          '/bin/bash', '-c',
                          '/bin/bash /opt/invenio/src/scripts/setup'],
@@ -250,10 +253,10 @@ def run(cli_obj, dev, bg, start):
     docker_compose = DockerCompose(dev=dev, bg=bg, logfile=cli_obj.logfile,
                                    loglevel=cli_obj.loglevel)
     if start:
-        print('Starting server...')
+        click.secho('Starting server...', fg='green')
 
         def signal_handler(sig, frame):
-            print('Stopping server...')
+            click.secho('Stopping server...', fg='green')
             # Close logging pipe
             logpipe.close()
             docker_compose.stop_containers()
@@ -269,13 +272,13 @@ def run(cli_obj, dev, bg, start):
             if bg:
                 server = subprocess.Popen(['/bin/bash', 'scripts/server'],
                                           stdout=logpipe, stderr=logpipe)
-                print('Server up and running...')
+                click.secho('Server up and running...', fg='green')
                 server.wait()
             else:
                 server = subprocess.call(['/bin/bash', 'scripts/server'])
 
     else:
-        print('Starting server...')
+        click.secho('Starting server...', fg='green')
         docker_compose.stop_containers()
 
 
@@ -285,8 +288,8 @@ def run(cli_obj, dev, bg, start):
 @click.pass_obj
 def destroy(cli_obj, dev):
     """Removes all associated resources (containers, images, volumes)."""
-    print('Destroying {flavour} application...'
-          .format(flavour=cli_obj.flavour))
+    click.secho('Destroying {flavour} application...'
+                .format(flavour=cli_obj.flavour), fg='green')
     docker_compose = DockerCompose(dev=dev, loglevel=cli_obj.loglevel,
                                    logfile=cli_obj.logfile)
     docker_compose.destroy_containers()
@@ -296,6 +299,6 @@ def destroy(cli_obj, dev):
 @click.pass_obj
 def upgrade(cli_obj):
     """Upgrades the current application to the specified newer version."""
-    print('Upgrading server for {flavour} application...'
-          .format(flavour=cli_obj.flavour))
-    print('ERROR: Not supported yet...')
+    click.secho('Upgrading server for {flavour} application...'
+                .format(flavour=cli_obj.flavour), fg='green')
+    click.secho('ERROR: Not supported yet...', fg='red')
