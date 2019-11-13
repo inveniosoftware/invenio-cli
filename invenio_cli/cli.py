@@ -20,7 +20,9 @@ import docker
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .utils import Cookiecutter, DockerCompose, get_created_files
+from .cookicutter_config import CookiecutterConfig
+from .docker_compose import DockerCompose
+from .filesystem import get_created_files
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -82,12 +84,12 @@ def init(cli_obj):
     """Initializes the application according to the chosen flavour."""
     print('Initializing {flavour} application...'.format(
         flavour=cli_obj.flavour))
-    cookie = Cookiecutter()
+    cookie_config = CookiecutterConfig()
 
     try:
         context = cookiecutter(
-            config_file=cookie.create_and_dump_config(),
-            **cookie.repository(cli_obj.flavour)
+            config_file=cookie_config.create_and_dump_config(),
+            **cookie_config.repository(cli_obj.flavour)
         )
 
         config = cli_obj.config
@@ -103,7 +105,7 @@ def init(cli_obj):
             config[CLI_SECTION][FLAVOUR_ITEM] = cli_obj.flavour
             config[COOKIECUTTER_SECTION] = {}
             # Cookiecutter user input
-            replay = cookie.get_replay()
+            replay = cookie_config.get_replay()
             for key, value in replay[COOKIECUTTER_SECTION].items():
                 config[COOKIECUTTER_SECTION][key] = value
             # Generated files
@@ -116,7 +118,7 @@ def init(cli_obj):
         print(str(e))
 
     finally:
-        cookie.remove_config()
+        cookie_config.remove_config()
 
 
 @cli.command()
