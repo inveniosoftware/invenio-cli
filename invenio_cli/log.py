@@ -13,9 +13,6 @@ import logging
 import os
 import threading
 
-logging.basicConfig(filename='invenio-cli.log',
-                    format='%(message)s', level=logging.INFO)
-
 
 class LogPipe(threading.Thread):
     """Logging pipe object to support forwarding subprocess and Popen logs.
@@ -23,8 +20,9 @@ class LogPipe(threading.Thread):
     Based on https://codereview.stackexchange.com/questions/6567
     """
 
-    def __init__(self, level):
+    def __init__(self, level, filename):
         """Setup the object with a logger and a level and start the thread."""
+        logging.basicConfig(filename=filename, level=logging.INFO)
         threading.Thread.__init__(self)
         self.daemon = False
         self.level = level
