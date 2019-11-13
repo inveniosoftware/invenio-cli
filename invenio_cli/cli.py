@@ -27,7 +27,7 @@ from .log import LogPipe
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
 # NOTE: If modifying the list check the impact int he `init` command.
-CLI_ITEMS = ['project_name', 'flavour', 'logifle']
+CLI_ITEMS = ['project_name', 'flavour', 'logfile']
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
@@ -59,7 +59,7 @@ class InvenioCli(object):
         if os.path.isfile(CONFIG_FILENAME):
             try:
                 for item in CLI_ITEMS:
-                    setattr(self, CLI_ITEMS, self.config[CLI_SECTION][item])
+                    setattr(self, item, self.config[CLI_SECTION][item])
             except KeyError:
                 logging.error(
                     '{item} not configured in CLI section'.format(item=item))
