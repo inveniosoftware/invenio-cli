@@ -44,7 +44,7 @@ class InvenioCli(object):
 
     def __init__(self, flavour=None, loglevel=LEVELS['warning'],
                  verbose=False):
-        r"""Initialize builder.
+        """Initialize builder.
 
         :param flavour: Flavour name.
         """
@@ -89,8 +89,7 @@ class InvenioCli(object):
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('-V', default=False, is_flag=True, required=False,
-              help='Verbose mode, puts the application in debug mode on the \
-                  terminal output.')
+              help='Verbose mode will show all logs in the console.')
 @click.pass_context
 def cli(ctx, flavour, log_level, v):
     """Initialize CLI context."""
@@ -280,7 +279,7 @@ def run(cli_obj, dev, bg, start):
                                            loglevel=cli_obj.loglevel)
 
     else:
-        print('Starting server...')
+        print('Stopping server...')
         DockerCompose.stop_containers(loglevel=cli_obj.loglevel)
 
 
