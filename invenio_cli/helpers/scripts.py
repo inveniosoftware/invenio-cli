@@ -143,8 +143,15 @@ def update_statics(dev, loglevel, logfile):
     if dev:
         # Copy logo file
         dst_path = _get_instance_path(loglevel, logfile)
+        dst_path = Path(dst_path) / 'static/images'
         src_file = os.path.abspath('static/images/logo.svg')
-        shutil.copyfile(src_file, Path(dst_path) / 'static/images/logo.svg')
+        click.secho("Creating statics folder...", fg="green")
+        try:
+            os.makedirs(dst_path)  # Create directories if doesnt exist
+        except FileExistsError:
+            click.secho("Statics directory already exsits...", fg="yellow")
+
+        shutil.copyfile(src_file, dst_path / 'logo.svg')
 
     else:
         pass

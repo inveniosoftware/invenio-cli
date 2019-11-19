@@ -48,7 +48,7 @@ class InvenioCli(object):
         :param flavour: Flavour name.
         """
         self.flavour = None
-        self.name = None
+        self.project_name = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
         self.verbose = verbose
@@ -137,6 +137,9 @@ def init(flavour, log_level, verbose):
 
             config.write(configfile)
 
+            click.secho("Creating logs directory...")
+            os.mkdir(Path(config[CLI_SECTION]['project_name']) / "logs")
+
     except OutputDirExistsException as e:
         click.secho(str(e), fg='red')
 
@@ -180,7 +183,8 @@ def build(base, app, pre, dev, lock, log_level, verbose):
         _lock_dependencies(invenio_cli, pre)
 
     scripts.bootstrap(dev=dev, pre=pre, base=base, app=app,
-                      docker_helper=docker_compose, app_name=invenio_cli.name,
+                      docker_helper=docker_compose,
+                      app_name=invenio_cli.project_name,
                       verbose=invenio_cli.verbose,
                       loglevel=invenio_cli.loglevel,
                       logfile=invenio_cli.logfile)
@@ -229,9 +233,12 @@ def setup(dev, cleanup, log_level, verbose):
     docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
                                    logfile=invenio_cli.logfile)
 
-    scripts.setup(dev=dev, cleanup=cleanup, docker_helper=docker_compose,
-                  app_name=invenio_cli.name, verbose=invenio_cli.verbose,
-                  loglevel=invenio_cli.loglevel, logfile=invenio_cli.logfile)
+    scripts.setup(dev=dev, cleanup=cleanup,
+                  docker_helper=docker_compose,
+                  app_name=invenio_cli.project_name,
+                  verbose=invenio_cli.verbose,
+                  loglevel=invenio_cli.loglevel,
+                  logfile=invenio_cli.logfile)
 
 
 @cli.command()
