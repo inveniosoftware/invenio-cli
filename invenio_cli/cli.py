@@ -19,10 +19,11 @@ import click
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .cookicutter_config import CookiecutterConfig
-from .docker_compose import DockerCompose
-from .filesystem import get_created_files
-from .log import LogPipe
+from .helpers import scripts
+from .helpers.cookicutter_config import CookiecutterConfig
+from .helpers.docker_compose import DockerCompose
+from .helpers.filesystem import get_created_files
+from .helpers.log import LogPipe
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'

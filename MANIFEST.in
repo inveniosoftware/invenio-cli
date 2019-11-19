@@ -24,5 +24,6 @@ recursive-include docs Makefile
 recursive-include examples *.py
 recursive-include examples *.sh
 recursive-include invenio_cli *.html
+recursive-include invenio_cli *.py
 recursive-include tests *.py
 recursive-include invenio_cli *.po *.pot *.mo

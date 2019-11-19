@@ -24,8 +24,8 @@ class DockerCompose(object):
                  logfile='invenio-cli.log'):
         """Constructor for the DockerCompose helper."""
         super(DockerCompose, self).__init__()
-        self.dev = True
-        self.bg = True
+        self.dev = dev
+        self.bg = bg
         self.loglevel = loglevel
         self.logfile = logfile
         self.docker_client = docker.from_env()
