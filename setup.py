@@ -46,8 +46,11 @@ install_requires = [
     'click>=7.0,<7.1',
     'docker>=4.0.2,<4.1.0',
     'Flask-BabelEx>=0.9.3',
+    'invenio-app>=1.2.0,<1.3.0',
+    'invenio-base>=1.1.0,<1.2.0',
     'pipenv==2018.11.26',
-    'PyYAML>=5.1.2,<5.2.0'
+    'PyYAML>=5.1.2,<5.2.0',
+    'redis>=3.3.11,<3.4.0',
 ]
 
 packages = find_packages()
@@ -75,7 +78,15 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'invenio-cli = invenio_cli.cli:cli',
+            'invenio-cli = invenio_app.cli:cli',
+        ],
+        'flask.commands': [
+            'init = invenio_cli.cli:init',
+            'build = invenio_cli.cli:build',
+            'setup = invenio_cli.cli:setup',
+            'server = invenio_cli.cli:server',
+            'destroy = invenio_cli.cli:destroy',
+            'upgrade = invenio_cli.cli:upgrade'
         ],
         'invenio_base.apps': [
             'invenio_cli = invenio_cli:InvenioCli',

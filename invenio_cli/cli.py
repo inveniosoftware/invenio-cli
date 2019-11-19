@@ -10,7 +10,6 @@
 
 import logging
 import os
-import signal
 import subprocess
 from configparser import ConfigParser
 from pathlib import Path
@@ -80,48 +79,48 @@ class InvenioCli(object):
 
 
 @click.group()
+def cli():
+    """Initialize CLI context."""
+
+
+@cli.command()
 @click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
               default=None, required=False)
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
-@click.option('-V', default=False, is_flag=True, required=False,
+@click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-@click.pass_context
-def cli(ctx, flavour, log_level, v):
-    """Initialize CLI context."""
-    ctx.obj = InvenioCli(
-        flavour=flavour,
-        loglevel=LEVELS[log_level],
-        verbose=v
-    )
-
-
-@cli.command()
-@click.pass_obj
-def init(cli_obj):
+def init(flavour, log_level, verbose):
     """Initializes the application according to the chosen flavour."""
     click.secho('Initializing {flavour} application...'.format(
-        flavour=cli_obj.flavour), fg='green')
+        flavour=flavour), fg='green')
 
+    # Create config object
+    invenio_cli = InvenioCli(
+        flavour=flavour,
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
+    # Process Cookiecutter
     cookie_config = CookiecutterConfig()
 
     try:
         context = cookiecutter(
             config_file=cookie_config.create_and_dump_config(),
-            **cookie_config.repository(cli_obj.flavour)
+            **cookie_config.repository(flavour)
         )
-
-        config = cli_obj.config
 
         file_fullpath = Path(context) / CONFIG_FILENAME
 
         with open(file_fullpath, 'w') as configfile:
             # Open config file
+            config = invenio_cli.config
             config.read(CONFIG_FILENAME)
 
             # CLI parameters
             config[CLI_SECTION] = {}
-            config[CLI_SECTION]['flavour'] = cli_obj.flavour
+            config[CLI_SECTION]['flavour'] = flavour
             config[CLI_SECTION]['project_name'] = \
                 context.split(os.path.sep)[-1]
             config[CLI_SECTION]['logfile'] = \
@@ -146,7 +145,6 @@ def init(cli_obj):
 
 
 @cli.command()
-@click.pass_obj
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
 @click.option('--base/--skip-base', default=True, is_flag=True,
@@ -159,83 +157,50 @@ def init(cli_obj):
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-def build(cli_obj, base, app, pre, dev, lock):
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def build(base, app, pre, dev, lock, log_level, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
     click.secho('Building {flavour} application...'.format(
-                flavour=cli_obj.flavour), fg='green')
+                flavour=invenio_cli.flavour), fg='green')
 
-    # Open logging pipe
-    logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
     # Initialize docker client
-    docker_compose = DockerCompose(dev=dev, loglevel=cli_obj.loglevel,
-                                   logfile=cli_obj.logfile)
+    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
+                                   logfile=invenio_cli.logfile)
     if lock:
-        # Lock dependencies
-        click.secho('Locking dependencies...', fg='green')
-        command = ['pipenv', 'lock']
-        if pre:
-            command.append('--pre')
-        # No need for `with` context since call is a blocking op
-        subprocess.call(command, stdout=logpipe, stderr=logpipe)
+        # Open logging pipe
+        _lock_dependencies(invenio_cli, pre)
 
-    if dev:
-        # FIXME: Scripts should be changed by commands run here
-        click.secho('Bootstrapping development server...', fg='green')
-        subprocess.call(['/bin/bash', 'scripts/bootstrap', '--dev'],
-                        stdout=logpipe, stderr=logpipe)
+    scripts.bootstrap(dev=dev, pre=pre, base=base, app=app,
+                      docker_helper=docker_compose, app_name=invenio_cli.name,
+                      verbose=invenio_cli.verbose,
+                      loglevel=invenio_cli.loglevel,
+                      logfile=invenio_cli.logfile)
 
-    else:
-        if base:
-            click.secho('Building {flavour} base docker image...'.format(
-                flavour=cli_obj.flavour), fg='green')
-            # docker build -f Dockerfile.base -t my-site-base:latest .
-            docker_compose.built_image(
-                dockerfile='Dockerfile.base',
-                tag='{project_name}-base:latest'.format(
-                    project_name=cli_obj.name)
-            )
-        if app:
-            click.secho('Building {flavour} app docker image...'.format(
-                flavour=cli_obj.flavour), fg='green')
-            # docker build -t my-site:latest .
-            docker_compose.built_image(
-                dockerfile='Dockerfile',
-                tag='{project_name}:latest'.format(
-                    project_name=cli_obj.name)
-            )
-
-        click.secho('Creating {mode} services...'
-                    .format(mode='development' if dev else 'semi-production'),
-                    fg='green')
-        docker_compose.create_images()
-
-    # Close logging pipe
-    logpipe.close()
+    click.secho('Creating {mode} services...'
+                .format(mode='development' if dev else 'semi-production'),
+                fg='green')
+    docker_compose.create_images()
 
 
-@cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
-@click.pass_obj
-def setup(cli_obj, dev):
-    """Sets up the application for the first time (DB, ES, queue, etc.)."""
-    click.secho('Setting up environment for {flavour} application...'
-                .format(flavour=cli_obj.flavour), fg='green')
-
+def _lock_dependencies(cli_obj, pre):
     # Open logging pipe
     logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
-    if dev:
-        # FIXME: Scripts should be changed by commands run here
-        subprocess.call(['/bin/bash', 'scripts/setup', '--dev'],
-                        stdout=logpipe, stderr=logpipe)
-    else:
-        # FIXME: Scripts should be changed by commands run here
-        click.secho('Setting up instance...', fg='green')
-        subprocess.call(['docker-compose', 'exec', 'web-api',
-                         '/bin/bash', '-c',
-                         '/bin/bash /opt/invenio/src/scripts/setup'],
-                        stdout=logpipe, stderr=logpipe)
-
+    # Lock dependencies
+    click.secho('Locking dependencies...', fg='green')
+    command = ['pipenv', 'lock']
+    if pre:
+        command.append('--pre')
+    # No need for `with` context since call is a blocking op
+    subprocess.call(command, stdout=logpipe, stderr=logpipe)
     # Close logging pipe
     logpipe.close()
 
@@ -243,62 +208,97 @@ def setup(cli_obj, dev):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--bg', default=True, is_flag=True,
-              help='Run the containers in foreground')
+@click.option('--cleanup', default=False, is_flag=True,
+              help='Delete all content from the database, ES indexes, queues')
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def setup(dev, cleanup, log_level, verbose):
+    """Sets up the application for the first time (DB, ES, queue, etc.)."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
+    click.secho('Setting up environment for {flavour} application...'
+                .format(flavour=invenio_cli.flavour), fg='green')
+
+    # Initialize docker client
+    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
+                                   logfile=invenio_cli.logfile)
+
+    scripts.setup(dev=dev, cleanup=cleanup, docker_helper=docker_compose,
+                  app_name=invenio_cli.name, verbose=invenio_cli.verbose,
+                  loglevel=invenio_cli.loglevel, logfile=invenio_cli.logfile)
+
+
+@cli.command()
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
 @click.option('--start/--stop', default=True, is_flag=True,
               help='Start or Stop application and services')
-@click.pass_obj
-def run(cli_obj, dev, bg, start):
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def server(dev, start, log_level, verbose):
     """Starts the application server."""
-    docker_compose = DockerCompose(dev=dev, bg=bg, logfile=cli_obj.logfile,
-                                   loglevel=cli_obj.loglevel)
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
+    docker_compose = DockerCompose(dev=dev, bg=verbose,
+                                   logfile=invenio_cli.logfile,
+                                   loglevel=invenio_cli.loglevel)
     if start:
-        click.secho('Starting server...', fg='green')
-
-        def signal_handler(sig, frame):
-            click.secho('Stopping server...', fg='green')
-            # Close logging pipe
-            logpipe.close()
-            docker_compose.stop_containers()
-
-        signal.signal(signal.SIGINT, signal_handler)
-
-        docker_compose.start_containers()
-        if dev:
-            # Open logging pipe
-            logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
-
-            # FIXME: Scripts should be changed by commands run here
-            if bg:
-                server = subprocess.Popen(['/bin/bash', 'scripts/server'],
-                                          stdout=logpipe, stderr=logpipe)
-                click.secho('Server up and running...', fg='green')
-                server.wait()
-            else:
-                server = subprocess.call(['/bin/bash', 'scripts/server'])
-
+        click.secho('Booting up server...', fg='green')
+        scripts.server(dev, docker_compose, invenio_cli.loglevel,
+                       invenio_cli.logfile, invenio_cli.verbose)
     else:
         print('Stopping server...')
-        DockerCompose.stop_containers(loglevel=cli_obj.loglevel)
+        docker_compose.stop_containers()
 
 
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.pass_obj
-def destroy(cli_obj, dev):
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def destroy(dev, log_level, verbose):
     """Removes all associated resources (containers, images, volumes)."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
     click.secho('Destroying {flavour} application...'
-                .format(flavour=cli_obj.flavour), fg='green')
-    docker_compose = DockerCompose(dev=dev, loglevel=cli_obj.loglevel,
-                                   logfile=cli_obj.logfile)
+                .format(flavour=invenio_cli.flavour), fg='green')
+    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
+                                   logfile=invenio_cli.logfile)
     docker_compose.destroy_containers()
 
 
 @cli.command()
-@click.pass_obj
-def upgrade(cli_obj):
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode, puts the application in debug mode on the \
+                  terminal output.')
+def upgrade(log_level, verbose):
     """Upgrades the current application to the specified newer version."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
     click.secho('Upgrading server for {flavour} application...'
-                .format(flavour=cli_obj.flavour), fg='green')
+                .format(flavour=invenio_cli.flavour), fg='green')
     click.secho('ERROR: Not supported yet...', fg='red')
