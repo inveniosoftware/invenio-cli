@@ -10,8 +10,6 @@
 
 from __future__ import absolute_import, print_function
 
-from flask_babelex import gettext as _
-
 from . import config
 
 
@@ -30,12 +28,6 @@ class InvenioCli(object):
 
     def init_config(self, app):
         """Initialize configuration."""
-        # Use theme's base template if theme is installed
-        if 'BASE_TEMPLATE' in app.config:
-            app.config.setdefault(
-                'CLI_BASE_TEMPLATE',
-                app.config['BASE_TEMPLATE'],
-            )
         for k in dir(config):
             if k.startswith('CLI'):
                 app.config.setdefault(k, getattr(config, k))
