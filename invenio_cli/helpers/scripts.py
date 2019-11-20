@@ -189,7 +189,10 @@ def _get_instance_path(loglevel, logfile):
 #########
 
 @with_appcontext
-def _setup_dev(force, docker_helper, app_name, verbose, loglevel, logfile):
+def setup(dev=True,  force=False, docker_helper=None, app_name='invenio-rdm',
+          verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
+    """Bootstrap server."""
+    click.secho('Setting up server...', fg='green')
     cli = create_cli()
     runner = current_app.test_cli_runner()
 
@@ -226,20 +229,6 @@ def _setup_dev(force, docker_helper, app_name, verbose, loglevel, logfile):
 
     docker_helper.stop_containers()
 
-
-def _setup_prod(force, docker_helper, app_name):
-    pass
-
-
-def setup(dev=True,  force=False, docker_helper=None, app_name='invenio-rdm',
-          verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
-    """Bootstrap server."""
-    click.secho('Setting up server...', fg='green')
-    if dev:
-        _setup_dev(force, docker_helper, app_name, verbose,
-                   loglevel, logfile)
-    else:
-        _setup_prod(force, docker_helper, app_name)
 
 ##########
 # SERVER #
