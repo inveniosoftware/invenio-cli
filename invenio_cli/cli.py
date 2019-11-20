@@ -120,8 +120,7 @@ def init(flavour, log_level, verbose):
             # CLI parameters
             config[CLI_SECTION] = {}
             config[CLI_SECTION]['flavour'] = flavour
-            config[CLI_SECTION]['project_name'] = \
-                context.split(os.path.sep)[-1]
+            config[CLI_SECTION]['project_name'] = os.path.basename(context)
             config[CLI_SECTION]['logfile'] = \
                 '{path}/logs/invenio-cli.log'.format(path=context)
 
