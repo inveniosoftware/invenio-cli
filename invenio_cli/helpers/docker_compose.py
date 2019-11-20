@@ -30,9 +30,10 @@ class DockerCompose(object):
         self.logfile = logfile
         self.docker_client = docker.from_env()
 
-    def built_image(self, dockerfile, tag):
+    def build_image(self, dockerfile, tag):
         """Build docker image."""
-        self.docker_client.images.build(dockerfile=dockerfile, tag=tag)
+        self.docker_client.images.build(path=os.getcwd(),
+                                        dockerfile=dockerfile, tag=tag)
 
     def create_images(self):
         """Create images according to the specified environment."""

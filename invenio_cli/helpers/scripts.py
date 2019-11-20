@@ -76,7 +76,7 @@ def _boostrap_prod(base, docker_helper, app_name):
     if base:
         click.secho('Building base docker image...', fg='green')
         # docker build -f Dockerfile.base -t my-site-base:latest .
-        docker_helper.built_image(
+        docker_helper.build_image(
             dockerfile='Dockerfile.base',
             tag='{project_name}-base:latest'.format(
                 project_name=app_name)
