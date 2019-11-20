@@ -18,11 +18,10 @@ import click
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .helpers import scripts
-from .helpers.cookicutter_config import CookiecutterConfig
-from .helpers.docker_compose import DockerCompose
-from .helpers.filesystem import get_created_files
-from .helpers.log import LogPipe
+from .helpers import CookiecutterConfig, DockerCompose, LogPipe, bootstrap, \
+    get_created_files
+from .helpers import server as scripts_server
+from .helpers import setup
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -179,15 +178,14 @@ def build(base, app, pre, dev, lock, log_level, verbose):
     docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
                                    logfile=invenio_cli.logfile)
     if lock:
-        # Open logging pipe
         _lock_dependencies(invenio_cli, pre)
 
-    scripts.bootstrap(dev=dev, pre=pre, base=base, app=app,
-                      docker_helper=docker_compose,
-                      app_name=invenio_cli.project_name,
-                      verbose=invenio_cli.verbose,
-                      loglevel=invenio_cli.loglevel,
-                      logfile=invenio_cli.logfile)
+    bootstrap(dev=dev, pre=pre, base=base,
+              docker_helper=docker_compose,
+              app_name=invenio_cli.project_name,
+              verbose=invenio_cli.verbose,
+              loglevel=invenio_cli.loglevel,
+              logfile=invenio_cli.logfile)
 
     click.secho('Creating {mode} services...'
                 .format(mode='development' if dev else 'semi-production'),
@@ -233,12 +231,12 @@ def setup(dev, cleanup, log_level, verbose):
     docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
                                    logfile=invenio_cli.logfile)
 
-    scripts.setup(dev=dev, cleanup=cleanup,
-                  docker_helper=docker_compose,
-                  app_name=invenio_cli.project_name,
-                  verbose=invenio_cli.verbose,
-                  loglevel=invenio_cli.loglevel,
-                  logfile=invenio_cli.logfile)
+    setup(dev=dev, force=force,
+          docker_helper=docker_compose,
+          app_name=invenio_cli.project_name,
+          verbose=invenio_cli.verbose,
+          loglevel=invenio_cli.loglevel,
+          logfile=invenio_cli.logfile)
 
 
 @cli.command()
