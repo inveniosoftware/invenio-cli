@@ -206,13 +206,13 @@ def _lock_dependencies(cli_obj, pre):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--cleanup', default=False, is_flag=True,
+@click.option('--force', default=False, is_flag=True,
               help='Delete all content from the database, ES indexes, queues')
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def setup(dev, cleanup, log_level, verbose):
+def setup(dev, force, log_level, verbose):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     # Create config object
     invenio_cli = InvenioCli(
