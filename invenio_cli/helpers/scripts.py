@@ -285,14 +285,13 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
     server.wait()
 
 
-def _server_prod():
-    pass
-
-
 def server(dev=True, docker_helper=None, app_name='invenio-rdm',
            verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Run server."""
     if dev:
         _server_dev(docker_helper, loglevel, logfile, verbose)
     else:
-        _server_prod()
+        click.secho("Starting docker contianers. It might take up to a minute.", fg="green")
+        click.secho("Use --stop to stop server.", fg="green")
+        docker_helper.start_containers()
+        time.sleep(60)
