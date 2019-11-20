@@ -194,7 +194,7 @@ def _get_instance_path(loglevel, logfile):
 #########
 
 @with_appcontext
-def setup(dev=True,  force=False, docker_helper=None,
+def setup(dev=True, force=False, docker_helper=None,
           project_shortname='invenio-rdm', verbose=False,
           loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Bootstrap server."""
