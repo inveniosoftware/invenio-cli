@@ -163,13 +163,13 @@ def _get_instance_path(loglevel, logfile):
 
     calculate_path = subprocess.Popen(
         ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
-            '-c', '"print(app.instance_path)"'],
+            '-c', '"print(app.instance_path, end='')"'],
         stdout=subprocess.PIPE,
         stderr=logpipe)
 
     dst_path = calculate_path.communicate()[0]
     # Remove \n incoming with bytes sequence
-    dst_path = dst_path.decode("utf-8").strip()
+    dst_path = dst_path.decode("utf-8")
 
     if not os.path.isdir(dst_path):
         click.secho('Could not update config. Env dir {} does not extis.'
