@@ -155,7 +155,7 @@ def update_statics(dev, loglevel, logfile, docker_helper=None, app_name=None):
 
         shutil.copyfile(src_file, dst_path / 'logo.svg')
 
-    else:       
+    else:
         # dst_path is a path inside the container.
         dst_path = '/opt/invenio/var/instance/static/images'
         app_name = app_name.replace("-", "")
@@ -285,7 +285,8 @@ def server(dev=True, docker_helper=None, app_name='invenio-rdm',
     if dev:
         _server_dev(docker_helper, loglevel, logfile, verbose)
     else:
-        click.secho("Starting docker contianers. It might take up to a minute.", fg="green")
+        click.secho("Starting docker containers. " +
+                    "It might take up to a minute.", fg="green")
         click.secho("Use --stop to stop server.", fg="green")
         docker_helper.start_containers()
         time.sleep(60)
