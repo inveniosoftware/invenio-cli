@@ -26,7 +26,7 @@ from .helpers.log import LogPipe
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
-# NOTE: If modifying the list check the impact int he `init` command.
+# NOTE: If modifying the list check the impact in the `init` command.
 CLI_ITEMS = ['project_name', 'flavour', 'logfile']
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
@@ -66,7 +66,7 @@ class InvenioCli(object):
                 exit(1)
             # Provided flavour differs from the one in .invenio
             if flavour and flavour != self.flavour:
-                logging.error('Config flavour in .invenio differs form ' +
+                logging.error('Config flavour in .invenio differs from ' +
                               'the specified')
                 exit(1)
         elif flavour:
