@@ -21,7 +21,7 @@ from cookiecutter.main import cookiecutter
 from .helpers import CookiecutterConfig, DockerCompose, LogPipe, bootstrap, \
     get_created_files
 from .helpers import server as scripts_server
-from .helpers import setup
+from .helpers import setup as scripts_setup
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -227,12 +227,12 @@ def setup(dev, force, log_level, verbose):
     docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
                                    logfile=invenio_cli.logfile)
 
-    setup(dev=dev, force=force,
-          docker_helper=docker_compose,
-          app_name=invenio_cli.project_name,
-          verbose=invenio_cli.verbose,
-          loglevel=invenio_cli.loglevel,
-          logfile=invenio_cli.logfile)
+    scripts_setup(dev=dev, force=force,
+                 docker_helper=docker_compose,
+                 app_name=invenio_cli.project_name,
+                 verbose=invenio_cli.verbose,
+                 loglevel=invenio_cli.loglevel,
+                 logfile=invenio_cli.logfile)
 
 
 @cli.command()
