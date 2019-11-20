@@ -40,7 +40,7 @@ class DockerCompose(object):
         logpipe = LogPipe(self.loglevel, self.logfile)
 
         command = ['docker-compose',
-                   '-f', 'docker-compose.full.yml', 'up', '--no-start']
+                   '--file', 'docker-compose.full.yml', 'up', '--no-start']
         if self.dev:
             command[2] = 'docker-compose.yml'
 
@@ -51,7 +51,7 @@ class DockerCompose(object):
     def start_containers(self):
         """Start containers according to the specified environment."""
         command = ['docker-compose',
-                   '-f', 'docker-compose.full.yml', 'up', '--no-recreate']
+                   '--file', 'docker-compose.full.yml', 'up', '--no-recreate']
 
         if self.dev:
             command[2] = 'docker-compose.yml'
@@ -86,7 +86,7 @@ class DockerCompose(object):
         # Open logging pipe
         logpipe = LogPipe(self.loglevel, self.logfile)
 
-        command = ['docker-compose', '-f', 'docker-compose.full.yml',
+        command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
         if self.dev:
             command[2] = 'docker-compose.yml'

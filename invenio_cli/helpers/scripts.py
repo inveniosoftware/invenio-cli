@@ -270,7 +270,7 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
 
     click.secho("Starting celery worker...", fg="green")
     worker = subprocess.Popen(['pipenv', 'run', 'celery', 'worker',
-                               '-A', 'invenio_app.celery'],
+                               '--app', 'invenio_app.celery'],
                               stdout=logpipe, stderr=logpipe)
 
     click.secho("Starting up development server...", fg='green')
