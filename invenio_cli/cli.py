@@ -257,10 +257,10 @@ def server(dev, start, log_level, verbose):
                                    loglevel=invenio_cli.loglevel)
     if start:
         click.secho('Booting up server...', fg='green')
-        scripts.server(dev, docker_compose, invenio_cli.loglevel,
+        scripts_server(dev, docker_compose, invenio_cli.loglevel,
                        invenio_cli.logfile, invenio_cli.verbose)
     else:
-        print('Stopping server...')
+        click.secho('Stopping server...', fg="green")
         docker_compose.stop_containers()
 
 
