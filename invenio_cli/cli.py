@@ -228,11 +228,11 @@ def setup(dev, force, log_level, verbose):
                                    logfile=invenio_cli.logfile)
 
     scripts_setup(dev=dev, force=force,
-                 docker_helper=docker_compose,
-                 app_name=invenio_cli.project_name,
-                 verbose=invenio_cli.verbose,
-                 loglevel=invenio_cli.loglevel,
-                 logfile=invenio_cli.logfile)
+                  docker_helper=docker_compose,
+                  app_name=invenio_cli.project_name,
+                  verbose=invenio_cli.verbose,
+                  loglevel=invenio_cli.loglevel,
+                  logfile=invenio_cli.logfile)
 
 
 @cli.command()
