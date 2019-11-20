@@ -151,9 +151,6 @@ def init(flavour, log_level, verbose):
 @click.option('--base/--skip-base', default=True, is_flag=True,
               help='If specified, it will build the base docker image ' +
                    '(not compatible with --dev)')
-@click.option('--app/--skip-app', default=True, is_flag=True,
-              help='If specified, it will build the application docker ' +
-                   'image (not compatible with --dev)')
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
@@ -162,7 +159,7 @@ def init(flavour, log_level, verbose):
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def build(base, app, pre, dev, lock, log_level, verbose):
+def build(base, pre, dev, lock, log_level, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
     # Create config object
     invenio_cli = InvenioCli(

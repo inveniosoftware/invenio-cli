@@ -72,7 +72,7 @@ def _bootstrap_dev(pre, loglevel, logfile, verbose):
     update_config(True, loglevel, logfile)
 
 
-def _boostrap_prod(base, app, docker_helper, app_name):
+def _boostrap_prod(base, docker_helper, app_name):
     if base:
         click.secho('Building base docker image...', fg='green')
         # docker build -f Dockerfile.base -t my-site-base:latest .
@@ -81,25 +81,25 @@ def _boostrap_prod(base, app, docker_helper, app_name):
             tag='{project_name}-base:latest'.format(
                 project_name=app_name)
         )
-    if app:
-        click.secho('Building applications docker image...', fg='green')
-        # docker build -t my-site:latest .
-        docker_helper.built_image(
-            dockerfile='Dockerfile',
-            tag='{project_name}:latest'.format(
-                project_name=app_name)
-        )
+
+    click.secho('Building applications docker image...', fg='green')
+    # docker build -t my-site:latest .
+    docker_helper.built_image(
+        dockerfile='Dockerfile',
+        tag='{project_name}:latest'.format(
+            project_name=app_name)
+    )
 
 
 def bootstrap(dev=True, pre=True,
-              base=True, app=True, docker_helper=None, app_name='invenio-rdm',
+              base=True, docker_helper=None, app_name='invenio-rdm',
               verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
     if dev:
         _bootstrap_dev(pre, loglevel, logfile, verbose)
     else:
-        _boostrap_prod(base, app, docker_helper, app_name)
+        _boostrap_prod(base, docker_helper, app_name)
 
 
 @with_appcontext
