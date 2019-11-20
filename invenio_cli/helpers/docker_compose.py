@@ -73,10 +73,14 @@ class DockerCompose(object):
     def stop_containers(self):
         """Stop currently running containers."""
         # Open logging pipe
+        command = ['docker-compose', '-f', 'docker-compose.full.yml', 'stop']
+
+        if self.dev:
+            command[2] = 'docker-compose.yml'
+
         logpipe = LogPipe(self.loglevel, self.logfile)
 
-        subprocess.call(['docker-compose', 'stop'],
-                        stdout=logpipe, stderr=logpipe)
+        subprocess.call(command, stdout=logpipe, stderr=logpipe)
 
         # Close logging pipe
         logpipe.close()
