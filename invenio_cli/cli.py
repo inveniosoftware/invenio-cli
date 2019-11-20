@@ -287,6 +287,35 @@ def destroy(dev, log_level, verbose):
 
 
 @cli.command()
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode, puts the application in debug mode on the \
+                  terminal output.')
+def update(dev, log_level, verbose):
+    """Updates the current application static files."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+
+    click.secho("Updating static files...", fg="green")
+    if dev:
+        scripts.update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile)
+        click.secho("Files updated, you might need to restart your " +
+                    "application (if running)...", fg="green")
+    else:
+        docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
+                                       logfile=invenio_cli.logfile)
+        scripts.update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile,
+                               docker_helper=docker_compose,
+                               app_name=invenio_cli.project_name)
+
+
+@cli.command()
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,

@@ -86,6 +86,7 @@ setup(
             'setup = invenio_cli.cli:setup',
             'server = invenio_cli.cli:server',
             'destroy = invenio_cli.cli:destroy',
+            'update = invenio_cli.cli:update',
             'upgrade = invenio_cli.cli:upgrade'
         ],
         'invenio_base.apps': [

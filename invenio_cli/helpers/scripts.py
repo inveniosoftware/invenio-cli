@@ -138,8 +138,10 @@ def update_config(dev, loglevel, logfile):
         pass
 
 
-def update_statics(dev, loglevel, logfile):
+def update_statics(dev, loglevel, logfile, docker_helper=None, app_name=None):
     """Update static files."""
+    src_file = os.path.abspath('static/images/logo.svg')
+
     if dev:
         # Copy logo file
         dst_path = _get_instance_path(loglevel, logfile)
@@ -153,8 +155,11 @@ def update_statics(dev, loglevel, logfile):
 
         shutil.copyfile(src_file, dst_path / 'logo.svg')
 
-    else:
-        pass
+    else:       
+        # dst_path is a path inside the container.
+        dst_path = '/opt/invenio/var/instance/static/images'
+        app_name = app_name.replace("-", "")
+        docker_helper.copy(src_file, dst_path, '{}_web-ui_1'.format(app_name))
 
 
 def _get_instance_path(loglevel, logfile):

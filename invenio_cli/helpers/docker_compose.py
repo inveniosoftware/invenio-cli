@@ -9,8 +9,11 @@
 
 """Invenio CLI Docker Compose class."""
 
+import io
 import logging
+import os
 import subprocess
+import tarfile
 
 import docker
 
@@ -100,3 +103,14 @@ class DockerCompose(object):
 
         # Close logging pipe
         logpipe.close()
+
+    def copy(self, src_file, dst_path, container):
+        """Copy a file into the path of the specified container."""
+        container = self.docker_client.containers.get(container)
+
+        with tarfile.open('tmp.tar', "w") as tar:
+            tar.add(src_file, arcname=os.path.basename(src_file),
+                    recursive=False)
+        with open('tmp.tar', 'rb') as fin:
+            data = io.BytesIO(fin.read())
+            container.put_archive(dst_path, data)
