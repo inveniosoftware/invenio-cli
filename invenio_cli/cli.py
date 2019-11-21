@@ -18,10 +18,11 @@ import click
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .helpers import CookiecutterConfig, DockerCompose, LogPipe, bootstrap, \
+from .helpers import CookiecutterConfig, DockerHelper, LogPipe, bootstrap, \
     get_created_files
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
+from .helpers import update_statics
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -171,13 +172,13 @@ def build(base, pre, dev, lock, log_level, verbose):
                 flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
-                                   logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+                                 logfile=invenio_cli.logfile)
     if lock:
         _lock_dependencies(invenio_cli, pre)
 
     bootstrap(dev=dev, pre=pre, base=base,
-              docker_helper=docker_compose,
+              docker_helper=docker_helper,
               app_name=invenio_cli.project_name,
               verbose=invenio_cli.verbose,
               loglevel=invenio_cli.loglevel,
@@ -186,7 +187,7 @@ def build(base, pre, dev, lock, log_level, verbose):
     click.secho('Creating {mode} services...'
                 .format(mode='development' if dev else 'semi-production'),
                 fg='green')
-    docker_compose.create_images()
+    docker_helper.create_images()
 
 
 def _lock_dependencies(cli_obj, pre):
@@ -224,11 +225,11 @@ def setup(dev, force, log_level, verbose):
                 .format(flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
-                                   logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+                                 logfile=invenio_cli.logfile)
 
     scripts_setup(dev=dev, force=force,
-                  docker_helper=docker_compose,
+                  docker_helper=docker_helper,
                   app_name=invenio_cli.project_name,
                   verbose=invenio_cli.verbose,
                   loglevel=invenio_cli.loglevel,
@@ -252,16 +253,16 @@ def server(dev, start, log_level, verbose):
         verbose=verbose
     )
 
-    docker_compose = DockerCompose(dev=dev, bg=verbose,
-                                   logfile=invenio_cli.logfile,
-                                   loglevel=invenio_cli.loglevel)
+    docker_helper = DockerHelper(dev=dev, bg=verbose,
+                                 logfile=invenio_cli.logfile,
+                                 loglevel=invenio_cli.loglevel)
     if start:
         click.secho('Booting up server...', fg='green')
-        scripts_server(dev, docker_compose, invenio_cli.loglevel,
+        scripts_server(dev, docker_helper, invenio_cli.loglevel,
                        invenio_cli.logfile, invenio_cli.verbose)
     else:
         click.secho('Stopping server...', fg="green")
-        docker_compose.stop_containers()
+        docker_helper.stop_containers()
 
 
 @cli.command()
@@ -281,9 +282,9 @@ def destroy(dev, log_level, verbose):
 
     click.secho('Destroying {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
-    docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
-                                   logfile=invenio_cli.logfile)
-    docker_compose.destroy_containers()
+    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+                                 logfile=invenio_cli.logfile)
+    docker_helper.destroy_containers()
 
 
 @cli.command()
@@ -303,15 +304,15 @@ def update(dev, log_level, verbose):
 
     click.secho("Updating static files...", fg="green")
     if dev:
-        scripts.update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile)
+        update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile)
         click.secho("Files updated, you might need to restart your " +
                     "application (if running)...", fg="green")
     else:
-        docker_compose = DockerCompose(dev=dev, loglevel=invenio_cli.loglevel,
-                                       logfile=invenio_cli.logfile)
-        scripts.update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile,
-                               docker_helper=docker_compose,
-                               app_name=invenio_cli.project_name)
+        docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+                                     logfile=invenio_cli.logfile)
+        update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile,
+                       docker_helper=docker_helper,
+                       app_name=invenio_cli.project_name)
 
 
 @cli.command()

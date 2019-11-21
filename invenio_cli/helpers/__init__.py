@@ -10,7 +10,7 @@
 """Invenio CLI helpers module."""
 
 from .cookicutter_config import CookiecutterConfig
-from .docker_compose import DockerCompose
+from .docker_helper import DockerHelper
 from .filesystem import get_created_files
 from .log import LogPipe
-from .scripts import bootstrap, server, setup
+from .scripts import bootstrap, server, setup, update_statics

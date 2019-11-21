@@ -20,13 +20,13 @@ import docker
 from .log import LogPipe
 
 
-class DockerCompose(object):
+class DockerHelper(object):
     """Utility class to interact with docker-compose."""
 
     def __init__(self, dev=True, bg=True, loglevel=logging.WARN,
                  logfile='invenio-cli.log'):
         """Constructor for the DockerCompose helper."""
-        super(DockerCompose, self).__init__()
+        super(DockerHelper, self).__init__()
         self.dev = dev
         self.bg = bg
         self.loglevel = loglevel
@@ -76,12 +76,13 @@ class DockerCompose(object):
 
     def stop_containers(self):
         """Stop currently running containers."""
-        # Open logging pipe
-        command = ['docker-compose', '-f', 'docker-compose.full.yml', 'stop']
+        command = ['docker-compose',
+                   '--file', 'docker-compose.full.yml', 'stop']
 
         if self.dev:
             command[2] = 'docker-compose.yml'
 
+        # Open logging pipe
         logpipe = LogPipe(self.loglevel, self.logfile)
 
         subprocess.call(command, stdout=logpipe, stderr=logpipe)
