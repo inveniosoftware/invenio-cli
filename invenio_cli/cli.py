@@ -292,8 +292,7 @@ def destroy(dev, log_level, verbose):
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode, puts the application in debug mode on the \
-                  terminal output.')
+              help='Verbose mode will show all logs in the console.')
 def update(dev, log_level, verbose):
     """Updates the current application static files."""
     # Create config object
@@ -319,8 +318,7 @@ def update(dev, log_level, verbose):
 @click.option('--log-level', required=False, default='warning',
               type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode, puts the application in debug mode on the \
-                  terminal output.')
+              help='Verbose mode will show all logs in the console.')
 def upgrade(log_level, verbose):
     """Upgrades the current application to the specified newer version."""
     # Create config object
