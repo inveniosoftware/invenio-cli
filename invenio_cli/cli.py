@@ -19,7 +19,7 @@ from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
 from .helpers import CookiecutterConfig, DockerHelper, LogPipe, bootstrap, \
-    get_created_files
+    get_created_files, populate_demo_records
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
 from .helpers import update_statics
@@ -332,3 +332,22 @@ def upgrade(log_level, verbose):
     click.secho('Upgrading server for {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
     click.secho('ERROR: Not supported yet...', fg='red')
+
+
+@cli.command()
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
+@click.option('--log-level', required=False, default='warning',
+              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def demo(dev, log_level, verbose):
+    """Upgrades the current application to the specified newer version."""
+    # Create config object
+    invenio_cli = InvenioCli(
+        loglevel=LEVELS[log_level],
+        verbose=verbose
+    )
+    docker_compose = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+                                  logfile=invenio_cli.logfile)
+    populate_demo_records(docker_compose, invenio_cli.verbose)

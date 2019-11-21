@@ -291,3 +291,26 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
         click.secho("Use --stop to stop server.", fg="green")
         docker_helper.start_containers()
         time.sleep(60)
+
+
+############
+# POPULATE #
+############
+
+
+@with_appcontext
+def populate_demo_records(docker_helper, verbose):
+    """Add demo records into the instance."""
+    click.secho('Setting up server...', fg='green')
+    cli = create_cli()
+    runner = current_app.test_cli_runner()
+
+    click.secho("Starting containers...", fg="green")
+    docker_helper.start_containers()
+    time.sleep(10)  # Give time to the containers to start properly
+
+    run_command(cli, runner, 'rdm-records demo',
+                message="Populating instance with demo records...",
+                verbose=verbose)
+
+    docker_helper.stop_containers()
