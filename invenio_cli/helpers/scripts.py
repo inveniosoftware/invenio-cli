@@ -168,7 +168,7 @@ def _get_instance_path(loglevel, logfile):
 
     calculate_path = subprocess.Popen(
         ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
-            '-c', '"print(app.instance_path, end='')"'],
+            '-c', '"print(app.instance_path, end=\'\')"'],
         stdout=subprocess.PIPE,
         stderr=logpipe)
 
