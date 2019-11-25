@@ -12,12 +12,15 @@
 import io
 import logging
 import os
+import re
 import subprocess
 import tarfile
 
 import docker
 
 from .log import LogPipe
+
+DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 
 
 class DockerHelper(object):
@@ -105,9 +108,29 @@ class DockerHelper(object):
         # Close logging pipe
         logpipe.close()
 
-    def copy(self, src_file, dst_path, container):
+    def _normalize_name(self, app_name):
+        """Normalize the container name according to the compose version.
+
+        Docker-Compose introduced support for dash and underscore in
+        version 1.21.0.
+        """
+        dc_version_command = subprocess.Popen(['docker-compose', '--version'],
+                                              stdout=subprocess.PIPE)
+
+        dc_version_string = dc_version_command.communicate()[0]
+
+        groups = re.search(r'1.[0-9]*.[0-9]*', dc_version_string)
+        dc_version = groups.group(0)
+
+        if dc_version < DOCKER_COMPOSE_VERSION_DASH:
+            return re.sub(r'[^-_a-z0-9]', '', app_name)
+        else:
+            return app_name
+
+    def copy(self, src_file, dst_path, app_name):
         """Copy a file into the path of the specified container."""
-        container = self.docker_client.containers.get(container)
+        container_name = '{}_web-ui_1'.format(self._normalize_name(app_name))
+        container = self.docker_client.containers.get(container_name)
 
         with tarfile.open('tmp.tar', "w") as tar:
             tar.add(src_file, arcname=os.path.basename(src_file),

@@ -158,8 +158,7 @@ def update_statics(dev, loglevel, logfile, docker_helper=None, app_name=None):
     else:
         # dst_path is a path inside the container.
         dst_path = '/opt/invenio/var/instance/static/images'
-        app_name = app_name.replace("-", "")
-        docker_helper.copy(src_file, dst_path, '{}_web-ui_1'.format(app_name))
+        docker_helper.copy(src_file, dst_path, app_name)
 
 
 def _get_instance_path(loglevel, logfile):
