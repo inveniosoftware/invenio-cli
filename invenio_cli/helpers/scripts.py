@@ -72,34 +72,34 @@ def _bootstrap_dev(pre, loglevel, logfile, verbose):
     update_config(True, loglevel, logfile)
 
 
-def _boostrap_prod(base, docker_helper, app_name):
+def _boostrap_prod(base, docker_helper, project_shortname):
     if base:
         click.secho('Building base docker image...', fg='green')
         # docker build -f Dockerfile.base -t my-site-base:latest .
         docker_helper.build_image(
             dockerfile='Dockerfile.base',
-            tag='{project_name}-base:latest'.format(
-                project_name=app_name)
+            tag='{project_shortname}-base:latest'.format(
+                project_shortname=project_shortname)
         )
 
     click.secho('Building applications docker image...', fg='green')
     # docker build -t my-site:latest .
     docker_helper.built_image(
         dockerfile='Dockerfile',
-        tag='{project_name}:latest'.format(
-            project_name=app_name)
+        tag='{project_shortname}:latest'.format(
+            project_shortname=project_shortname)
     )
 
 
 def bootstrap(dev=True, pre=True,
-              base=True, docker_helper=None, app_name='invenio-rdm',
+              base=True, docker_helper=None, project_shortname='invenio-rdm',
               verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
     if dev:
         _bootstrap_dev(pre, loglevel, logfile, verbose)
     else:
-        _boostrap_prod(base, docker_helper, app_name)
+        _boostrap_prod(base, docker_helper, project_shortname)
 
 
 @with_appcontext
@@ -138,7 +138,8 @@ def update_config(dev, loglevel, logfile):
         pass
 
 
-def update_statics(dev, loglevel, logfile, docker_helper=None, app_name=None):
+def update_statics(dev, loglevel, logfile, docker_helper=None,
+                   project_shortname=None):
     """Update static files."""
     src_file = os.path.abspath('static/images/logo.svg')
 
@@ -158,7 +159,7 @@ def update_statics(dev, loglevel, logfile, docker_helper=None, app_name=None):
     else:
         # dst_path is a path inside the container.
         dst_path = '/opt/invenio/var/instance/static/images'
-        docker_helper.copy(src_file, dst_path, app_name)
+        docker_helper.copy(src_file, dst_path, project_shortname)
 
 
 def _get_instance_path(loglevel, logfile):
@@ -193,8 +194,9 @@ def _get_instance_path(loglevel, logfile):
 #########
 
 @with_appcontext
-def setup(dev=True,  force=False, docker_helper=None, app_name='invenio-rdm',
-          verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
+def setup(dev=True,  force=False, docker_helper=None,
+          project_shortname='invenio-rdm', verbose=False,
+          loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
@@ -278,7 +280,7 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
     server.wait()
 
 
-def server(dev=True, docker_helper=None, app_name='invenio-rdm',
+def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
            verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Run server."""
     if dev:

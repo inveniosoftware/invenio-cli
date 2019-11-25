@@ -27,7 +27,7 @@ from .helpers import update_statics
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
 # NOTE: If modifying the list check the impact in the `init` command.
-CLI_ITEMS = ['project_name', 'flavour', 'logfile']
+CLI_ITEMS = ['project_shortname', 'flavour', 'logfile']
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
@@ -48,7 +48,7 @@ class InvenioCli(object):
         :param flavour: Flavour name.
         """
         self.flavour = None
-        self.project_name = None
+        self.project_shortname = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
         self.verbose = verbose
@@ -121,7 +121,8 @@ def init(flavour, log_level, verbose):
             # CLI parameters
             config[CLI_SECTION] = {}
             config[CLI_SECTION]['flavour'] = flavour
-            config[CLI_SECTION]['project_name'] = os.path.basename(context)
+            config[CLI_SECTION]['project_shortname'] = \
+                os.path.basename(context)
             config[CLI_SECTION]['logfile'] = \
                 '{path}/logs/invenio-cli.log'.format(path=context)
 
@@ -137,7 +138,7 @@ def init(flavour, log_level, verbose):
             config.write(configfile)
 
             click.secho("Creating logs directory...")
-            os.mkdir(Path(config[CLI_SECTION]['project_name']) / "logs")
+            os.mkdir(Path(config[CLI_SECTION]['project_shortname']) / "logs")
 
     except OutputDirExistsException as e:
         click.secho(str(e), fg='red')
@@ -179,7 +180,7 @@ def build(base, pre, dev, lock, log_level, verbose):
 
     bootstrap(dev=dev, pre=pre, base=base,
               docker_helper=docker_helper,
-              app_name=invenio_cli.project_name,
+              project_shortname=invenio_cli.project_shortname,
               verbose=invenio_cli.verbose,
               loglevel=invenio_cli.loglevel,
               logfile=invenio_cli.logfile)
@@ -230,7 +231,7 @@ def setup(dev, force, log_level, verbose):
 
     scripts_setup(dev=dev, force=force,
                   docker_helper=docker_helper,
-                  app_name=invenio_cli.project_name,
+                  project_shortname=invenio_cli.project_shortname,
                   verbose=invenio_cli.verbose,
                   loglevel=invenio_cli.loglevel,
                   logfile=invenio_cli.logfile)
@@ -312,7 +313,7 @@ def update(dev, log_level, verbose):
                                      logfile=invenio_cli.logfile)
         update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile,
                        docker_helper=docker_helper,
-                       app_name=invenio_cli.project_name)
+                       project_shortname=invenio_cli.project_shortname)
 
 
 @cli.command()

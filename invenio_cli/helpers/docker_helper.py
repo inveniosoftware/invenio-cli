@@ -108,7 +108,7 @@ class DockerHelper(object):
         # Close logging pipe
         logpipe.close()
 
-    def _normalize_name(self, app_name):
+    def _normalize_name(self, project_shortname):
         """Normalize the container name according to the compose version.
 
         Docker-Compose introduced support for dash and underscore in
@@ -123,13 +123,14 @@ class DockerHelper(object):
         dc_version = groups.group(0)
 
         if dc_version < DOCKER_COMPOSE_VERSION_DASH:
-            return re.sub(r'[^-_a-z0-9]', '', app_name)
+            return re.sub(r'[^-_a-z0-9]', '', project_shortname)
         else:
-            return app_name
+            return project_shortname
 
-    def copy(self, src_file, dst_path, app_name):
+    def copy(self, src_file, dst_path, project_shortname):
         """Copy a file into the path of the specified container."""
-        container_name = '{}_web-ui_1'.format(self._normalize_name(app_name))
+        container_name = '{}_web-ui_1'.format(
+            self._normalize_name(project_shortname))
         container = self.docker_client.containers.get(container_name)
 
         with tarfile.open('tmp.tar', "w") as tar:
