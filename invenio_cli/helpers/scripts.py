@@ -204,7 +204,7 @@ def setup(dev=True,  force=False, docker_helper=None,
 
     click.secho("Starting containers...", fg="green")
     docker_helper.start_containers()
-    time.sleep(10)  # Give time to the containers to start properly
+    time.sleep(60)  # Give time to the containers to start properly
 
     # Clean things up
     if force:
