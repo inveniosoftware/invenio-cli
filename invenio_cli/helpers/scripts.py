@@ -84,7 +84,7 @@ def _boostrap_prod(base, docker_helper, project_shortname):
 
     click.secho('Building applications docker image...', fg='green')
     # docker build -t my-site:latest .
-    docker_helper.built_image(
+    docker_helper.build_image(
         dockerfile='Dockerfile',
         tag='{project_shortname}:latest'.format(
             project_shortname=project_shortname)
