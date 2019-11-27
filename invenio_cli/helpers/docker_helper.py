@@ -118,6 +118,7 @@ class DockerHelper(object):
                                               stdout=subprocess.PIPE)
 
         dc_version_string = dc_version_command.communicate()[0]
+        dc_version_string = dc_version_string.decode("utf-8").strip()
 
         groups = re.search(r'1.[0-9]*.[0-9]*', dc_version_string)
         dc_version = groups.group(0)
