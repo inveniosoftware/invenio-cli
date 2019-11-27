@@ -124,7 +124,7 @@ class DockerHelper(object):
         dc_version = groups.group(0)
 
         if dc_version < DOCKER_COMPOSE_VERSION_DASH:
-            return re.sub(r'[^-_a-z0-9]', '', project_shortname)
+            return re.sub(r'[^a-z0-9]', '', project_shortname)
         else:
             return project_shortname
 
