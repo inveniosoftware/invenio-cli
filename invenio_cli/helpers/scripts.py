@@ -193,19 +193,7 @@ def _get_instance_path(loglevel, logfile):
 # SETUP #
 #########
 
-@with_appcontext
-def setup(dev=True,  force=False, docker_helper=None,
-          project_shortname='invenio-rdm', verbose=False,
-          loglevel=logging.WARN, logfile='invenio-cli.log'):
-    """Bootstrap server."""
-    click.secho('Setting up server...', fg='green')
-    cli = create_cli()
-    runner = current_app.test_cli_runner()
-
-    click.secho("Starting containers...", fg="green")
-    docker_helper.start_containers()
-    time.sleep(60)  # Give time to the containers to start properly
-
+def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
     # Clean things up
     if force:
         run_command(cli, runner, 'shell --no-term-title -c ' +
@@ -232,6 +220,62 @@ def setup(dev=True,  force=False, docker_helper=None,
     run_command(cli, runner, 'access allow superuser-access role admin',
                 message="Assigning superuser access to admin role...",
                 verbose=verbose)
+
+
+def _setup_prod(force, docker_helper, project_shortname):
+    # Clean things up
+    if force:
+        click.secho("Flushing redis cache...", fg="green")
+        docker_helper.execute_cli_command(
+            project_shortname,
+            'invenio shell --no-term-title -c "import redis; ' +
+            "redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL'])" +
+            '.flushall(); print(\'Cache cleared\')"')
+        click.secho("Deleting database...", fg="green")
+        docker_helper.execute_cli_command(
+            project_shortname, 'invenio db destroy --yes-i-know')
+        click.secho("Deleting indexes...", fg="green")
+        docker_helper.execute_cli_command(
+            project_shortname, 'invenio index destroy --force --yes-i-know')
+        click.secho("Purging queues...", fg="green")
+        docker_helper.execute_cli_command(
+            project_shortname, 'invenio index queue init purge')
+
+    click.secho("Creating database...", fg="green")
+    docker_helper.execute_cli_command(
+        project_shortname, 'invenio db init create',)
+    click.secho("Creating indexes...", fg="green")
+    docker_helper.execute_cli_command(
+        project_shortname, 'invenio index init --force')
+    click.secho("Creating files location...", fg="green")
+    docker_helper.execute_cli_command(
+        project_shortname,
+        "invenio files location --default 'default-location'")
+    click.secho("Creating admin role...", fg="green")
+    docker_helper.execute_cli_command(
+        project_shortname, 'invenio roles create admin')
+    click.secho("Assigning superuser access to admin role...", fg="green")
+    docker_helper.execute_cli_command(
+        project_shortname, 'invenio access allow superuser-access role admin')
+
+
+@with_appcontext
+def setup(dev=True, force=False, docker_helper=None,
+          project_shortname='invenio-rdm', verbose=False,
+          loglevel=logging.WARN, logfile='invenio-cli.log'):
+    """Bootstrap server."""
+    click.secho('Setting up server...', fg='green')
+    cli = create_cli()
+    runner = current_app.test_cli_runner()
+
+    click.secho("Starting containers...", fg="green")
+    docker_helper.start_containers()
+    time.sleep(60)  # Give time to the containers to start properly
+
+    if dev:
+        _setup_dev(force, cli, runner, verbose, loglevel, logfile)
+    else:
+        _setup_prod(force, docker_helper, project_shortname)
 
     docker_helper.stop_containers()
 
@@ -301,6 +345,7 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
 @with_appcontext
 def populate_demo_records(docker_helper, verbose):
     """Add demo records into the instance."""
+    # FIXME: Needs to execute in docker container if "prod"
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
     runner = current_app.test_cli_runner()

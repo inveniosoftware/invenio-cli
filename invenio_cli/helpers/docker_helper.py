@@ -140,3 +140,15 @@ class DockerHelper(object):
         with open('tmp.tar', 'rb') as fin:
             data = io.BytesIO(fin.read())
             container.put_archive(dst_path, data)
+
+    def execute_cli_command(self, project_shortname, command):
+        """Execute an invenio CLI command in the API container."""
+        container_name = '{}_web-api_1'.format(
+            self._normalize_name(project_shortname))
+        container = self.docker_client.containers.get(container_name)
+
+        # TODO: Implement loggin and verbosity
+        status = container.exec_run(
+            cmd='/bin/bash -c "{}"'.format(command),
+            user='invenio',
+            tty=True)
