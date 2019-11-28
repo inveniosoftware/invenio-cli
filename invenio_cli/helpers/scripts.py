@@ -266,19 +266,22 @@ def setup(dev=True, force=False, docker_helper=None,
           loglevel=logging.WARN, logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Setting up server...', fg='green')
-    cli = create_cli()
-    runner = current_app.test_cli_runner()
 
     click.secho("Starting containers...", fg="green")
     docker_helper.start_containers()
     time.sleep(60)  # Give time to the containers to start properly
 
     if dev:
+        cli = create_cli()
+        runner = current_app.test_cli_runner()
         _setup_dev(force, cli, runner, verbose, loglevel, logfile)
     else:
-        _setup_prod(force, docker_helper, project_shortname)
+        _setup_prod(force, docker_helper, project_shortname, loglevel,
+                    logfile)
 
+    click.secho("Stopping containers...", fg="green")
     docker_helper.stop_containers()
+    time.sleep(30)
 
 
 ##########
@@ -296,7 +299,7 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
         os.kill(worker.pid, signal.SIGTERM)
         # Stop containers
         docker_helper.stop_containers()
-        time.sleep(10)  # Allow last logs to get into the file
+        time.sleep(30)  # Allow last logs to get into the file
         # Close logging pipe
         logpipe.close()
         click.secho("Server and worker stopped...", fg="green")
@@ -333,8 +336,9 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
     else:
         click.secho("Starting docker containers. " +
                     "It might take up to a minute.", fg="green")
-        click.secho("Use --stop to stop server.", fg="green")
         docker_helper.start_containers()
+        click.secho("Containers started use --stop to stop server.",
+                    fg="green")
         time.sleep(60)
 
 
