@@ -210,7 +210,7 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
 
     run_command(cli, runner, 'db init create',
                 message="Creating database...", verbose=verbose)
-    run_command(cli, runner, 'index init --force',
+    run_command(cli, runner, 'index init',
                 message="Creating indexes...", verbose=verbose)
     run_command(cli, runner, "files location --default 'default-location' " +
                 "{})".format(_get_instance_path(loglevel, logfile)),
@@ -246,7 +246,7 @@ def _setup_prod(force, docker_helper, project_shortname):
         project_shortname, 'invenio db init create',)
     click.secho("Creating indexes...", fg="green")
     docker_helper.execute_cli_command(
-        project_shortname, 'invenio index init --force')
+        project_shortname, 'invenio index init')
     click.secho("Creating files location...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname,
