@@ -342,7 +342,7 @@ def upgrade(log_level, verbose):
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 def demo(dev, log_level, verbose):
-    """Upgrades the current application to the specified newer version."""
+    """Populates instance with demo records."""
     # Create config object
     invenio_cli = InvenioCli(
         loglevel=LEVELS[log_level],
@@ -350,4 +350,5 @@ def demo(dev, log_level, verbose):
     )
     docker_compose = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
                                   logfile=invenio_cli.logfile)
-    populate_demo_records(docker_compose, invenio_cli.verbose)
+    populate_demo_records(dev, docker_compose, invenio_cli.verbose,
+                          invenio_cli.project_shortname)

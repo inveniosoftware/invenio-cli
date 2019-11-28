@@ -343,7 +343,7 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
 
 
 @with_appcontext
-def populate_demo_records(docker_helper, verbose):
+def populate_demo_records(dev, docker_helper, verbose, project_shortname):
     """Add demo records into the instance."""
     # FIXME: Needs to execute in docker container if "prod"
     click.secho('Setting up server...', fg='green')
@@ -352,10 +352,16 @@ def populate_demo_records(docker_helper, verbose):
 
     click.secho("Starting containers...", fg="green")
     docker_helper.start_containers()
-    time.sleep(10)  # Give time to the containers to start properly
+    time.sleep(60)  # Give time to the containers to start properly
 
-    run_command(cli, runner, 'rdm-records demo',
-                message="Populating instance with demo records...",
-                verbose=verbose)
+    if dev:
+        run_command(cli, runner, 'rdm-records demo',
+                    message="Populating instance with demo records...",
+                    verbose=verbose)
+    else:
+        click.secho("Populating instance with demo records...", fg="green")
+        docker_helper.execute_cli_command(
+            project_shortname, 'invenio rdm-records demo')
 
     docker_helper.stop_containers()
+    time.sleep(30)
