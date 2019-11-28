@@ -213,7 +213,7 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
     run_command(cli, runner, 'index init',
                 message="Creating indexes...", verbose=verbose)
     run_command(cli, runner, "files location --default 'default-location' " +
-                "{})".format(_get_instance_path(loglevel, logfile)),
+                "{}".format(_get_instance_path(loglevel, logfile)),
                 message="Creating files location...", verbose=verbose)
     run_command(cli, runner, 'roles create admin',
                 message="Creating admin role...", verbose=verbose)
@@ -222,7 +222,7 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
                 verbose=verbose)
 
 
-def _setup_prod(force, docker_helper, project_shortname):
+def _setup_prod(force, docker_helper, project_shortname, loglevel, logfile):
     # Clean things up
     if force:
         click.secho("Flushing redis cache...", fg="green")
@@ -250,7 +250,8 @@ def _setup_prod(force, docker_helper, project_shortname):
     click.secho("Creating files location...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname,
-        "invenio files location --default 'default-location'")
+        "invenio files location --default 'default-location' " +
+        "{}".format(_get_instance_path(loglevel, logfile)))
     click.secho("Creating admin role...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio roles create admin')
