@@ -141,14 +141,19 @@ class DockerHelper(object):
             data = io.BytesIO(fin.read())
             container.put_archive(dst_path, data)
 
-    def execute_cli_command(self, project_shortname, command):
+    def execute_cli_command(self, project_shortname, command, logfile,
+                            loglevel, verbose):
         """Execute an invenio CLI command in the API container."""
         container_name = '{}_web-api_1'.format(
             self._normalize_name(project_shortname))
         container = self.docker_client.containers.get(container_name)
 
-        # TODO: Implement loggin and verbosity
+        logpipe = LogPipe(loglevel, logfile) if verbose else subprocess.PIPE
         status = container.exec_run(
             cmd='/bin/bash -c "{}"'.format(command),
             user='invenio',
-            tty=True)
+            tty=True,
+            stdout=logpipe,
+            stderr=logpipe)
+
+        return status.exit_code

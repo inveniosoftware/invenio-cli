@@ -350,5 +350,6 @@ def demo(dev, log_level, verbose):
     )
     docker_compose = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
                                   logfile=invenio_cli.logfile)
-    populate_demo_records(dev, docker_compose, invenio_cli.verbose,
-                          invenio_cli.project_shortname)
+    populate_demo_records(dev, docker_compose, invenio_cli.project_shortname,
+                          invenio_cli.logfile, invenio_cli.loglevel,
+                          invenio_cli.verbose)

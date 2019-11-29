@@ -222,7 +222,8 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
                 verbose=verbose)
 
 
-def _setup_prod(force, docker_helper, project_shortname, loglevel, logfile):
+def _setup_prod(force, docker_helper, project_shortname,
+                loglevel, logfile, verbose):
     # Clean things up
     if force:
         click.secho("Flushing redis cache...", fg="green")
@@ -230,34 +231,43 @@ def _setup_prod(force, docker_helper, project_shortname, loglevel, logfile):
             project_shortname,
             'invenio shell --no-term-title -c "import redis; ' +
             "redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL'])" +
-            '.flushall(); print(\'Cache cleared\')"')
+            '.flushall(); print(\'Cache cleared\')"',
+            logfile, loglevel, verbose)
         click.secho("Deleting database...", fg="green")
         docker_helper.execute_cli_command(
-            project_shortname, 'invenio db destroy --yes-i-know')
+            project_shortname, 'invenio db destroy --yes-i-know',
+            logfile, loglevel, verbose)
         click.secho("Deleting indexes...", fg="green")
         docker_helper.execute_cli_command(
-            project_shortname, 'invenio index destroy --force --yes-i-know')
+            project_shortname, 'invenio index destroy --force --yes-i-know',
+            logfile, loglevel, verbose)
         click.secho("Purging queues...", fg="green")
         docker_helper.execute_cli_command(
-            project_shortname, 'invenio index queue init purge')
+            project_shortname, 'invenio index queue init purge',
+            logfile, loglevel, verbose)
 
     click.secho("Creating database...", fg="green")
     docker_helper.execute_cli_command(
-        project_shortname, 'invenio db init create',)
+        project_shortname, 'invenio db init create',
+        logfile, loglevel, verbose)
     click.secho("Creating indexes...", fg="green")
     docker_helper.execute_cli_command(
-        project_shortname, 'invenio index init')
+        project_shortname, 'invenio index init',
+        logfile, loglevel, verbose)
     click.secho("Creating files location...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname,
         "invenio files location --default 'default-location' " +
-        "{}".format(_get_instance_path(loglevel, logfile)))
+        "{}".format(_get_instance_path(loglevel, logfile)),
+        logfile, loglevel, verbose)
     click.secho("Creating admin role...", fg="green")
     docker_helper.execute_cli_command(
-        project_shortname, 'invenio roles create admin')
+        project_shortname, 'invenio roles create admin',
+        logfile, loglevel, verbose)
     click.secho("Assigning superuser access to admin role...", fg="green")
     docker_helper.execute_cli_command(
-        project_shortname, 'invenio access allow superuser-access role admin')
+        project_shortname, 'invenio access allow superuser-access role admin',
+        logfile, loglevel, verbose)
 
 
 @with_appcontext
@@ -277,7 +287,7 @@ def setup(dev=True, force=False, docker_helper=None,
         _setup_dev(force, cli, runner, verbose, loglevel, logfile)
     else:
         _setup_prod(force, docker_helper, project_shortname, loglevel,
-                    logfile)
+                    logfile, verbose)
 
     click.secho("Stopping containers...", fg="green")
     docker_helper.stop_containers()
@@ -348,9 +358,9 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
 
 
 @with_appcontext
-def populate_demo_records(dev, docker_helper, verbose, project_shortname):
+def populate_demo_records(dev, docker_helper, project_shortname,
+                          logfile, loglevel, verbose):
     """Add demo records into the instance."""
-    # FIXME: Needs to execute in docker container if "prod"
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
     runner = current_app.test_cli_runner()
@@ -366,7 +376,8 @@ def populate_demo_records(dev, docker_helper, verbose, project_shortname):
     else:
         click.secho("Populating instance with demo records...", fg="green")
         docker_helper.execute_cli_command(
-            project_shortname, 'invenio rdm-records demo')
+            project_shortname, 'invenio rdm-records demo',
+            logfile, loglevel, verbose)
 
     docker_helper.stop_containers()
     time.sleep(30)
