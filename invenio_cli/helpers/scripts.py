@@ -196,10 +196,10 @@ def _get_instance_path(loglevel, logfile):
 def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
     # Clean things up
     if force:
-        run_command(cli, runner, 'shell --no-term-title -c ' +
-                    '"import redis; redis.StrictRedis.from_url(' +
-                    "app.config['CACHE_REDIS_URL']).flushall();" +
-                    'print(\'Cache cleared\')"',
+        run_command(cli, runner, "shell --no-term-title -c " +
+                    "\"import redis; redis.StrictRedis.from_url(" +
+                    "app.config['CACHE_REDIS_URL']).flushall(); " +
+                    "print('Cache cleared')\"",
                     message="Flushing redis cache...", verbose=verbose)
         run_command(cli, runner, 'db destroy --yes-i-know',
                     message="Deleting database...", verbose=verbose)
@@ -229,9 +229,10 @@ def _setup_prod(force, docker_helper, project_shortname,
         click.secho("Flushing redis cache...", fg="green")
         docker_helper.execute_cli_command(
             project_shortname,
-            'invenio shell --no-term-title -c "import redis; ' +
-            "redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL'])" +
-            '.flushall(); print(\'Cache cleared\')"',
+            "invenio shell --no-term-title -c " +
+            "\"import redis; redis.StrictRedis.from_url(" +
+            "app.config['CACHE_REDIS_URL']).flushall(); " +
+            "print('Cache cleared')\"",
             logfile, loglevel, verbose)
         click.secho("Deleting database...", fg="green")
         docker_helper.execute_cli_command(
