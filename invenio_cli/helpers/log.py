@@ -37,7 +37,7 @@ class LogPipe(threading.Thread):
     def run(self):
         """Run the thread, logging everything."""
         for line in iter(self.pipeReader.readline, ''):
-            logging.log(self.level, line.strip('\n'))
+            logging.info(line.strip('\n'))
 
         self.pipeReader.close()
 
