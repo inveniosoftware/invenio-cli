@@ -148,12 +148,18 @@ class DockerHelper(object):
             self._normalize_name(project_shortname))
         container = self.docker_client.containers.get(container_name)
 
-        logpipe = LogPipe(loglevel, logfile) if verbose else subprocess.PIPE
         status = container.exec_run(
-            cmd='/bin/bash -c "{}"'.format(command),
+            cmd='/bin/bash -c "{}"'.format(command.replace('"', '\\"')),
             user='invenio',
             tty=True,
-            stdout=logpipe,
-            stderr=logpipe)
+            stdout=True,
+            stderr=True)
+
+        if verbose:
+            print(status.output.decode("utf-8"))
+        else:
+            logging.basicConfig(filename=logfile, level=logging.INFO)
+            level = logging.INFO if status.exit_code == 0 else logging.ERROR
+            logging.log(level, status.output.decode("utf-8").strip('\n'))
 
         return status.exit_code
