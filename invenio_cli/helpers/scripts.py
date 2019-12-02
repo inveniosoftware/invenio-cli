@@ -259,7 +259,7 @@ def _setup_prod(force, docker_helper, project_shortname,
     docker_helper.execute_cli_command(
         project_shortname,
         "invenio files location --default 'default-location' " +
-        "{}".format(_get_instance_path(loglevel, logfile)),
+        r"${INVENIO_INSTANCE_PATH}",
         logfile, loglevel, verbose)
     click.secho("Creating admin role...", fg="green")
     docker_helper.execute_cli_command(
