@@ -18,16 +18,17 @@ import click
 from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
-from .helpers import CookiecutterConfig, DockerHelper, LogPipe, bootstrap, \
-    get_created_files, populate_demo_records
+from .helpers import CookiecutterConfig, DockerHelper, LoggingConfig, \
+    LogPipe, bootstrap, get_created_files, populate_demo_records
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
 from .helpers import update_statics
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
-# NOTE: If modifying the list check the impact in the `init` command.
-CLI_ITEMS = ['project_shortname', 'flavour', 'logfile']
+CLI_PROJECT_NAME = 'project_shortname'
+CLI_FLAVOUR = 'flavour'
+CLI_LOGFILE = 'logfile'
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
@@ -42,24 +43,25 @@ class InvenioCli(object):
         """
         self.flavour = None
         self.project_shortname = None
+        self.log_config = None
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
-        self.verbose = verbose
-        self.logfile = None
 
         # There is a .invenio config file
         if os.path.isfile(CONFIG_FILENAME):
             try:
-                for item in CLI_ITEMS:
-                    setattr(self, item, self.config[CLI_SECTION][item])
+                self.flavour = self.config[CLI_SECTION][CLI_FLAVOUR]
+                self.project_shortname = \
+                    self.config[CLI_SECTION][CLI_PROJECT_NAME]
+                self.log_config = LoggingConfig(
+                    logfile=self.config[CLI_SECTION][CLI_LOGFILE],
+                    verbose=verbose
+                )
             except KeyError:
                 logging.error(
-                    '{item} not configured in CLI section'.format(item=item))
-                exit(1)
-            # Provided flavour differs from the one in .invenio
-            if flavour and flavour != self.flavour:
-                logging.error('Config flavour in .invenio differs from ' +
-                              'the specified')
+                    '{0}, {1} or {2} not configured in CLI section'.format(
+                        CLI_PROJECT_NAME, CLI_LOGFILE, CLI_FLAVOUR
+                    ))
                 exit(1)
         elif flavour:
             # There is no .invenio file but the flavour was provided via CLI
@@ -154,15 +156,14 @@ def build(base, pre, dev, lock, verbose):
                 flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
     if lock:
-        _lock_dependencies(invenio_cli, pre)
+        _lock_dependencies(invenio_cli.log_config, pre)
 
     bootstrap(dev=dev, pre=pre, base=base,
               docker_helper=docker_helper,
               project_shortname=invenio_cli.project_shortname,
-              verbose=invenio_cli.verbose,
-              logfile=invenio_cli.logfile)
+              log_config=invenio_cli.log_config)
 
     click.secho('Creating {mode} services...'
                 .format(mode='development' if dev else 'semi-production'),
@@ -170,9 +171,9 @@ def build(base, pre, dev, lock, verbose):
     docker_helper.create_images()
 
 
-def _lock_dependencies(cli_obj, pre):
+def _lock_dependencies(log_config, pre):
     # Open logging pipe
-    logpipe = LogPipe(cli_obj.logfile)
+    logpipe = LogPipe(log_config)
     # Lock dependencies
     click.secho('Locking dependencies...', fg='green')
     command = ['pipenv', 'lock']
@@ -200,13 +201,12 @@ def setup(dev, force, verbose):
                 .format(flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
 
     scripts_setup(dev=dev, force=force,
                   docker_helper=docker_helper,
                   project_shortname=invenio_cli.project_shortname,
-                  verbose=invenio_cli.verbose,
-                  logfile=invenio_cli.logfile)
+                  log_config=invenio_cli.log_config)
 
 
 @cli.command()
@@ -221,12 +221,11 @@ def server(dev, start, verbose):
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
 
-    docker_helper = DockerHelper(dev=dev, bg=verbose,
-                                 logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
     if start:
         click.secho('Booting up server...', fg='green')
-        scripts_server(dev, docker_helper,
-                       invenio_cli.logfile, invenio_cli.verbose)
+        scripts_server(dev=dev, docker_helper=docker_helper,
+                       log_config=invenio_cli.log_config)
     else:
         click.secho('Stopping server...', fg="green")
         docker_helper.stop_containers()
@@ -244,8 +243,7 @@ def destroy(dev, verbose):
 
     click.secho('Destroying {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
-    docker_helper = DockerHelper(dev=dev,
-                                 logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
     docker_helper.destroy_containers()
 
 
@@ -261,12 +259,13 @@ def update(dev, verbose):
 
     click.secho("Updating static files...", fg="green")
     if dev:
-        update_statics(dev, invenio_cli.logfile)
+        update_statics(dev, log_config=invenio_cli.log_config)
         click.secho("Files updated, you might need to restart your " +
                     "application (if running)...", fg="green")
     else:
-        docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
-        update_statics(dev, invenio_cli.logfile,
+        docker_helper = DockerHelper(dev=dev,
+                                     log_config=invenio_cli.log_config)
+        update_statics(dev, log_config=invenio_cli.log_config,
                        docker_helper=docker_helper,
                        project_shortname=invenio_cli.project_shortname)
 
@@ -293,8 +292,6 @@ def demo(dev, verbose):
     """Populates instance with demo records."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
-    docker_compose = DockerHelper(dev=dev,
-                                  logfile=invenio_cli.logfile)
+    docker_compose = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
     populate_demo_records(dev, docker_compose, invenio_cli.project_shortname,
-                          invenio_cli.logfile,
-                          invenio_cli.verbose)
+                          invenio_cli.log_config)

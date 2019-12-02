@@ -12,6 +12,6 @@
 from .cookicutter_config import CookiecutterConfig
 from .docker_helper import DockerHelper
 from .filesystem import get_created_files
-from .log import LogPipe
+from .log import LoggingConfig, LogPipe
 from .scripts import bootstrap, populate_demo_records, server, setup, \
     update_statics

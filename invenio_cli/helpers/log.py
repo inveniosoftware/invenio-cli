@@ -20,10 +20,10 @@ class LogPipe(threading.Thread):
     Based on https://codereview.stackexchange.com/questions/6567
     """
 
-    def __init__(self, filename):
+    def __init__(self, log_config):
         """Setup the object with a logger and start the thread."""
         # Set as INFO to allow all logs to be sent
-        logging.basicConfig(filename=filename, level=logging.INFO)
+        logging.basicConfig(filename=log_config.logfile, level=logging.INFO)
         threading.Thread.__init__(self)
         self.daemon = False
         self.fdRead, self.fdWrite = os.pipe()
@@ -44,3 +44,13 @@ class LogPipe(threading.Thread):
     def close(self):
         """Close the write end of the pipe."""
         os.close(self.fdWrite)
+
+
+class LoggingConfig(object):
+    """Class to encapsulate the logging configuration."""
+
+    def __init__(self, logfile='invenio-cli.log', verbose=False):
+        """Constructor for the LoggingConfig helper."""
+        super(LoggingConfig, self).__init__()
+        self.logfile = logfile
+        self.verbose = verbose
