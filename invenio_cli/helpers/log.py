@@ -20,12 +20,12 @@ class LogPipe(threading.Thread):
     Based on https://codereview.stackexchange.com/questions/6567
     """
 
-    def __init__(self, level, filename):
-        """Setup the object with a logger and a level and start the thread."""
+    def __init__(self, filename):
+        """Setup the object with a logger and start the thread."""
+        # Set as INFO to allow all logs to be sent
         logging.basicConfig(filename=filename, level=logging.INFO)
         threading.Thread.__init__(self)
         self.daemon = False
-        self.level = level
         self.fdRead, self.fdWrite = os.pipe()
         self.pipeReader = os.fdopen(self.fdRead)
         self.start()

@@ -40,7 +40,7 @@ def run_command(cli, runner, command, message=None, catch_exceptions=False,
 #############
 
 
-def _bootstrap_dev(pre, loglevel, logfile, verbose):
+def _bootstrap_dev(pre, logfile, verbose):
     # Check if the dependencies have been locked, fail if not
     click.secho('Checking that dependencies are locked...', fg='green')
     locked = 'Pipfile.lock' in os.listdir('.')
@@ -49,7 +49,7 @@ def _bootstrap_dev(pre, loglevel, logfile, verbose):
         exit(1)
 
     # Open logging pipe
-    logpipe = LogPipe(loglevel, logfile)
+    logpipe = LogPipe(logfile)
 
     # Install packages according to the lock file
     click.secho('Installing dependencies...', fg='green')
@@ -66,10 +66,10 @@ def _bootstrap_dev(pre, loglevel, logfile, verbose):
     build_assets(verbose)
 
     # Update static files
-    update_statics(True, loglevel, logfile)
+    update_statics(True, logfile)
 
     # Update configuration
-    update_config(True, loglevel, logfile)
+    update_config(True, logfile)
 
 
 def _boostrap_prod(base, docker_helper, project_shortname):
@@ -93,11 +93,11 @@ def _boostrap_prod(base, docker_helper, project_shortname):
 
 def bootstrap(dev=True, pre=True,
               base=True, docker_helper=None, project_shortname='invenio-rdm',
-              verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
+              verbose=False, logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
     if dev:
-        _bootstrap_dev(pre, loglevel, logfile, verbose)
+        _bootstrap_dev(pre, verbose)
     else:
         _boostrap_prod(base, docker_helper, project_shortname)
 
@@ -125,11 +125,11 @@ def _force_symlink(file1, file2):
             os.symlink(file1, file2)
 
 
-def update_config(dev, loglevel, logfile):
+def update_config(dev, logfile):
     """Update invenio.cfg configuration file."""
     if dev:
         # Create symbolic link
-        dst_path = _get_instance_path(loglevel, logfile)
+        dst_path = _get_instance_path(logfile)
         src_file = os.path.abspath('invenio.cfg')
         _force_symlink(src_file, Path(dst_path) / 'invenio.cfg')
 
@@ -138,14 +138,14 @@ def update_config(dev, loglevel, logfile):
         pass
 
 
-def update_statics(dev, loglevel, logfile, docker_helper=None,
+def update_statics(dev, logfile, docker_helper=None,
                    project_shortname=None):
     """Update static files."""
     src_file = os.path.abspath('static/images/logo.svg')
 
     if dev:
         # Copy logo file
-        dst_path = _get_instance_path(loglevel, logfile)
+        dst_path = _get_instance_path(logfile)
         dst_path = Path(dst_path) / 'static/images'
         src_file = os.path.abspath('static/images/logo.svg')
         click.secho("Creating statics folder...", fg="green")
@@ -162,9 +162,9 @@ def update_statics(dev, loglevel, logfile, docker_helper=None,
         docker_helper.copy(src_file, dst_path, project_shortname)
 
 
-def _get_instance_path(loglevel, logfile):
+def _get_instance_path(logfile):
     # Open logging pipe
-    logpipe = LogPipe(loglevel, logfile)
+    logpipe = LogPipe(logfile)
 
     calculate_path = subprocess.Popen(
         ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
@@ -193,7 +193,7 @@ def _get_instance_path(loglevel, logfile):
 # SETUP #
 #########
 
-def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
+def _setup_dev(force, cli, runner, verbose, logfile):
     # Clean things up
     if force:
         run_command(cli, runner, "shell --no-term-title -c " +
@@ -213,7 +213,7 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
     run_command(cli, runner, 'index init',
                 message="Creating indexes...", verbose=verbose)
     run_command(cli, runner, "files location --default 'default-location' " +
-                "{}".format(_get_instance_path(loglevel, logfile)),
+                "{}".format(_get_instance_path(logfile)),
                 message="Creating files location...", verbose=verbose)
     run_command(cli, runner, 'roles create admin',
                 message="Creating admin role...", verbose=verbose)
@@ -223,7 +223,7 @@ def _setup_dev(force, cli, runner, verbose, loglevel, logfile):
 
 
 def _setup_prod(force, docker_helper, project_shortname,
-                loglevel, logfile, verbose):
+                logfile, verbose):
     # Clean things up
     if force:
         click.secho("Flushing redis cache...", fg="green")
@@ -233,48 +233,48 @@ def _setup_prod(force, docker_helper, project_shortname,
             "\"import redis; redis.StrictRedis.from_url(" +
             "app.config['CACHE_REDIS_URL']).flushall(); " +
             "print('Cache cleared')\"",
-            logfile, loglevel, verbose)
+            verbose)
         click.secho("Deleting database...", fg="green")
         docker_helper.execute_cli_command(
             project_shortname, 'invenio db destroy --yes-i-know',
-            logfile, loglevel, verbose)
+            verbose)
         click.secho("Deleting indexes...", fg="green")
         docker_helper.execute_cli_command(
             project_shortname, 'invenio index destroy --force --yes-i-know',
-            logfile, loglevel, verbose)
+            verbose)
         click.secho("Purging queues...", fg="green")
         docker_helper.execute_cli_command(
             project_shortname, 'invenio index queue init purge',
-            logfile, loglevel, verbose)
+            verbose)
 
     click.secho("Creating database...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio db init create',
-        logfile, loglevel, verbose)
+        verbose)
     click.secho("Creating indexes...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio index init',
-        logfile, loglevel, verbose)
+        verbose)
     click.secho("Creating files location...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname,
         "invenio files location --default 'default-location' " +
         r"${INVENIO_INSTANCE_PATH}",
-        logfile, loglevel, verbose)
+        verbose)
     click.secho("Creating admin role...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio roles create admin',
-        logfile, loglevel, verbose)
+        verbose)
     click.secho("Assigning superuser access to admin role...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio access allow superuser-access role admin',
-        logfile, loglevel, verbose)
+        verbose)
 
 
 @with_appcontext
 def setup(dev=True, force=False, docker_helper=None,
           project_shortname='invenio-rdm', verbose=False,
-          loglevel=logging.WARN, logfile='invenio-cli.log'):
+          logfile='invenio-cli.log'):
     """Bootstrap server."""
     click.secho('Setting up server...', fg='green')
 
@@ -285,10 +285,9 @@ def setup(dev=True, force=False, docker_helper=None,
     if dev:
         cli = create_cli()
         runner = current_app.test_cli_runner()
-        _setup_dev(force, cli, runner, verbose, loglevel, logfile)
+        _setup_dev(force, cli, runner, verbose, logfile)
     else:
-        _setup_prod(force, docker_helper, project_shortname, loglevel,
-                    logfile, verbose)
+        _setup_prod(force, docker_helper, project_shortname, logfile, verbose)
 
     click.secho("Stopping containers...", fg="green")
     docker_helper.stop_containers()
@@ -300,7 +299,7 @@ def setup(dev=True, force=False, docker_helper=None,
 ##########
 
 
-def _server_dev(docker_helper, loglevel, logfile, verbose):
+def _server_dev(docker_helper, logfile, verbose):
 
     def signal_handler(sig, frame):
         click.secho('Stopping server...', fg='green')
@@ -320,7 +319,7 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
     docker_helper.start_containers()
 
     # Open logging pipe
-    logpipe = LogPipe(loglevel, logfile) if verbose else subprocess.PIPE
+    logpipe = LogPipe(logfile) if verbose else subprocess.PIPE
 
     click.secho("Starting celery worker...", fg="green")
     worker = subprocess.Popen(['pipenv', 'run', 'celery', 'worker',
@@ -340,10 +339,10 @@ def _server_dev(docker_helper, loglevel, logfile, verbose):
 
 
 def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
-           verbose=False, loglevel=logging.WARN, logfile='invenio-cli.log'):
+           verbose=False, logfile='invenio-cli.log'):
     """Run server."""
     if dev:
-        _server_dev(docker_helper, loglevel, logfile, verbose)
+        _server_dev(docker_helper, logfile, verbose)
     else:
         click.secho("Starting docker containers. " +
                     "It might take up to a minute.", fg="green")
@@ -360,7 +359,7 @@ def server(dev=True, docker_helper=None, project_shortname='invenio-rdm',
 
 @with_appcontext
 def populate_demo_records(dev, docker_helper, project_shortname,
-                          logfile, loglevel, verbose):
+                          logfile, verbose):
     """Add demo records into the instance."""
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
@@ -376,9 +375,8 @@ def populate_demo_records(dev, docker_helper, project_shortname,
                     verbose=verbose)
     else:
         click.secho("Populating instance with demo records...", fg="green")
-        docker_helper.execute_cli_command(
-            project_shortname, 'invenio rdm-records demo',
-            logfile, loglevel, verbose)
+        docker_helper.execute_cli_command(project_shortname,
+            'invenio rdm-records demo', verbose)
 
     docker_helper.stop_containers()
     time.sleep(30)

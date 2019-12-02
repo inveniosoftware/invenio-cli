@@ -31,18 +31,11 @@ CLI_ITEMS = ['project_shortname', 'flavour', 'logfile']
 COOKIECUTTER_SECTION = 'cookiecutter'
 FILES_SECTION = 'files'
 
-LEVELS = {'debug': logging.DEBUG,
-          'info': logging.INFO,
-          'warning': logging.WARNING,
-          'error': logging.ERROR,
-          'critical': logging.CRITICAL}
-
 
 class InvenioCli(object):
     """Current application building properties."""
 
-    def __init__(self, flavour=None, loglevel=LEVELS['warning'],
-                 verbose=False):
+    def __init__(self, flavour=None, verbose=False):
         """Initialize builder.
 
         :param flavour: Flavour name.
@@ -52,7 +45,6 @@ class InvenioCli(object):
         self.config = ConfigParser()
         self.config.read(CONFIG_FILENAME)
         self.verbose = verbose
-        self.loglevel = loglevel
         self.logfile = None
 
         # There is a .invenio config file
@@ -86,21 +78,15 @@ def cli():
 @cli.command()
 @click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
               default=None, required=False)
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def init(flavour, log_level, verbose):
+def init(flavour, verbose):
     """Initializes the application according to the chosen flavour."""
     click.secho('Initializing {flavour} application...'.format(
         flavour=flavour), fg='green')
 
     # Create config object
-    invenio_cli = InvenioCli(
-        flavour=flavour,
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(flavour=flavour, verbose=verbose)
 
     # Process Cookiecutter
     cookie_config = CookiecutterConfig()
@@ -157,24 +143,18 @@ def init(flavour, log_level, verbose):
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def build(base, pre, dev, lock, log_level, verbose):
+def build(base, pre, dev, lock, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho('Building {flavour} application...'.format(
                 flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
-                                 logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
     if lock:
         _lock_dependencies(invenio_cli, pre)
 
@@ -182,7 +162,6 @@ def build(base, pre, dev, lock, log_level, verbose):
               docker_helper=docker_helper,
               project_shortname=invenio_cli.project_shortname,
               verbose=invenio_cli.verbose,
-              loglevel=invenio_cli.loglevel,
               logfile=invenio_cli.logfile)
 
     click.secho('Creating {mode} services...'
@@ -193,7 +172,7 @@ def build(base, pre, dev, lock, log_level, verbose):
 
 def _lock_dependencies(cli_obj, pre):
     # Open logging pipe
-    logpipe = LogPipe(cli_obj.loglevel, cli_obj.logfile)
+    logpipe = LogPipe(cli_obj.logfile)
     # Lock dependencies
     click.secho('Locking dependencies...', fg='green')
     command = ['pipenv', 'lock']
@@ -210,30 +189,23 @@ def _lock_dependencies(cli_obj, pre):
               help='Which environment to build, it defaults to development')
 @click.option('--force', default=False, is_flag=True,
               help='Delete all content from the database, ES indexes, queues')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def setup(dev, force, log_level, verbose):
+def setup(dev, force, verbose):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho('Setting up environment for {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
-                                 logfile=invenio_cli.logfile)
+    docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
 
     scripts_setup(dev=dev, force=force,
                   docker_helper=docker_helper,
                   project_shortname=invenio_cli.project_shortname,
                   verbose=invenio_cli.verbose,
-                  loglevel=invenio_cli.loglevel,
                   logfile=invenio_cli.logfile)
 
 
@@ -242,24 +214,18 @@ def setup(dev, force, log_level, verbose):
               help='Which environment to build, it defaults to development')
 @click.option('--start/--stop', default=True, is_flag=True,
               help='Start or Stop application and services')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def server(dev, start, log_level, verbose):
+def server(dev, start, verbose):
     """Starts the application server."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     docker_helper = DockerHelper(dev=dev, bg=verbose,
-                                 logfile=invenio_cli.logfile,
-                                 loglevel=invenio_cli.loglevel)
+                                 logfile=invenio_cli.logfile)
     if start:
         click.secho('Booting up server...', fg='green')
-        scripts_server(dev, docker_helper, invenio_cli.loglevel,
+        scripts_server(dev, docker_helper,
                        invenio_cli.logfile, invenio_cli.verbose)
     else:
         click.secho('Stopping server...', fg="green")
@@ -269,21 +235,16 @@ def server(dev, start, log_level, verbose):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def destroy(dev, log_level, verbose):
+def destroy(dev, verbose):
     """Removes all associated resources (containers, images, volumes)."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho('Destroying {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
-    docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+    docker_helper = DockerHelper(dev=dev,
                                  logfile=invenio_cli.logfile)
     docker_helper.destroy_containers()
 
@@ -291,43 +252,32 @@ def destroy(dev, log_level, verbose):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def update(dev, log_level, verbose):
+def update(dev, verbose):
     """Updates the current application static files."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho("Updating static files...", fg="green")
     if dev:
-        update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile)
+        update_statics(dev, invenio_cli.logfile)
         click.secho("Files updated, you might need to restart your " +
                     "application (if running)...", fg="green")
     else:
-        docker_helper = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
-                                     logfile=invenio_cli.logfile)
-        update_statics(dev, invenio_cli.loglevel, invenio_cli.logfile,
+        docker_helper = DockerHelper(dev=dev, logfile=invenio_cli.logfile)
+        update_statics(dev, invenio_cli.logfile,
                        docker_helper=docker_helper,
                        project_shortname=invenio_cli.project_shortname)
 
 
 @cli.command()
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def upgrade(log_level, verbose):
+def upgrade(verbose):
     """Upgrades the current application to the specified newer version."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
+    invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho('Upgrading server for {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
@@ -337,19 +287,14 @@ def upgrade(log_level, verbose):
 @cli.command()
 @click.option('--dev/--prod', default=True, is_flag=True,
               help='Which environment to build, it defaults to development')
-@click.option('--log-level', required=False, default='warning',
-              type=click.Choice(list(LEVELS.keys()), case_sensitive=False))
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def demo(dev, log_level, verbose):
+def demo(dev, verbose):
     """Populates instance with demo records."""
     # Create config object
-    invenio_cli = InvenioCli(
-        loglevel=LEVELS[log_level],
-        verbose=verbose
-    )
-    docker_compose = DockerHelper(dev=dev, loglevel=invenio_cli.loglevel,
+    invenio_cli = InvenioCli(verbose=verbose)
+    docker_compose = DockerHelper(dev=dev,
                                   logfile=invenio_cli.logfile)
     populate_demo_records(dev, docker_compose, invenio_cli.project_shortname,
-                          invenio_cli.logfile, invenio_cli.loglevel,
+                          invenio_cli.logfile,
                           invenio_cli.verbose)

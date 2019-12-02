@@ -26,15 +26,15 @@ DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 class DockerHelper(object):
     """Utility class to interact with docker-compose."""
 
-    def __init__(self, dev=True, bg=True, loglevel=logging.WARN,
-                 logfile='invenio-cli.log'):
+    def __init__(self, dev=True, bg=True, logfile='invenio-cli.log'):
         """Constructor for the DockerCompose helper."""
         super(DockerHelper, self).__init__()
         self.dev = dev
         self.bg = bg
-        self.loglevel = loglevel
         self.logfile = logfile
         self.docker_client = docker.from_env()
+        # Set as INFO to allow all logs to be sent
+        logging.basicConfig(filename=logfile, level=logging.INFO)
 
     def build_image(self, dockerfile, tag):
         """Build docker image."""
@@ -44,7 +44,7 @@ class DockerHelper(object):
     def create_images(self):
         """Create images according to the specified environment."""
         # Open logging pipe
-        logpipe = LogPipe(self.loglevel, self.logfile)
+        logpipe = LogPipe(self.logfile)
 
         command = ['docker-compose',
                    '--file', 'docker-compose.full.yml', 'up', '--no-start']
@@ -65,7 +65,7 @@ class DockerHelper(object):
 
         if self.bg:
             # Open logging pipe
-            logpipe = LogPipe(self.loglevel, self.logfile)
+            logpipe = LogPipe(self.logfile)
 
             command.append('-d')
             subprocess.call(command, stdout=logpipe, stderr=logpipe)
@@ -86,7 +86,7 @@ class DockerHelper(object):
             command[2] = 'docker-compose.yml'
 
         # Open logging pipe
-        logpipe = LogPipe(self.loglevel, self.logfile)
+        logpipe = LogPipe(self.logfile)
 
         subprocess.call(command, stdout=logpipe, stderr=logpipe)
 
@@ -96,7 +96,7 @@ class DockerHelper(object):
     def destroy_containers(self):
         """Stop and remove all containers, volumes and images."""
         # Open logging pipe
-        logpipe = LogPipe(self.loglevel, self.logfile)
+        logpipe = LogPipe(self.logfile)
 
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
@@ -141,8 +141,7 @@ class DockerHelper(object):
             data = io.BytesIO(fin.read())
             container.put_archive(dst_path, data)
 
-    def execute_cli_command(self, project_shortname, command, logfile,
-                            loglevel, verbose):
+    def execute_cli_command(self, project_shortname, command, verbose):
         """Execute an invenio CLI command in the API container."""
         container_name = '{}_web-api_1'.format(
             self._normalize_name(project_shortname))
@@ -158,7 +157,6 @@ class DockerHelper(object):
         if verbose:
             print(status.output.decode("utf-8"))
         else:
-            logging.basicConfig(filename=logfile, level=logging.INFO)
             level = logging.INFO if status.exit_code == 0 else logging.ERROR
             logging.log(level, status.output.decode("utf-8").strip('\n'))
 
