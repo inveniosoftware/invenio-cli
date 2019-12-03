@@ -95,7 +95,7 @@ def bootstrap(log_config, dev=True, pre=True,
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
     if dev:
-        _bootstrap_dev(pre, log_config.verbose)
+        _bootstrap_dev(pre, log_config)
     else:
         _boostrap_prod(base, docker_helper, project_shortname)
 
@@ -127,7 +127,7 @@ def update_config(dev, log_config):
     """Update invenio.cfg configuration file."""
     if dev:
         # Create symbolic link
-        dst_path = _get_instance_path(log_config.logfile)
+        dst_path = _get_instance_path(log_config)
         src_file = os.path.abspath('invenio.cfg')
         _force_symlink(src_file, Path(dst_path) / 'invenio.cfg')
 
@@ -143,7 +143,7 @@ def update_statics(dev, log_config, docker_helper=None,
 
     if dev:
         # Copy logo file
-        dst_path = _get_instance_path(log_config.logfile)
+        dst_path = _get_instance_path(log_config)
         dst_path = Path(dst_path) / 'static/images'
         src_file = os.path.abspath('static/images/logo.svg')
         click.secho("Creating statics folder...", fg="green")
@@ -160,9 +160,9 @@ def update_statics(dev, log_config, docker_helper=None,
         docker_helper.copy(src_file, dst_path, project_shortname)
 
 
-def _get_instance_path(logfile):
+def _get_instance_path(log_config):
     # Open logging pipe
-    logpipe = LogPipe(logfile)
+    logpipe = LogPipe(log_config)
 
     calculate_path = subprocess.Popen(
         ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
@@ -217,7 +217,7 @@ def _setup_dev(force, cli, runner, log_config):
                 message="Creating indexes...",
                 verbose=log_config.verbose)
     run_command(cli, runner, "files location --default 'default-location' " +
-                "{}".format(_get_instance_path(log_config.logfile)),
+                "{}".format(_get_instance_path(log_config)),
                 message="Creating files location...",
                 verbose=log_config.verbose)
     run_command(cli, runner, 'roles create admin',
@@ -314,7 +314,7 @@ def _server_dev(docker_helper, log_config):
     docker_helper.start_containers()
 
     # Open logging pipe
-    logpipe = LogPipe(log_config) if log_config.verbose else subprocess.PIPE
+    logpipe = subprocess.PIPE if log_config.verbose else LogPipe(log_config)
 
     click.secho("Starting celery worker...", fg="green")
     worker = subprocess.Popen(['pipenv', 'run', 'celery', 'worker',
