@@ -26,10 +26,10 @@ DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 class DockerHelper(object):
     """Utility class to interact with docker-compose."""
 
-    def __init__(self, log_config, dev=True):
+    def __init__(self, log_config, local=True):
         """Constructor for the DockerCompose helper."""
         super(DockerHelper, self).__init__()
-        self.dev = dev
+        self.local = local
         self.log_config = log_config
         self.docker_client = docker.from_env()
         # Set as INFO to allow all logs to be sent
@@ -48,7 +48,7 @@ class DockerHelper(object):
 
         command = ['docker-compose',
                    '--file', 'docker-compose.full.yml', 'up', '--no-start']
-        if self.dev:
+        if self.local:
             command[2] = 'docker-compose.yml'
 
         subprocess.call(command, stdout=logpipe, stderr=logpipe)
@@ -60,7 +60,7 @@ class DockerHelper(object):
         command = ['docker-compose',
                    '--file', 'docker-compose.full.yml', 'up', '--no-recreate']
 
-        if self.dev:
+        if self.local:
             command[2] = 'docker-compose.yml'
 
         if not self.log_config.verbose:
@@ -82,7 +82,7 @@ class DockerHelper(object):
         command = ['docker-compose',
                    '--file', 'docker-compose.full.yml', 'stop']
 
-        if self.dev:
+        if self.local:
             command[2] = 'docker-compose.yml'
 
         # Open logging pipe
@@ -100,7 +100,7 @@ class DockerHelper(object):
 
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
-        if self.dev:
+        if self.local:
             command[2] = 'docker-compose.yml'
 
         subprocess.call(command, stdout=logpipe, stderr=logpipe)

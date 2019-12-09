@@ -39,7 +39,7 @@ def run_command(cli, runner, command, message=None, catch_exceptions=False,
 #############
 
 
-def _bootstrap_dev(pre, log_config):
+def _bootstrap_local(pre, log_config):
     # Check if the dependencies have been locked, fail if not
     click.secho('Checking that dependencies are locked...', fg='green')
     locked = 'Pipfile.lock' in os.listdir('.')
@@ -71,7 +71,7 @@ def _bootstrap_dev(pre, log_config):
     update_config(True, log_config)
 
 
-def _boostrap_prod(base, docker_helper, project_shortname):
+def _boostrap_containers(base, docker_helper, project_shortname):
     if base:
         click.secho('Building base docker image...', fg='green')
         # docker build -f Dockerfile.base -t my-site-base:latest .
@@ -90,14 +90,14 @@ def _boostrap_prod(base, docker_helper, project_shortname):
     )
 
 
-def bootstrap(log_config, dev=True, pre=True,
+def bootstrap(log_config, local=True, pre=True,
               base=True, docker_helper=None, project_shortname='invenio-rdm'):
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
-    if dev:
-        _bootstrap_dev(pre, log_config)
+    if local:
+        _bootstrap_local(pre, log_config)
     else:
-        _boostrap_prod(base, docker_helper, project_shortname)
+        _boostrap_containers(base, docker_helper, project_shortname)
 
 
 @with_appcontext
@@ -123,9 +123,9 @@ def _build_container_assets(log_config, statics=True, webpack=True):
     pass
 
 
-def build_assets(dev, statics, webpack, log_config):
+def build_assets(local, statics, webpack, log_config):
     """Build assets in the containers."""
-    if dev:
+    if local:
         _build_local_assets(log_config, statics, webpack)
     else:
         _build_container_assets(log_config, statics, webpack)
@@ -140,9 +140,9 @@ def _force_symlink(file1, file2):
             os.symlink(file1, file2)
 
 
-def update_config(dev, log_config):
+def update_config(local, log_config):
     """Update invenio.cfg configuration file."""
-    if dev:
+    if local:
         # Create symbolic link
         dst_path = _get_instance_path(log_config)
         src_file = os.path.abspath('invenio.cfg')
@@ -153,12 +153,12 @@ def update_config(dev, log_config):
         pass
 
 
-def update_statics(dev, log_config, docker_helper=None,
+def update_statics(local, log_config, docker_helper=None,
                    project_shortname=None):
     """Update static files."""
     src_file = os.path.abspath('static/images/logo.svg')
 
-    if dev:
+    if local:
         # Copy logo file
         dst_path = _get_instance_path(log_config)
         dst_path = Path(dst_path) / 'static/images'
@@ -208,7 +208,7 @@ def _get_instance_path(log_config):
 # SETUP #
 #########
 
-def _setup_dev(force, cli, runner, log_config):
+def _setup_local(force, cli, runner, log_config):
     # Clean things up
     if force:
         run_command(cli, runner, "shell --no-term-title -c " +
@@ -245,7 +245,7 @@ def _setup_dev(force, cli, runner, log_config):
                 verbose=log_config.verbose)
 
 
-def _setup_prod(force, docker_helper, project_shortname, log_config):
+def _setup_containers(force, docker_helper, project_shortname, log_config):
     # Clean things up
     if force:
         click.secho("Flushing redis cache...", fg="green")
@@ -285,7 +285,7 @@ def _setup_prod(force, docker_helper, project_shortname, log_config):
 
 
 @with_appcontext
-def setup(log_config, dev=True, force=False, docker_helper=None,
+def setup(log_config, local=True, force=False, docker_helper=None,
           project_shortname='invenio-rdm'):
     """Bootstrap server."""
     click.secho('Setting up server...', fg='green')
@@ -294,12 +294,12 @@ def setup(log_config, dev=True, force=False, docker_helper=None,
     docker_helper.start_containers()
     time.sleep(60)  # Give time to the containers to start properly
 
-    if dev:
+    if local:
         cli = create_cli()
         runner = current_app.test_cli_runner()
-        _setup_dev(force, cli, runner, log_config)
+        _setup_local(force, cli, runner, log_config)
     else:
-        _setup_prod(force, docker_helper, project_shortname, log_config)
+        _setup_containers(force, docker_helper, project_shortname, log_config)
 
     click.secho("Stopping containers...", fg="green")
     docker_helper.stop_containers()
@@ -311,7 +311,7 @@ def setup(log_config, dev=True, force=False, docker_helper=None,
 ##########
 
 
-def _server_dev(docker_helper, log_config):
+def _server_local(docker_helper, log_config):
 
     def signal_handler(sig, frame):
         click.secho('Stopping server...', fg='green')
@@ -338,7 +338,7 @@ def _server_dev(docker_helper, log_config):
                                '--app', 'invenio_app.celery'],
                               stdout=logpipe, stderr=logpipe)
 
-    click.secho("Starting up development server...", fg='green')
+    click.secho("Starting up local (development) server...", fg='green')
 
     server = subprocess.Popen(['pipenv', 'run', 'invenio', 'run',
                                '--cert', 'docker/nginx/test.crt',
@@ -350,11 +350,11 @@ def _server_dev(docker_helper, log_config):
     server.wait()
 
 
-def server(log_config, dev=True, docker_helper=None,
+def server(log_config, local=True, docker_helper=None,
            project_shortname='invenio-rdm'):
     """Run server."""
-    if dev:
-        _server_dev(docker_helper, log_config)
+    if local:
+        _server_local(docker_helper, log_config)
     else:
         click.secho("Starting docker containers. " +
                     "It might take up to a minute.", fg="green")
@@ -370,7 +370,7 @@ def server(log_config, dev=True, docker_helper=None,
 
 
 @with_appcontext
-def populate_demo_records(dev, docker_helper, project_shortname, log_config):
+def populate_demo_records(local, docker_helper, project_shortname, log_config):
     """Add demo records into the instance."""
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
@@ -380,7 +380,7 @@ def populate_demo_records(dev, docker_helper, project_shortname, log_config):
     docker_helper.start_containers()
     time.sleep(60)  # Give time to the containers to start properly
 
-    if dev:
+    if local:
         run_command(cli, runner, 'rdm-records demo',
                     message="Populating instance with demo records...",
                     verbose=log_config.verbose)

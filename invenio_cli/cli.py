@@ -137,18 +137,18 @@ def init(flavour, verbose):
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--base/--skip-base', default=True, is_flag=True,
               help='If specified, it will build the base docker image ' +
-                   '(not compatible with --dev)')
+                   '(not compatible with --local)')
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def build(base, pre, dev, lock, verbose):
+def build(base, pre, local, lock, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
@@ -157,31 +157,30 @@ def build(base, pre, dev, lock, verbose):
                 flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
+    docker_helper = DockerHelper(local=local,
+                                 log_config=invenio_cli.log_config)
     if lock:
         _lock_dependencies(invenio_cli.log_config, pre)
 
-    bootstrap(dev=dev, pre=pre, base=base,
+    bootstrap(local=local, pre=pre, base=base,
               docker_helper=docker_helper,
               project_shortname=invenio_cli.project_shortname,
               log_config=invenio_cli.log_config)
 
-    click.secho('Creating {mode} services...'
-                .format(mode='development' if dev else 'semi-production'),
-                fg='green')
+    click.secho('Creating services...', fg='green')
     docker_helper.create_images()
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--statics/--skip-statics', default=True, is_flag=True,
               help='Regenerate static files or skip this step.')
 @click.option('--webpack/--skip-webpack', default=True, is_flag=True,
               help='Build the application using webpack or skip this step.')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def assets(dev, statics, webpack, verbose):
+def assets(local, statics, webpack, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
@@ -189,7 +188,7 @@ def assets(dev, statics, webpack, verbose):
     click.secho('Generating assets...'.format(
                 flavour=invenio_cli.flavour), fg='green')
 
-    build_assets(dev, statics, webpack, invenio_cli.log_config)
+    build_assets(local, statics, webpack, invenio_cli.log_config)
 
 
 def _lock_dependencies(log_config, pre):
@@ -207,13 +206,13 @@ def _lock_dependencies(log_config, pre):
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--force', default=False, is_flag=True,
               help='Delete all content from the database, ES indexes, queues')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def setup(dev, force, verbose):
+def setup(local, force, verbose):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
@@ -222,30 +221,32 @@ def setup(dev, force, verbose):
                 .format(flavour=invenio_cli.flavour), fg='green')
 
     # Initialize docker client
-    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
+    docker_helper = DockerHelper(local=local,
+                                 log_config=invenio_cli.log_config)
 
-    scripts_setup(dev=dev, force=force,
+    scripts_setup(local=local, force=force,
                   docker_helper=docker_helper,
                   project_shortname=invenio_cli.project_shortname,
                   log_config=invenio_cli.log_config)
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--start/--stop', default=True, is_flag=True,
               help='Start or Stop application and services')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def server(dev, start, verbose):
+def server(local, start, verbose):
     """Starts the application server."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
 
-    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
+    docker_helper = DockerHelper(local=local,
+                                 log_config=invenio_cli.log_config)
     if start:
         click.secho('Booting up server...', fg='green')
-        scripts_server(dev=dev, docker_helper=docker_helper,
+        scripts_server(local=local, docker_helper=docker_helper,
                        log_config=invenio_cli.log_config)
     else:
         click.secho('Stopping server...', fg="green")
@@ -253,40 +254,41 @@ def server(dev, start, verbose):
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def destroy(dev, verbose):
+def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho('Destroying {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
-    docker_helper = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
+    docker_helper = DockerHelper(local=local,
+                                 log_config=invenio_cli.log_config)
     docker_helper.destroy_containers()
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def update(dev, verbose):
+def update(local, verbose):
     """Updates the current application static files."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho("Updating static files...", fg="green")
-    if dev:
-        update_statics(dev, log_config=invenio_cli.log_config)
+    if local:
+        update_statics(local, log_config=invenio_cli.log_config)
         click.secho("Files updated, you might need to restart your " +
                     "application (if running)...", fg="green")
     else:
-        docker_helper = DockerHelper(dev=dev,
+        docker_helper = DockerHelper(local=local,
                                      log_config=invenio_cli.log_config)
-        update_statics(dev, log_config=invenio_cli.log_config,
+        update_statics(local, log_config=invenio_cli.log_config,
                        docker_helper=docker_helper,
                        project_shortname=invenio_cli.project_shortname)
 
@@ -305,14 +307,15 @@ def upgrade(verbose):
 
 
 @cli.command()
-@click.option('--dev/--prod', default=True, is_flag=True,
-              help='Which environment to build, it defaults to development')
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def demo(dev, verbose):
+def demo(local, verbose):
     """Populates instance with demo records."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
-    docker_compose = DockerHelper(dev=dev, log_config=invenio_cli.log_config)
-    populate_demo_records(dev, docker_compose, invenio_cli.project_shortname,
+    docker_compose = DockerHelper(local=local,
+                                  log_config=invenio_cli.log_config)
+    populate_demo_records(local, docker_compose, invenio_cli.project_shortname,
                           invenio_cli.log_config)
