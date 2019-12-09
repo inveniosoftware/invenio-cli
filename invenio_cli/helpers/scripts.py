@@ -62,7 +62,7 @@ def _bootstrap_dev(pre, log_config):
     logpipe.close()
 
     # Build assets
-    build_assets(log_config)
+    _build_local_assets(log_config)
 
     # Update static files
     update_statics(True, log_config)
@@ -101,17 +101,34 @@ def bootstrap(log_config, dev=True, pre=True,
 
 
 @with_appcontext
-def build_assets(log_config):
-    """Build assets."""
+def _build_local_assets(log_config, statics=True, webpack=True):
+    """Build assets in the containers."""
     cli = create_cli()
     runner = current_app.test_cli_runner()
-    # Collect
-    run_command(cli, runner, "collect -v", message="Collecting assets...",
-                verbose=log_config.verbose)
+    if statics:
+        # Collect
+        run_command(cli, runner, "collect -v", message="Collecting assets...",
+                    verbose=log_config.verbose)
+    if webpack:
+        # Build using webpack
+        run_command(cli, runner, "webpack buildall",
+                    message="Building assets...", verbose=log_config.verbose)
 
-    # Build using webpack
-    run_command(cli, runner, "webpack buildall",
-                message="Building assets...", verbose=log_config.verbose)
+
+def _build_container_assets(log_config, statics=True, webpack=True):
+    """Build assets in the containers."""
+    # TODO: Check how to address this. Requires uwsgi restart.
+    click.secho("Command not supported: In order to rebuild assets in the " +
+                "containers environment, use the `build` command.", fg="red")
+    pass
+
+
+def build_assets(dev, statics, webpack, log_config):
+    """Build assets in the containers."""
+    if dev:
+        _build_local_assets(log_config, statics, webpack)
+    else:
+        _build_container_assets(log_config, statics, webpack)
 
 
 def _force_symlink(file1, file2):

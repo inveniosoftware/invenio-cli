@@ -83,6 +83,7 @@ setup(
         'flask.commands': [
             'init = invenio_cli.cli:init',
             'build = invenio_cli.cli:build',
+            'assets = invenio_cli.cli:assets',
             'setup = invenio_cli.cli:setup',
             'server = invenio_cli.cli:server',
             'destroy = invenio_cli.cli:destroy',

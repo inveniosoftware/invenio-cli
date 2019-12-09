@@ -19,7 +19,8 @@ from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
 
 from .helpers import CookiecutterConfig, DockerHelper, LoggingConfig, \
-    LogPipe, bootstrap, get_created_files, populate_demo_records
+    LogPipe, bootstrap, build_assets, get_created_files, \
+    populate_demo_records
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
 from .helpers import update_statics
@@ -169,6 +170,26 @@ def build(base, pre, dev, lock, verbose):
                 .format(mode='development' if dev else 'semi-production'),
                 fg='green')
     docker_helper.create_images()
+
+
+@cli.command()
+@click.option('--dev/--prod', default=True, is_flag=True,
+              help='Which environment to build, it defaults to development')
+@click.option('--statics/--skip-statics', default=True, is_flag=True,
+              help='Regenerate static files or skip this step.')
+@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
+              help='Build the application using webpack or skip this step.')
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def assets(dev, statics, webpack, verbose):
+    """Locks the dependencies and builds the corresponding docker images."""
+    # Create config object
+    invenio_cli = InvenioCli(verbose=verbose)
+
+    click.secho('Generating assets...'.format(
+                flavour=invenio_cli.flavour), fg='green')
+
+    build_assets(dev, statics, webpack, invenio_cli.log_config)
 
 
 def _lock_dependencies(log_config, pre):
