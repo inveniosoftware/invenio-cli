@@ -234,7 +234,7 @@ def _setup_local(force, cli, runner, log_config):
                 message="Creating indexes...",
                 verbose=log_config.verbose)
     run_command(cli, runner, "files location --default 'default-location' " +
-                "{}".format(_get_instance_path(log_config)),
+                "{}/data".format(_get_instance_path(log_config)),
                 message="Creating files location...",
                 verbose=log_config.verbose)
     run_command(cli, runner, 'roles create admin',
@@ -275,7 +275,7 @@ def _setup_containers(force, docker_helper, project_shortname, log_config):
     docker_helper.execute_cli_command(
         project_shortname,
         "invenio files location --default 'default-location' " +
-        r"${INVENIO_INSTANCE_PATH}")
+        r"${INVENIO_INSTANCE_PATH}/data")
     click.secho("Creating admin role...", fg="green")
     docker_helper.execute_cli_command(
         project_shortname, 'invenio roles create admin')
