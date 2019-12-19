@@ -31,7 +31,7 @@ class CookiecutterConfig(object):
             repo = {
                 'template': 'https://github.com/inveniosoftware/' +
                             'cookiecutter-invenio-rdm.git',
-                'checkout': 'v1.0.0a3'
+                'checkout': 'v1.0.0a4'
             }
             self.template = 'cookiecutter-invenio-rdm.json'
             return repo
