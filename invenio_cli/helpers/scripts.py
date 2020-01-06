@@ -285,8 +285,8 @@ def _setup_containers(force, docker_helper, project_shortname, log_config):
 
 
 @with_appcontext
-def setup(log_config, local=True, force=False, docker_helper=None,
-          project_shortname='invenio-rdm'):
+def setup(log_config, local=True, force=False, stop_containers=False,
+          docker_helper=None, project_shortname='invenio-rdm'):
     """Bootstrap server."""
     click.secho('Setting up server...', fg='green')
 
@@ -301,9 +301,10 @@ def setup(log_config, local=True, force=False, docker_helper=None,
     else:
         _setup_containers(force, docker_helper, project_shortname, log_config)
 
-    click.secho("Stopping containers...", fg="green")
-    docker_helper.stop_containers()
-    time.sleep(30)
+    if stop_containers:
+        click.secho("Stopping containers...", fg="green")
+        docker_helper.stop_containers()
+        time.sleep(30)
 
 
 ##########
@@ -370,7 +371,8 @@ def server(log_config, local=True, docker_helper=None,
 
 
 @with_appcontext
-def populate_demo_records(local, docker_helper, project_shortname, log_config):
+def populate_demo_records(local, docker_helper, project_shortname, log_config,
+                          stop_containers=False):
     """Add demo records into the instance."""
     click.secho('Setting up server...', fg='green')
     cli = create_cli()
@@ -389,5 +391,6 @@ def populate_demo_records(local, docker_helper, project_shortname, log_config):
         docker_helper.execute_cli_command(project_shortname,
                                           'invenio rdm-records demo')
 
-    docker_helper.stop_containers()
-    time.sleep(30)
+    if stop_containers:
+        docker_helper.stop_containers()
+        time.sleep(30)

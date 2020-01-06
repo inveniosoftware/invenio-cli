@@ -210,9 +210,11 @@ def _lock_dependencies(log_config, pre):
               help='Which environment to build, it defaults to local')
 @click.option('--force', default=False, is_flag=True,
               help='Delete all content from the database, ES indexes, queues')
+@click.option('--stop-containers', default=False, is_flag=True, required=False,
+              help='Stop containers when finishing the setup operations.')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def setup(local, force, verbose):
+def setup(local, force, stop_containers, verbose):
     """Sets up the application for the first time (DB, ES, queue, etc.)."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
@@ -224,7 +226,7 @@ def setup(local, force, verbose):
     docker_helper = DockerHelper(local=local,
                                  log_config=invenio_cli.log_config)
 
-    scripts_setup(local=local, force=force,
+    scripts_setup(local=local, force=force, stop_containers=stop_containers,
                   docker_helper=docker_helper,
                   project_shortname=invenio_cli.project_shortname,
                   log_config=invenio_cli.log_config)
@@ -309,13 +311,15 @@ def upgrade(verbose):
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
+@click.option('--stop-containers', default=False, is_flag=True, required=False,
+              help='Stop containers when finishing the setup operations.')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def demo(local, verbose):
+def demo(local, stop_containers, verbose):
     """Populates instance with demo records."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
     docker_compose = DockerHelper(local=local,
                                   log_config=invenio_cli.log_config)
     populate_demo_records(local, docker_compose, invenio_cli.project_shortname,
-                          invenio_cli.log_config)
+                          invenio_cli.log_config, stop_containers)
