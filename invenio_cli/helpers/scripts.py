@@ -71,16 +71,7 @@ def _bootstrap_local(pre, log_config):
     update_config(True, log_config)
 
 
-def _boostrap_containers(base, docker_helper, project_shortname):
-    if base:
-        click.secho('Building base docker image...', fg='green')
-        # docker build -f Dockerfile.base -t my-site-base:latest .
-        docker_helper.build_image(
-            dockerfile='Dockerfile.base',
-            tag='{project_shortname}-base:latest'.format(
-                project_shortname=project_shortname)
-        )
-
+def _boostrap_containers(docker_helper, project_shortname):
     click.secho('Building applications docker image...', fg='green')
     # docker build -t my-site:latest .
     docker_helper.build_image(
@@ -91,13 +82,13 @@ def _boostrap_containers(base, docker_helper, project_shortname):
 
 
 def bootstrap(log_config, local=True, pre=True,
-              base=True, docker_helper=None, project_shortname='invenio-rdm'):
+              docker_helper=None, project_shortname='invenio-rdm'):
     """Bootstrap server."""
     click.secho('Bootstrapping server...', fg='green')
     if local:
         _bootstrap_local(pre, log_config)
     else:
-        _boostrap_containers(base, docker_helper, project_shortname)
+        _boostrap_containers(docker_helper, project_shortname)
 
 
 @with_appcontext

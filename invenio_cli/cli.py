@@ -139,16 +139,13 @@ def init(flavour, verbose):
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
-@click.option('--base/--skip-base', default=True, is_flag=True,
-              help='If specified, it will build the base docker image ' +
-                   '(not compatible with --local)')
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def build(base, pre, local, lock, verbose):
+def build(pre, local, lock, verbose):
     """Locks the dependencies and builds the corresponding docker images."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
@@ -162,7 +159,7 @@ def build(base, pre, local, lock, verbose):
     if lock:
         _lock_dependencies(invenio_cli.log_config, pre)
 
-    bootstrap(local=local, pre=pre, base=base,
+    bootstrap(local=local, pre=pre,
               docker_helper=docker_helper,
               project_shortname=invenio_cli.project_shortname,
               log_config=invenio_cli.log_config)
