@@ -70,14 +70,14 @@ def _bootstrap_local(pre, log_config):
     # Update configuration
     update_config(True, log_config)
 
+    symlink_templates_folder(log_config)
+
 
 def _boostrap_containers(docker_helper, project_shortname):
-    click.secho('Building applications docker image...', fg='green')
-    # docker build -t my-site:latest .
+    click.secho('Building application docker image...', fg='green')
     docker_helper.build_image(
         dockerfile='Dockerfile',
-        tag='{project_shortname}:latest'.format(
-            project_shortname=project_shortname)
+        tag='{}:latest'.format(project_shortname)
     )
 
 
@@ -93,7 +93,7 @@ def bootstrap(log_config, local=True, pre=True,
 
 @with_appcontext
 def _build_local_assets(log_config, statics=True, webpack=True):
-    """Build assets in the containers."""
+    """Build assets locally."""
     cli = create_cli()
     runner = current_app.test_cli_runner()
     if statics:
@@ -122,26 +122,35 @@ def build_assets(local, statics, webpack, log_config):
         _build_container_assets(log_config, statics, webpack)
 
 
-def _force_symlink(file1, file2):
+def _force_symlink(target, link_name):
+    """Forcefully create symlink at link_name pointing to target."""
     try:
-        os.symlink(file1, file2)
+        os.symlink(target, link_name)
     except OSError as e:
         if e.errno == errno.EEXIST:
-            os.remove(file2)
-            os.symlink(file1, file2)
+            os.remove(link_name)
+            os.symlink(target, link_name)
 
 
 def update_config(local, log_config):
     """Update invenio.cfg configuration file."""
     if local:
-        # Create symbolic link
-        dst_path = _get_instance_path(log_config)
-        src_file = os.path.abspath('invenio.cfg')
-        _force_symlink(src_file, Path(dst_path) / 'invenio.cfg')
+        click.secho("Symlinking invenio.cfg...", fg="green")
+        target_path = os.path.abspath('invenio.cfg')
+        link_path = _get_instance_path(log_config) / 'invenio.cfg'
+        _force_symlink(target_path, link_path)
 
     else:
         # Copy to container
         pass
+
+
+def symlink_templates_folder(log_config):
+    """Symlink the templates folder (only used for local development)."""
+    click.secho("Symlinking templates folder...", fg="green")
+    target_path = os.path.abspath('templates')
+    link_path = _get_instance_path(log_config) / 'templates/'
+    _force_symlink(target_path, link_path)
 
 
 def update_statics(local, log_config, docker_helper=None,
@@ -151,14 +160,13 @@ def update_statics(local, log_config, docker_helper=None,
 
     if local:
         # Copy logo file
-        dst_path = _get_instance_path(log_config)
-        dst_path = Path(dst_path) / 'static/images'
         src_file = os.path.abspath('static/images/logo.svg')
+        dst_path = _get_instance_path(log_config) / 'static/images'
         click.secho("Creating statics folder...", fg="green")
         try:
             os.makedirs(dst_path)  # Create directories if doesnt exist
         except FileExistsError:
-            click.secho("Statics directory already exsits...", fg="yellow")
+            click.secho("Statics directory already exists...", fg="yellow")
 
         shutil.copyfile(src_file, dst_path / 'logo.svg')
 
@@ -183,7 +191,7 @@ def _get_instance_path(log_config):
     dst_path = dst_path.decode("utf-8")
 
     if not os.path.isdir(dst_path):
-        click.secho('Could not update config. Env dir {} does not extis.'
+        click.secho('Could not update config. Env dir {} does not exist.'
                     .format(dst_path), fg='red')
         # Close logging pipe
         logpipe.close()
@@ -192,7 +200,7 @@ def _get_instance_path(log_config):
     # Close logging pipe
     logpipe.close()
 
-    return dst_path
+    return Path(dst_path)
 
 
 #########
