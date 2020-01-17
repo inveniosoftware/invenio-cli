@@ -26,44 +26,62 @@
 
 Invenio module that allows the creation of applications building workflows
 
+Installation
+============
+
+.. code-block:: console
+
+    (<custom virtualenv>)$ pip install invenio-cli
+
 Usage
 =====
 
-Development environment
------------------------
+
+Local Development environment
+-----------------------------
 
 .. code-block:: console
 
-    # Initialize environment
-    $ invenio-cli --flavour=RDM init
+    # Initialize environment and cd into <created folder>
+    (<custom virtualenv>)$ invenio-cli init --flavour=RDM --verbose
+    (<custom virtualenv>)$ cd <created folder>
 
-    # Build Docker images
-    $ invenio-cli build --dev --pre --lock
+    # Build Docker image and assets: very important to have dependencies
+    # installed by this command appear in your <custom virtualenv>
+    (<custom virtualenv>)$ invenio-cli build --local --pre --verbose
 
-    # Run server and services
-    $ invenio-cli run --dev --bg
+    # Setup services (database, Elasticsearch, Redis, queue)
+    (<custom virtualenv>)$ invenio-cli setup --local --verbose
 
-    # Setup databases and Elasticsearch
-    $ invenio-cli setup --dev
+    # Optional: add demo data
+    (<custom virtualenv>)$ invenio-cli demo --local --verbose
+
+    # Run the server
+    (<custom virtualenv>)$ invenio-cli server --local --verbose
 
     # Destroy the instances
-    $ invenio-cli destroy --dev
+    (<custom virtualenv>)$ invenio-cli destroy --local --verbose
 
     # Get more help
-    $ invenio-cli --help
+    (<custom virtualenv>)$ invenio-cli --help
 
-Production environment
-----------------------
 
-Just like the above, except with ``--prod``:
+Containerized 'Production' environment
+--------------------------------------
+
+Just like the above, except with ``--containers``:
 
 .. code-block:: console
 
-    # Initialize environment
-    $ invenio-cli --flavour=RDM init
+    # Initialize environment and cd into <created folder>
+    (<custom virtualenv>)$ invenio-cli init --flavour=RDM
+    (<custom virtualenv>)$ cd <created folder>
 
     # Build Docker images
-    $ invenio-cli build --prod --lock
+    (<custom virtualenv>)$ invenio-cli build --containers --pre --verbose
+
+    # Setup services (database, Elasticsearch, Redis, queue)
+    (<custom virtualenv>)$ invenio-cli setup --containers --verbose
 
     ...
 
