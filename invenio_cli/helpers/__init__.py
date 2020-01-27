@@ -14,4 +14,4 @@ from .docker_helper import DockerHelper
 from .filesystem import get_created_files
 from .log import LoggingConfig, LogPipe
 from .scripts import bootstrap, build_assets, populate_demo_records, server, \
-    setup, update_statics
+    setup, update_assets, update_statics

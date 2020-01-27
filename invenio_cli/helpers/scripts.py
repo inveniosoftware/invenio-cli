@@ -96,6 +96,7 @@ def _build_local_assets(log_config, statics=True, webpack=True):
     """Build assets locally."""
     cli = create_cli()
     runner = current_app.test_cli_runner()
+
     if statics:
         # Collect
         run_command(cli, runner, "collect -v", message="Collecting assets...",
@@ -151,6 +152,28 @@ def symlink_templates_folder(log_config):
     target_path = os.path.abspath('templates')
     link_path = _get_instance_path(log_config) / 'templates/'
     _force_symlink(target_path, link_path)
+
+
+def update_assets(local, log_config, docker_helper=None,
+                  project_shortname=None):
+    """Update instance's assets files."""
+    src_file = os.path.abspath('assets/scss/{}'.format(project_shortname))
+
+    if local:
+        # Copy logo file
+        dst_path = _get_instance_path(log_config) \
+            / 'assets/scss/{}'.format(project_shortname)
+        click.secho("Creating assets folder...", fg="green")
+        if os.path.exists(dst_path):
+            click.secho(
+                "Instance's assets directory already exists. Removing...",
+                fg="yellow")
+            shutil.rmtree(dst_path)
+        shutil.copytree(src_file, dst_path)
+    else:
+        # dst_path is a path inside the container.
+        dst_path = '/opt/invenio/var/instance/assets/scss'
+        docker_helper.copy(src_file, dst_path, project_shortname)
 
 
 def update_statics(local, log_config, docker_helper=None,

@@ -23,7 +23,7 @@ from .helpers import CookiecutterConfig, DockerHelper, LoggingConfig, \
     populate_demo_records
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
-from .helpers import update_statics
+from .helpers import update_assets, update_statics
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -275,21 +275,28 @@ def destroy(local, verbose):
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 def update(local, verbose):
-    """Updates the current application static files."""
+    """Updates the current application static/assets files."""
     # Create config object
     invenio_cli = InvenioCli(verbose=verbose)
 
     click.secho("Updating static files...", fg="green")
     if local:
         update_statics(local, log_config=invenio_cli.log_config)
+        click.secho("Updating assets files...", fg="green")
+        update_assets(local, log_config=invenio_cli.log_config,
+                      project_shortname=invenio_cli.project_shortname)
         click.secho("Files updated, you might need to restart your " +
-                    "application (if running)...", fg="green")
+                    "application (if running) and rebuild your assets...",
+                    fg="green")
     else:
         docker_helper = DockerHelper(local=local,
                                      log_config=invenio_cli.log_config)
         update_statics(local, log_config=invenio_cli.log_config,
                        docker_helper=docker_helper,
                        project_shortname=invenio_cli.project_shortname)
+        update_assets(local, log_config=invenio_cli.log_config,
+                      docker_helper=docker_helper,
+                      project_shortname=invenio_cli.project_shortname)
 
 
 @cli.command()
