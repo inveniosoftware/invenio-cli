@@ -15,15 +15,14 @@ from configparser import ConfigParser
 from pathlib import Path
 
 import click
-from cookiecutter.exceptions import OutputDirExistsException
-from cookiecutter.main import cookiecutter
 
-from .helpers import CookiecutterConfig, DockerHelper, LoggingConfig, \
-    LogPipe, bootstrap, build_assets, get_created_files, \
-    populate_demo_records
+from .helpers import DockerHelper, LoggingConfig, LogPipe, bootstrap, \
+    build_assets, populate_demo_records
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
-from .helpers import update_assets, update_statics
+from .helpers import update_statics
+from .helpers.cli_config import InvenioCLIConfig
+from .helpers.cookiecutter_wrapper import CookiecutterWrapper
 
 CONFIG_FILENAME = '.invenio'
 CLI_SECTION = 'cli'
@@ -88,52 +87,22 @@ def init(flavour, verbose):
     click.secho('Initializing {flavour} application...'.format(
         flavour=flavour), fg='green')
 
-    # Create config object
-    invenio_cli = InvenioCli(flavour=flavour, verbose=verbose)
-
-    # Process Cookiecutter
-    cookie_config = CookiecutterConfig()
+    cookiecutter_wrapper = CookiecutterWrapper(flavour)
 
     try:
-        context = cookiecutter(
-            config_file=cookie_config.create_and_dump_config(),
-            **cookie_config.repository(flavour)
-        )
+        project_dir = cookiecutter_wrapper.cookiecutter()
 
-        file_fullpath = Path(context) / CONFIG_FILENAME
+        saved_replay = cookiecutter_wrapper.get_replay()
+        InvenioCLIConfig.write(project_dir, flavour, saved_replay)
 
-        with open(file_fullpath, 'w') as configfile:
-            # Open config file
-            config = invenio_cli.config
-            config.read(CONFIG_FILENAME)
+        # click.secho("Creating logs directory...")
+        # os.mkdir(Path(config[CLI_SECTION]['project_shortname']) / "logs")
 
-            # CLI parameters
-            config[CLI_SECTION] = {}
-            config[CLI_SECTION]['flavour'] = flavour
-            config[CLI_SECTION]['project_shortname'] = \
-                os.path.basename(context)
-            config[CLI_SECTION]['logfile'] = \
-                '{path}/logs/invenio-cli.log'.format(path=context)
-
-            # Cookiecutter user input
-            config[COOKIECUTTER_SECTION] = {}
-            replay = cookie_config.get_replay()
-            for key, value in replay[COOKIECUTTER_SECTION].items():
-                config[COOKIECUTTER_SECTION][key] = value
-            # Generated files
-            config[FILES_SECTION] = get_created_files(
-                    config[COOKIECUTTER_SECTION]['project_shortname'])
-
-            config.write(configfile)
-
-            click.secho("Creating logs directory...")
-            os.mkdir(Path(config[CLI_SECTION]['project_shortname']) / "logs")
-
-    except OutputDirExistsException as e:
+    except Exception as e:
         click.secho(str(e), fg='red')
 
     finally:
-        cookie_config.remove_config()
+        cookiecutter_wrapper.remove_config()
 
 
 @cli.command()
@@ -168,24 +137,24 @@ def build(pre, local, lock, verbose):
     docker_helper.create_images()
 
 
-@cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--statics/--skip-statics', default=True, is_flag=True,
-              help='Regenerate static files or skip this step.')
-@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
-              help='Build the application using webpack or skip this step.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def assets(local, statics, webpack, verbose):
-    """Locks the dependencies and builds the corresponding docker images."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
+# @cli.command()
+# @click.option('--local/--containers', default=True, is_flag=True,
+#               help='Which environment to build, it defaults to local')
+# @click.option('--statics/--skip-statics', default=True, is_flag=True,
+#               help='Regenerate static files or skip this step.')
+# @click.option('--webpack/--skip-webpack', default=True, is_flag=True,
+#               help='Build the application using webpack or skip this step.')
+# @click.option('--verbose', default=False, is_flag=True, required=False,
+#               help='Verbose mode will show all logs in the console.')
+# def assets(local, statics, webpack, verbose):
+#     """Locks the dependencies and builds the corresponding docker images."""
+#     # Create config object
+#     invenio_cli = InvenioCli(verbose=verbose)
 
-    click.secho('Generating assets...'.format(
-                flavour=invenio_cli.flavour), fg='green')
+#     click.secho('Generating assets...'.format(
+#                 flavour=invenio_cli.flavour), fg='green')
 
-    build_assets(local, statics, webpack, invenio_cli.log_config)
+#     build_assets(local, statics, webpack, invenio_cli.log_config)
 
 
 def _lock_dependencies(log_config, pre):
