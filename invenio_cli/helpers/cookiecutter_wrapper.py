@@ -14,35 +14,45 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from cookiecutter import replay
 from cookiecutter.config import DEFAULT_CONFIG
+from cookiecutter.exceptions import OutputDirExistsException
+from cookiecutter.main import cookiecutter
 
 
-class CookiecutterConfig(object):
+class CookiecutterWrapper(object):
     """Cookiecutter helper object for InvenioCLI."""
 
-    def __init__(self):
-        """Cookiecutter helper constructor."""
+    def __init__(self, flavour):
+        """Constructor."""
         self.tmp_file = None
         self.template = None
+        self.flavour = flavour
 
-    def repository(self, flavor):
+    def cookiecutter(self):
+        """Wrap cookiecutter call."""
+        return cookiecutter(
+            config_file=self.create_and_dump_config_file(),
+            **self.repository()
+        )
+
+    def repository(self):
         """Get the cookiecutter repository of a flavour."""
-        if flavor.upper() == 'RDM':
+        if self.flavour.upper() == 'RDM':
+            self.template_name = 'cookiecutter-invenio-rdm'
             repo = {
                 'template': 'https://github.com/inveniosoftware/' +
-                            'cookiecutter-invenio-rdm.git',
+                            '{}.git'.format(self.template_name),
                 # set to cookiecutter release version
                 # reset to master in development
                 'checkout': 'v1.0.0a5'
             }
-            self.template = 'cookiecutter-invenio-rdm.json'
             return repo
 
-    def create_and_dump_config(self):
-        """Create a tmp file to store cookicutters used configuration."""
+    def create_and_dump_config_file(self):
+        """Create a tmp file to store used configuration."""
         if not self.tmp_file:
-            self.tmp_file = \
-                tempfile.NamedTemporaryFile(mode='w+')
+            self.tmp_file = tempfile.NamedTemporaryFile(mode='w+')
 
         config = DEFAULT_CONFIG.copy()
         # BUG: when dumping {}, it's read back as a string '{}'
@@ -54,11 +64,8 @@ class CookiecutterConfig(object):
         return self.tmp_file.name
 
     def get_replay(self):
-        """Retrieve cookiecutters user input values."""
-        replay_path = Path(tempfile.gettempdir()) / self.template
-
-        with open(replay_path) as replay_file:
-            return json.load(replay_file)
+        """Retrieve dict of user input values."""
+        return replay.load(tempfile.gettempdir(), self.template_name)
 
     def remove_config(self):
         """Remove the tmp file."""
