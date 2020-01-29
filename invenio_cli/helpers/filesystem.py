@@ -9,8 +9,9 @@
 
 """Invenio Filesystem helper functions."""
 
+import errno
 import hashlib
-from os import listdir
+import os
 from os.path import isdir
 from pathlib import Path
 
@@ -35,7 +36,7 @@ def hash_file(path_to_file):
 def get_created_files(folder):
     """Return the generated tree of files (and their hash) and folders."""
     files = {}
-    for name in listdir(folder):
+    for name in os.listdir(folder):
         path = Path(folder)  # Current path
 
         # Add files and their hash
@@ -46,3 +47,13 @@ def get_created_files(folder):
             files[name] = get_created_files(path / name)
 
     return files
+
+
+def force_symlink(target, link_name):
+    """Forcefully create symlink at link_name pointing to target."""
+    try:
+        os.symlink(target, link_name)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            os.remove(link_name)
+            os.symlink(target, link_name)

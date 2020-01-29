@@ -26,7 +26,7 @@ class CookiecutterWrapper(object):
     def __init__(self, flavour):
         """Constructor."""
         self.tmp_file = None
-        self.template = None
+        self.template_name = None
         self.flavour = flavour
 
     def cookiecutter(self):
@@ -63,11 +63,12 @@ class CookiecutterWrapper(object):
 
         return self.tmp_file.name
 
-    def get_replay(self):
-        """Retrieve dict of user input values."""
-        return replay.load(tempfile.gettempdir(), self.template_name)
-
     def remove_config(self):
         """Remove the tmp file."""
         if self.tmp_file:
             self.tmp_file.close()
+
+    def get_replay(self):
+        """Retrieve dict of user input values."""
+        if self.template_name:
+            return replay.load(tempfile.gettempdir(), self.template_name)
