@@ -45,7 +45,7 @@ class CookiecutterWrapper(object):
                             '{}.git'.format(self.template_name),
                 # set to cookiecutter release version
                 # reset to master in development
-                'checkout': 'v1.0.0a5'
+                'checkout': 'master'
             }
             return repo
 
