@@ -133,10 +133,9 @@ def test_localcommands_uppdate_statics_and_assets(
     patched_dir_util.copy_tree.assert_any_call(
         'project_dir/static', 'instance_dir/static'
     )
-    # TODO: Uncomment when rebased on @zzachero assets work
-    # patched_dir_util.copy_tree.assert_any_call(
-    #     'project_dir/assets', 'instance_dir/assets'
-    # )
+    patched_dir_util.copy_tree.assert_any_call(
+        'project_dir/assets', 'instance_dir/assets'
+    )
 
     # Reset for install=False assertions
     patched_subprocess.run.reset_mock()

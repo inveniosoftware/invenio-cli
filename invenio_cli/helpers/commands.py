@@ -88,13 +88,12 @@ class LocalCommands(object):
         # using it for a different purpose then intended but very useful
         dir_util.copy_tree(src_dir, dst_dir)
 
-        # TODO: Uncomment when rebased on @zzachero work
-        # assets = 'assets'
-        # src_dir = self.cli_config.get_project_dir() / assets
-        # src_dir = str(src_dir)
-        # dst_dir = self.cli_config.get_instance_path() / assets
-        # dst_dir = str(dst_dir)
-        # dir_util.copy_tree(src_dir, dst_dir)
+        assets = 'assets'
+        src_dir = self.cli_config.get_project_dir() / assets
+        src_dir = str(src_dir)
+        dst_dir = self.cli_config.get_instance_path() / assets
+        dst_dir = str(dst_dir)
+        dir_util.copy_tree(src_dir, dst_dir)
 
     def update_statics_and_assets(self, install):
         """High-level command to update scss/js/images... files."""
