@@ -10,11 +10,13 @@
 
 import os
 import subprocess
+import time
 from distutils import dir_util
 
 import click
 
 from . import filesystem
+from .docker_helper import DockerHelper
 
 
 class Commands(object):
@@ -31,9 +33,9 @@ class Commands(object):
         else:
             self.environment = ContainerizedCommands()
 
-    def __getattr__(self, name, *args, **kwargs):
+    def __getattr__(self, name):
         """Delegate commands according to environment."""
-        return getattr(self.environment, name, *args, **kwargs)
+        return getattr(self.environment, name)
 
 
 class LocalCommands(object):
@@ -140,6 +142,68 @@ class LocalCommands(object):
         self._symlink_project_config()
         self._symlink_templates()
         self.update_statics_and_assets(install=True)
+
+    def services(self, force):
+        """Local start of containers (services).
+
+        NOTE: We use check=True to mimic set -e from original setup script
+              i.e. if a command fails, an exception is raised
+        """
+        click.secho('Starting local services (containers)...', fg='green')
+        docker_helper = DockerHelper(local=True)
+        docker_helper.start_containers()
+        time.sleep(30)  # Give time to the containers to start properly
+
+        if force:
+            command = [
+                'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
+                "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+            ]
+            subprocess.run(command, check=True)
+
+            command = [
+                'pipenv', 'run', 'invenio', 'db', 'destroy', '--yes-i-know',
+            ]
+            subprocess.run(command, check=True)
+
+            command = [
+                'pipenv', 'run', 'invenio', 'index', 'destroy',
+                '--force', '--yes-i-know',
+            ]
+            subprocess.run(command, check=True)
+
+            command = [
+                'pipenv', 'run', 'invenio', 'index', 'queue', 'init', 'purge']
+            subprocess.run(command, check=True)
+
+        # If re-run, this doesn't throw an error
+        command = ['pipenv', 'run', 'invenio', 'db', 'init', 'create']
+        subprocess.run(command, check=True)
+
+        # If re-run, this throws an error
+        # TODO: invenio-files-rest should make it idempotent
+        command = [
+            'pipenv', 'run', 'invenio', 'files', 'location', '--default',
+            'default-location',
+            "{}/data".format(self.cli_config.get_instance_path())
+        ]
+        subprocess.run(command, check=True)
+
+        # If re-run, this throws an error
+        # TODO: invenio-accounts should have a cli for find_or_create_role
+        command = ['pipenv', 'run', 'invenio', 'roles', 'create', 'admin']
+        subprocess.run(command, check=True)
+
+        # If re-run, this doesn't throw an error
+        command = [
+            'pipenv', 'run', 'invenio', 'access', 'allow',
+            'superuser-access', 'role', 'admin'
+        ]
+        subprocess.run(command, check=True)
+
+        # If re-run, this throws an error
+        command = ['pipenv', 'run', 'invenio', 'index', 'init']
+        subprocess.run(command, check=True)
 
 
 class ContainerizedCommands(object):

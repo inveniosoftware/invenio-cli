@@ -26,15 +26,17 @@ DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 class DockerHelper(object):
     """Utility class to interact with docker-compose."""
 
-    def __init__(self, log_config, local=True):
-        """Constructor for the DockerCompose helper."""
+    def __init__(self, local=True, log_config=None):
+        """Constructor."""
         super(DockerHelper, self).__init__()
         self.local = local
-        self.log_config = log_config
         self.docker_client = docker.from_env()
         # Set as INFO to allow all logs to be sent
-        logging.basicConfig(filename=self.log_config.logfile,
-                            level=logging.INFO)
+        # TODO: evisit when dealing with logs
+        self.log_config = log_config
+        if log_config:
+            logging.basicConfig(filename=self.log_config.logfile,
+                                level=logging.INFO)
 
     def build_image(self, dockerfile, tag):
         """Build docker image."""
@@ -57,25 +59,18 @@ class DockerHelper(object):
 
     def start_containers(self):
         """Start containers according to the specified environment."""
-        command = ['docker-compose',
-                   '--file', 'docker-compose.full.yml', 'up', '--no-recreate']
-
-        if self.local:
-            command[2] = 'docker-compose.yml'
-
-        if not self.log_config.verbose:
-            # Open logging pipe
-            logpipe = LogPipe(self.log_config)
-
-            command.append('-d')
-            subprocess.call(command, stdout=logpipe, stderr=logpipe)
-
-            # Close logging pipe
-            logpipe.close()
-        else:
-            # TEST: Is this piping all logs of containers along with server's?
-            subprocess.Popen(command,
-                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        command = [
+            'docker-compose',
+            '--file',
+            'docker-compose.yml' if self.local else 'docker-compose.full.yml',
+            'up',
+            # NOTE: docker-compose is smart about not rebuilding an image if
+            #       there is no need to, so --build is not a slow default.
+            '--build',
+            '--detach'
+        ]
+        # On a re-run everything is good.
+        subprocess.run(command)
 
     def stop_containers(self):
         """Stop currently running containers."""

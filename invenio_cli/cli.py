@@ -125,29 +125,25 @@ def build(pre, local, lock):
     """
     cli_config = CLIConfig()
     commands = Commands(cli_config, local)
-    commands.build(pre, lock)
+    commands.build(pre=pre, lock=lock)
 
 
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
-@click.option('--statics/--skip-statics', default=True, is_flag=True,
-              help='Regenerate static files or skip this step.')
-@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
-              help='Build the application using webpack or skip this step.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def assets(local, statics, webpack, verbose):
-    """Locks the dependencies and builds the corresponding docker images."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
+@click.option('--force', default=False, is_flag=True,
+              help='Force recreation of db tables, ES indices, queues...')
+def services(local, force):
+    """Starts services and ensures they are setup (DB, ES, queue, etc.).
 
-    click.secho('Generating assets...'.format(
-                flavour=invenio_cli.flavour), fg='green')
-
-    build_assets(local, statics, webpack, invenio_cli.log_config)
+    TODO: Forward any extra argument to docker-compose.
+    """
+    cli_config = CLIConfig()
+    commands = Commands(cli_config, local)
+    commands.services(force=force)
 
 
+# TODO: Remove when --containers implemented in the above
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
@@ -173,6 +169,26 @@ def setup(local, force, stop_containers, verbose):
                   docker_helper=docker_helper,
                   project_shortname=invenio_cli.project_shortname,
                   log_config=invenio_cli.log_config)
+
+
+@cli.command()
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
+@click.option('--statics/--skip-statics', default=True, is_flag=True,
+              help='Regenerate static files or skip this step.')
+@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
+              help='Build the application using webpack or skip this step.')
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def assets(local, statics, webpack, verbose):
+    """Locks the dependencies and builds the corresponding docker images."""
+    # Create config object
+    invenio_cli = InvenioCli(verbose=verbose)
+
+    click.secho('Generating assets...'.format(
+                flavour=invenio_cli.flavour), fg='green')
+
+    build_assets(local, statics, webpack, invenio_cli.log_config)
 
 
 @cli.command()
