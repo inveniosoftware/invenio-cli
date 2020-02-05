@@ -10,6 +10,8 @@
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
+import pytest
+
 from invenio_cli.helpers.commands import Commands, ContainerizedCommands, \
     LocalCommands
 
@@ -65,8 +67,8 @@ def test_localcommands_update_instance_path(patched_subprocess):
     cli_config.update_instance_path.assert_called_with('instance_dir')
 
 
-@patch('invenio_cli.helpers.filesystem.os')
-def test_localcommands_symlink_project_config(patched_os):
+@pytest.fixture
+def fake_cli_config():
     class FakeCLIConfig(object):
         def __init__(self):
             pass
@@ -77,7 +79,12 @@ def test_localcommands_symlink_project_config(patched_os):
         def get_instance_path(self):
             return Path('instance_dir')
 
-    commands = LocalCommands(FakeCLIConfig())
+    return FakeCLIConfig()
+
+
+@patch('invenio_cli.helpers.filesystem.os')
+def test_localcommands_symlink_project_config(patched_os, fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
 
     commands._symlink_project_config()
 
@@ -86,18 +93,8 @@ def test_localcommands_symlink_project_config(patched_os):
 
 
 @patch('invenio_cli.helpers.filesystem.os')
-def test_localcommands_symlink_templates(patched_os):
-    class FakeCLIConfig(object):
-        def __init__(self):
-            pass
-
-        def get_project_dir(self):
-            return Path('project_dir')
-
-        def get_instance_path(self):
-            return Path('instance_dir')
-
-    commands = LocalCommands(FakeCLIConfig())
+def test_localcommands_symlink_templates(patched_os, fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
 
     commands._symlink_templates()
 
@@ -130,19 +127,10 @@ def test_localcommands_symlink_assets_templates(patched_os):
 
 @patch('invenio_cli.helpers.commands.dir_util')
 @patch('invenio_cli.helpers.commands.subprocess')
-def test_localcommands_uppdate_statics_and_assets(
-        patched_subprocess, patched_dir_util):
-    class FakeCLIConfig(object):
-        def __init__(self):
-            pass
+def test_localcommands_update_statics_and_assets(
+        patched_subprocess, patched_dir_util, fake_cli_config):
 
-        def get_project_dir(self):
-            return Path('project_dir')
-
-        def get_instance_path(self):
-            return Path('instance_dir')
-
-    commands = LocalCommands(FakeCLIConfig())
+    commands = LocalCommands(fake_cli_config)
 
     commands.update_statics_and_assets(install=True)
 
@@ -171,3 +159,56 @@ def test_localcommands_uppdate_statics_and_assets(
         call(['pipenv', 'run', 'invenio', 'webpack', 'build'])
     ]
     assert patched_subprocess.run.mock_calls == expected_calls
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_services(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
+
+    commands.services(force=False)
+
+    expected_setup_calls = [
+        call(['pipenv', 'run', 'invenio', 'db', 'init', 'create'], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'files', 'location', '--default',
+            'default-location', 'instance_dir/data'
+        ], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'roles', 'create', 'admin'
+        ], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'access', 'allow',
+            'superuser-access', 'role', 'admin'
+        ], check=True),
+        call(['pipenv', 'run', 'invenio', 'index', 'init'], check=True)
+    ]
+    assert patched_subprocess.run.mock_calls == expected_setup_calls
+
+    # Reset for install=False assertions
+    patched_subprocess.run.reset_mock()
+
+    commands.services(force=True)
+
+    expected_force_calls = [
+        call([
+            'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
+            "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+        ], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'db', 'destroy', '--yes-i-know',
+        ], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'index', 'destroy', '--force',
+            '--yes-i-know'
+        ], check=True),
+        call([
+            'pipenv', 'run', 'invenio', 'index', 'queue', 'init', 'purge',
+        ], check=True)
+    ]
+    assert patched_subprocess.run.mock_calls == (
+            expected_force_calls + expected_setup_calls
+    )
