@@ -62,6 +62,10 @@ class CLIConfig(object):
         # Internal to Invenio-cli section
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]['flavour'] = flavour
+        # TODO: remove when references to it are removed
+        config_parser[cls.CLI_SECTION]['project_shortname'] = (
+            replay[cls.COOKIECUTTER_SECTION].get('project_shortname', '')
+        )
         config_parser[cls.CLI_SECTION]['project_dir'] = project_dir
         config_parser[cls.CLI_SECTION]['instance_path'] = ''
         config_parser[cls.CLI_SECTION]['logfile'] = \
