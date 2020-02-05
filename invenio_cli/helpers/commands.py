@@ -8,6 +8,7 @@
 
 """Local and Containerized Commands."""
 
+import os
 import subprocess
 from distutils import dir_util
 
@@ -30,9 +31,9 @@ class Commands(object):
         else:
             self.environment = ContainerizedCommands()
 
-    def build(self, pre, lock):
-        """Delegates to build of environment commands."""
-        return self.environment.build(pre, lock)
+    def __getattr__(self, name, *args, **kwargs):
+        """Delegate commands according to environment."""
+        return getattr(self.environment, name, *args, **kwargs)
 
 
 class LocalCommands(object):
@@ -76,6 +77,18 @@ class LocalCommands(object):
         link_path = self.cli_config.get_instance_path() / templates
         filesystem.force_symlink(target_path, link_path)
 
+    def _symlink_assets_templates(self, files_to_link):
+        """Symlink the assets folder."""
+        assets = 'assets'
+        click.secho('Symlinking {}/...'.format(assets), fg='green')
+
+        instance_path = str(self.cli_config.get_instance_path()) + '/'
+        project_dir = str(self.cli_config.get_project_dir())
+        for file_path in files_to_link:
+            relpath = file_path.split(instance_path)[1]
+            target_path = os.path.join(project_dir, relpath)
+            filesystem.force_symlink(target_path, file_path)
+
     def _copy_statics_and_assets(self):
         """Copy project's statics and assets into instance dir."""
         click.secho('Copying project statics and assets...', fg='green')
@@ -93,7 +106,9 @@ class LocalCommands(object):
         src_dir = str(src_dir)
         dst_dir = self.cli_config.get_instance_path() / assets
         dst_dir = str(dst_dir)
-        dir_util.copy_tree(src_dir, dst_dir)
+        # The full path to the files that were copied is returned
+        copied_files = dir_util.copy_tree(src_dir, dst_dir)
+        return copied_files
 
     def update_statics_and_assets(self, install):
         """High-level command to update scss/js/images... files."""
@@ -111,7 +126,8 @@ class LocalCommands(object):
             command = ['pipenv', 'run', 'invenio', 'webpack', 'install']
             subprocess.run(command)
 
-        self._copy_statics_and_assets()
+        copied_files = self._copy_statics_and_assets()
+        self._symlink_assets_templates(copied_files)
 
         click.secho('Building assets...', fg='green')
         command = ['pipenv', 'run', 'invenio', 'webpack', 'build']
