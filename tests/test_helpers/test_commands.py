@@ -105,6 +105,29 @@ def test_localcommands_symlink_templates(patched_os):
         Path('project_dir/templates'), Path('instance_dir/templates'))
 
 
+@patch('invenio_cli.helpers.filesystem.os')
+def test_localcommands_symlink_assets_templates(patched_os):
+    class FakeCLIConfig(object):
+        def __init__(self):
+            pass
+
+        def get_project_dir(self):
+            return Path('project_dir')
+
+        def get_instance_path(self):
+            return Path('instance_dir')
+
+    commands = LocalCommands(FakeCLIConfig())
+
+    files_to_link = ['instance_dir/templates/template.js']
+
+    commands._symlink_assets_templates(files_to_link)
+
+    patched_os.symlink.assert_called_with(
+        'project_dir/templates/template.js',
+        'instance_dir/templates/template.js')
+
+
 @patch('invenio_cli.helpers.commands.dir_util')
 @patch('invenio_cli.helpers.commands.subprocess')
 def test_localcommands_uppdate_statics_and_assets(
