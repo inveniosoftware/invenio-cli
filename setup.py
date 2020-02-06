@@ -51,6 +51,7 @@ install_requires = [
     'pipenv==2018.11.26',
     'PyYAML>=5.1.2,<5.2.0',
     'redis>=3.3.11,<3.4.0',
+    'Werkzeug>=0.16.1,<1.0.0'
 ]
 
 packages = find_packages()
