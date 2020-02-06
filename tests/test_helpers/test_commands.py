@@ -212,3 +212,19 @@ def test_localcommands_services(
     assert patched_subprocess.run.mock_calls == (
             expected_force_calls + expected_setup_calls
     )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_demo(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
+
+    commands.demo()
+
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'run', 'invenio', 'rdm-records', 'demo'],
+        check=True
+    )
