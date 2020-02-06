@@ -174,6 +174,16 @@ def setup(local, force, stop_containers, verbose):
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
+def demo(local):
+    """Populates instance with demo records."""
+    cli_config = CLIConfig()
+    commands = Commands(cli_config, local)
+    commands.demo()
+
+
+@cli.command()
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
 @click.option('--statics/--skip-statics', default=True, is_flag=True,
               help='Regenerate static files or skip this step.')
 @click.option('--webpack/--skip-webpack', default=True, is_flag=True,
@@ -258,18 +268,3 @@ def upgrade(verbose):
     click.secho('ERROR: Not supported yet...', fg='red')
 
 
-@cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--stop-containers', default=False, is_flag=True, required=False,
-              help='Stop containers when finishing the setup operations.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def demo(local, stop_containers, verbose):
-    """Populates instance with demo records."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-    docker_compose = DockerHelper(local=local,
-                                  log_config=invenio_cli.log_config)
-    populate_demo_records(local, docker_compose, invenio_cli.project_shortname,
-                          invenio_cli.log_config, stop_containers)

@@ -205,6 +205,16 @@ class LocalCommands(object):
         command = ['pipenv', 'run', 'invenio', 'index', 'init']
         subprocess.run(command, check=True)
 
+    def demo(self):
+        """Add demo records into the instance."""
+        click.secho("Making sure containers are started...", fg="green")
+        docker_helper = DockerHelper(local=True)
+        docker_helper.start_containers()
+        time.sleep(30)  # Give time for the containers to start properly
+
+        command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
+        subprocess.run(command, check=True)
+
 
 class ContainerizedCommands(object):
     """Containerized environment CLI commands."""
