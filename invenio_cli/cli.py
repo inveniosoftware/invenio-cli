@@ -17,12 +17,12 @@ from pathlib import Path
 import click
 
 from .helpers import DockerHelper, LoggingConfig, LogPipe, bootstrap, \
-    build_assets, populate_demo_records
+    build_assets
 from .helpers import server as scripts_server
 from .helpers import setup as scripts_setup
 from .helpers import update_statics
 from .helpers.cli_config import CLIConfig
-from .helpers.commands import Commands
+from .helpers.commands import Commands, LocalCommands
 from .helpers.cookiecutter_wrapper import CookiecutterWrapper
 
 CONFIG_FILENAME = '.invenio'
@@ -181,26 +181,7 @@ def demo(local):
     commands.demo()
 
 
-@cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--statics/--skip-statics', default=True, is_flag=True,
-              help='Regenerate static files or skip this step.')
-@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
-              help='Build the application using webpack or skip this step.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def assets(local, statics, webpack, verbose):
-    """Locks the dependencies and builds the corresponding docker images."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-
-    click.secho('Generating assets...'.format(
-                flavour=invenio_cli.flavour), fg='green')
-
-    build_assets(local, statics, webpack, invenio_cli.log_config)
-
-
+# TODO: Remove when --containers implemented in the above
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
@@ -225,20 +206,14 @@ def server(local, start, verbose):
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def destroy(local, verbose):
-    """Removes all associated resources (containers, images, volumes)."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
+def run():
+    """Starts the local development server.
 
-    click.secho('Destroying {flavour} application...'
-                .format(flavour=invenio_cli.flavour), fg='green')
-    docker_helper = DockerHelper(local=local,
-                                 log_config=invenio_cli.log_config)
-    docker_helper.destroy_containers()
+    NOTE: this only makes sense locally so no --local option
+    """
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.run()
 
 
 @cli.command()
@@ -256,6 +231,43 @@ def update(local, verbose, install):
 
 
 @cli.command()
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
+@click.option('--statics/--skip-statics', default=True, is_flag=True,
+              help='Regenerate static files or skip this step.')
+@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
+              help='Build the application using webpack or skip this step.')
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def assets(local, statics, webpack, verbose):
+    """Locks the dependencies and builds the corresponding docker images."""
+    # Create config object
+    invenio_cli = InvenioCli(verbose=verbose)
+
+    click.secho('Generating assets...'.format(
+                flavour=invenio_cli.flavour), fg='green')
+
+    build_assets(local, statics, webpack, invenio_cli.log_config)
+
+
+@cli.command()
+@click.option('--local/--containers', default=True, is_flag=True,
+              help='Which environment to build, it defaults to local')
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def destroy(local, verbose):
+    """Removes all associated resources (containers, images, volumes)."""
+    # Create config object
+    invenio_cli = InvenioCli(verbose=verbose)
+
+    click.secho('Destroying {flavour} application...'
+                .format(flavour=invenio_cli.flavour), fg='green')
+    docker_helper = DockerHelper(local=local,
+                                 log_config=invenio_cli.log_config)
+    docker_helper.destroy_containers()
+
+
+@cli.command()
 @click.option('--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 def upgrade(verbose):
@@ -266,5 +278,3 @@ def upgrade(verbose):
     click.secho('Upgrading server for {flavour} application...'
                 .format(flavour=invenio_cli.flavour), fg='green')
     click.secho('ERROR: Not supported yet...', fg='red')
-
-

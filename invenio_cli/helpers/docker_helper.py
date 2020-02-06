@@ -32,7 +32,7 @@ class DockerHelper(object):
         self.local = local
         self.docker_client = docker.from_env()
         # Set as INFO to allow all logs to be sent
-        # TODO: evisit when dealing with logs
+        # TODO: revisit when dealing with logs
         self.log_config = log_config
         if log_config:
             logging.basicConfig(filename=self.log_config.logfile,

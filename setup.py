@@ -86,12 +86,13 @@ setup(
             'build = invenio_cli.cli:build',
             'services = invenio_cli.cli:services',
             'setup = invenio_cli.cli:setup',  # TODO: remove when transitioned
-            'assets = invenio_cli.cli:assets',
-            'server = invenio_cli.cli:server',
-            'destroy = invenio_cli.cli:destroy',
+            'demo = invenio_cli.cli:demo',
+            'server = invenio_cli.cli:server',  # TODO: remove
+            'runit = invenio_cli.cli:run',  # TODO: Rename to run
             'update = invenio_cli.cli:update',
+            'assets = invenio_cli.cli:assets',  # TODO: Remove
+            'destroy = invenio_cli.cli:destroy',
             'upgrade = invenio_cli.cli:upgrade',
-            'demo = invenio_cli.cli:demo'
         ],
         'invenio_base.apps': [
             'invenio_cli = invenio_cli:InvenioCli',

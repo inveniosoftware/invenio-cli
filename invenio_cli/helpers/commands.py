@@ -9,6 +9,7 @@
 """Local and Containerized Commands."""
 
 import os
+import signal
 import subprocess
 import time
 from distutils import dir_util
@@ -143,16 +144,21 @@ class LocalCommands(object):
         self._symlink_templates()
         self.update_statics_and_assets(install=True)
 
+    def _ensure_containers_running(self):
+        """Ensures containers are running."""
+        click.secho('Making sure containers are up...', fg='green')
+        docker_helper = DockerHelper(local=True)
+        docker_helper.start_containers()
+        # TODO: Find faster way to procede when containers are ready
+        time.sleep(30)  # Give time to the containers to start properly
+
     def services(self, force):
         """Local start of containers (services).
 
         NOTE: We use check=True to mimic set -e from original setup script
               i.e. if a command fails, an exception is raised
         """
-        click.secho('Starting local services (containers)...', fg='green')
-        docker_helper = DockerHelper(local=True)
-        docker_helper.start_containers()
-        time.sleep(30)  # Give time to the containers to start properly
+        self._ensure_containers_running()
 
         if force:
             command = [
@@ -207,13 +213,38 @@ class LocalCommands(object):
 
     def demo(self):
         """Add demo records into the instance."""
-        click.secho("Making sure containers are started...", fg="green")
-        docker_helper = DockerHelper(local=True)
-        docker_helper.start_containers()
-        time.sleep(30)  # Give time for the containers to start properly
+        self._ensure_containers_running()
 
         command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
         subprocess.run(command, check=True)
+
+    def run(self):
+        """Run development server and celery queue."""
+        self._ensure_containers_running()
+
+        def signal_handler(sig, frame):
+            click.secho('Stopping server and worker...', fg='green')
+            server.terminate()
+            worker.terminate()
+            click.secho("Server and worker stopped...", fg="green")
+
+        signal.signal(signal.SIGINT, signal_handler)
+
+        click.secho("Starting celery worker...", fg="green")
+        worker = subprocess.Popen([
+            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+        ])
+
+        click.secho("Starting up local (development) server...", fg='green')
+        run_env = os.environ.copy()
+        run_env['FLASK_ENV'] = 'development'
+        server = subprocess.Popen([
+            'pipenv', 'run', 'invenio', 'run', '--cert',
+            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
+        ], env=run_env)
+
+        click.secho('Development server + worker are running!', fg='green')
+        server.wait()
 
 
 class ContainerizedCommands(object):
