@@ -24,7 +24,7 @@
 .. image:: https://img.shields.io/github/license/inveniosoftware/invenio-cli.svg
         :target: https://github.com/inveniosoftware/invenio-cli/blob/master/LICENSE
 
-Invenio module that allows the creation of applications building workflows
+Command-line tool to create and manage an InvenioRDM instance.
 
 Installation
 ============
@@ -43,24 +43,24 @@ Local Development environment
 .. code-block:: console
 
     # Initialize environment and cd into <created folder>
-    (<custom virtualenv>)$ invenio-cli init --flavour=RDM --verbose
+    (<custom virtualenv>)$ invenio-cli init --flavour=RDM
     (<custom virtualenv>)$ cd <created folder>
 
-    # Build Docker image and assets: very important to have dependencies
-    # installed by this command appear in your <custom virtualenv>
-    (<custom virtualenv>)$ invenio-cli build --local --pre --verbose
+    # Install python dependencies, link/copy assets + statics, install js
+    # dependencies, build assets and final statics
+    (<custom virtualenv>)$ invenio-cli build --local --pre
 
-    # Setup services (database, Elasticsearch, Redis, queue)
-    (<custom virtualenv>)$ invenio-cli setup --local --verbose
+    # Start and setup services (database, Elasticsearch, Redis, queue)
+    (<custom virtualenv>)$ invenio-cli services --local
 
     # Optional: add demo data
-    (<custom virtualenv>)$ invenio-cli demo --local --verbose
+    (<custom virtualenv>)$ invenio-cli demo --local
 
     # Run the server
-    (<custom virtualenv>)$ invenio-cli server --local --verbose
+    (<custom virtualenv>)$ invenio-cli runit
 
-    # Destroy the instances
-    (<custom virtualenv>)$ invenio-cli destroy --local --verbose
+    # Update assets or statics
+    (<custom virtualenv>)$ invenio-cli update --local
 
     # Get more help
     (<custom virtualenv>)$ invenio-cli --help

@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module commands.py's tests."""
+import os
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
@@ -103,19 +104,8 @@ def test_localcommands_symlink_templates(patched_os, fake_cli_config):
 
 
 @patch('invenio_cli.helpers.filesystem.os')
-def test_localcommands_symlink_assets_templates(patched_os):
-    class FakeCLIConfig(object):
-        def __init__(self):
-            pass
-
-        def get_project_dir(self):
-            return Path('project_dir')
-
-        def get_instance_path(self):
-            return Path('instance_dir')
-
-    commands = LocalCommands(FakeCLIConfig())
-
+def test_localcommands_symlink_assets_templates(patched_os, fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
     files_to_link = ['instance_dir/templates/template.js']
 
     commands._symlink_assets_templates(files_to_link)
@@ -210,7 +200,7 @@ def test_localcommands_services(
         ], check=True)
     ]
     assert patched_subprocess.run.mock_calls == (
-            expected_force_calls + expected_setup_calls
+        expected_force_calls + expected_setup_calls
     )
 
 
@@ -228,3 +218,28 @@ def test_localcommands_demo(
         ['pipenv', 'run', 'invenio', 'rdm-records', 'demo'],
         check=True
     )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_run(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
+
+    commands.run()
+
+    run_env = os.environ.copy()
+    run_env['FLASK_ENV'] = 'development'
+    expected_calls = [
+        call([
+            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+        ]),
+        call([
+            'pipenv', 'run', 'invenio', 'run', '--cert',
+            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
+        ], env=run_env),
+        call().wait()
+    ]
+    assert patched_subprocess.Popen.mock_calls == expected_calls
