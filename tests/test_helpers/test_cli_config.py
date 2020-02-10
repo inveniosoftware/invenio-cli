@@ -78,14 +78,9 @@ def test_cli_config_get_project_dir(config_path):
     cli_config = CLIConfig(config_path)
 
     assert cli_config.get_project_dir() == Path(os.path.dirname(config_path))
-    # TODO: remove when unused
-    assert (
-        cli_config.config[CLIConfig.CLI_SECTION]['project_shortname'] ==
-        'my-site'
-    )
 
 
-def test_cli_config_get_instance_path(config_path):
+def test_cli_config_instance_path(config_path):
     cli_config = CLIConfig(config_path)
 
     assert cli_config.get_instance_path() == Path('')
@@ -95,3 +90,19 @@ def test_cli_config_get_instance_path(config_path):
     cli_config.update_instance_path(instance_path)
 
     assert cli_config.get_instance_path() == Path(instance_path)
+
+
+def test_cli_config_services_setup(config_path):
+    cli_config = CLIConfig(config_path)
+
+    assert cli_config.get_services_setup() is False
+
+    cli_config.update_services_setup(True)
+
+    assert cli_config.get_services_setup() is True
+
+
+def test_cli_config_get_project_shortname(config_path):
+    cli_config = CLIConfig(config_path)
+
+    assert cli_config.get_project_shortname() == 'my-site'

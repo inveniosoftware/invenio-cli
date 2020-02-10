@@ -48,6 +48,21 @@ class CLIConfig(object):
         with open(self.fullpath, 'w') as configfile:
             self.config.write(configfile)
 
+    def get_services_setup(self):
+        """Returns bool whether services have been setup or not."""
+        return self.config.getboolean(CLIConfig.CLI_SECTION, 'services_setup')
+
+    def update_services_setup(self, is_setup):
+        """Updates path to application instance directory."""
+        self.config[CLIConfig.CLI_SECTION]['services_setup'] = str(is_setup)
+
+        with open(self.fullpath, 'w') as configfile:
+            self.config.write(configfile)
+
+    def get_project_shortname(self):
+        """Returns the project's shortname."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]['project_shortname']
+
     @classmethod
     def write(cls, project_dir, flavour, replay):
         """Write invenio-cli config file.
@@ -62,12 +77,9 @@ class CLIConfig(object):
         # Internal to Invenio-cli section
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]['flavour'] = flavour
-        # TODO: remove when references to it are removed
-        config_parser[cls.CLI_SECTION]['project_shortname'] = (
-            replay[cls.COOKIECUTTER_SECTION].get('project_shortname', '')
-        )
         config_parser[cls.CLI_SECTION]['project_dir'] = project_dir
         config_parser[cls.CLI_SECTION]['instance_path'] = ''
+        config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
         config_parser[cls.CLI_SECTION]['logfile'] = \
             '{path}/logs/invenio-cli.log'.format(path=project_dir)
 

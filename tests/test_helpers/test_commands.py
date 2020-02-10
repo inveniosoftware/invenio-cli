@@ -28,28 +28,36 @@ def test_commands_delegates_to_environment():
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-def test_localcommands_build_install_py_dependencies(patched_subprocess):
+def test_localcommands_install_py_dependencies(patched_subprocess):
     commands = LocalCommands(Mock())
 
     commands._install_py_dependencies(pre=True, lock=True)
 
     patched_subprocess.run.assert_any_call(
-        ['pipenv', 'install', '--dev', '--pre'])
+        ['pipenv', 'install', '--dev', '--pre'],
+        check=True
+    )
 
     commands._install_py_dependencies(pre=True, lock=False)
 
     patched_subprocess.run.assert_any_call(
-        ['pipenv', 'install', '--dev', '--pre', '--skip-lock'])
+        ['pipenv', 'install', '--dev', '--pre', '--skip-lock'],
+        check=True
+    )
 
     commands._install_py_dependencies(pre=False, lock=True)
 
     patched_subprocess.run.assert_any_call(
-        ['pipenv', 'install', '--dev'])
+        ['pipenv', 'install', '--dev'],
+        check=True
+    )
 
     commands._install_py_dependencies(pre=False, lock=False)
 
     patched_subprocess.run.assert_any_call(
-        ['pipenv', 'install', '--dev', '--skip-lock'])
+        ['pipenv', 'install', '--dev', '--skip-lock'],
+        check=True
+    )
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
@@ -72,13 +80,22 @@ def test_localcommands_update_instance_path(patched_subprocess):
 def fake_cli_config():
     class FakeCLIConfig(object):
         def __init__(self):
-            pass
+            self.services_setup = False
 
         def get_project_dir(self):
             return Path('project_dir')
 
         def get_instance_path(self):
             return Path('instance_dir')
+
+        def get_services_setup(self):
+            return self.services_setup
+
+        def update_services_setup(self, is_setup):
+            self.services_setup = bool(is_setup)
+
+        def get_project_shortname(self):
+            return 'project-shortname'
 
     return FakeCLIConfig()
 
@@ -125,10 +142,10 @@ def test_localcommands_update_statics_and_assets(
     commands.update_statics_and_assets(install=True)
 
     expected_calls = [
-        call(['pipenv', 'run', 'invenio', 'collect', '--verbose']),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'create']),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'install']),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'build']),
+        call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'create'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'install'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True),
     ]
     assert patched_subprocess.run.mock_calls == expected_calls
     patched_dir_util.copy_tree.assert_any_call(
@@ -144,9 +161,9 @@ def test_localcommands_update_statics_and_assets(
     commands.update_statics_and_assets(install=False)
 
     expected_calls = [
-        call(['pipenv', 'run', 'invenio', 'collect', '--verbose']),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'create']),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'build'])
+        call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'create'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True)
     ]
     assert patched_subprocess.run.mock_calls == expected_calls
 
@@ -243,3 +260,144 @@ def test_localcommands_run(
         call().wait()
     ]
     assert patched_subprocess.Popen.mock_calls == expected_calls
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_containerize(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    # Case: force=False, install=True
+    commands.containerize(force=False, install=True)
+
+    commands.docker_helper.start_containers.assert_called()
+    expected_setup_calls = [
+        call('project-shortname', 'invenio db init create'),
+        call(
+            'project-shortname',
+            'invenio files location --default default-location '
+            '${INVENIO_INSTANCE_PATH}/data'
+        ),
+        call('project-shortname', 'invenio roles create admin'),
+        call(
+            'project-shortname',
+            'invenio access allow superuser-access role admin'
+        ),
+        call('project-shortname', 'invenio index init'),
+        # update_statics_and_assets call
+        call('project-shortname', 'invenio collect'),
+        call('project-shortname', 'invenio webpack create'),
+        call('project-shortname', 'invenio webpack install --unsafe'),
+        call('project-shortname', 'invenio webpack build')
+    ]
+    assert (
+        commands.docker_helper.execute_cli_command.mock_calls ==
+        expected_setup_calls
+    )
+
+    # Case: install=False
+    commands.docker_helper.execute_cli_command.reset_mock()
+
+    commands.containerize(force=False, install=False)
+
+    assert (
+        call('project-shortname', 'invenio webpack install --unsafe') not in
+        commands.docker_helper.execute_cli_command.mock_calls
+    )
+
+    # Case: force=True
+    commands.docker_helper.execute_cli_command.reset_mock()
+
+    commands.containerize(force=True, install=True)
+
+    expected_force_calls = [
+        call(
+            'project-shortname',
+            "invenio shell --no-term-title -c "
+            "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+        ),
+        call('project-shortname', 'invenio db destroy --yes-i-know'),
+        call(
+            'project-shortname',
+            'invenio index destroy --force --yes-i-know'
+        ),
+        call('project-shortname', 'invenio index queue init purge')
+    ]
+    assert commands.docker_helper.execute_cli_command.mock_calls == (
+        expected_force_calls + expected_setup_calls
+    )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_update_statics_and_assets(
+        patched_docker_helper, patched_subprocess, fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    commands.update_statics_and_assets(install=True)
+
+    expected_execute_cli_calls = [
+        call('project-shortname', 'invenio collect'),
+        call('project-shortname', 'invenio webpack create'),
+        call('project-shortname', 'invenio webpack install --unsafe'),
+        call('project-shortname', 'invenio webpack build')
+    ]
+    assert (
+        commands.docker_helper.execute_cli_command.mock_calls ==
+        expected_execute_cli_calls
+    )
+
+    expected_copy2_calls = [
+        call(
+            'project_dir/static/.',
+            '/opt/invenio/var/instance/static/'
+        ),
+        call(
+            'project_dir/assets/.',
+            '/opt/invenio/var/instance/assets/'
+        )
+    ]
+    assert commands.docker_helper.copy2.mock_calls == expected_copy2_calls
+
+    # Reset for force=True assertions
+    commands.docker_helper.execute_cli_command.reset_mock()
+
+    commands.update_statics_and_assets(install=False)
+
+    expected_execute_cli_calls = [
+        call('project-shortname', 'invenio collect'),
+        call('project-shortname', 'invenio webpack create'),
+        call('project-shortname', 'invenio webpack build')
+    ]
+    assert (
+        commands.docker_helper.execute_cli_command.mock_calls ==
+        expected_execute_cli_calls
+    )
+
+
+@patch('invenio_cli.helpers.commands.os')
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_lock_python_dependencies(
+        patched_docker_helper, patched_subprocess, patched_os,
+        fake_cli_config):
+
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    # Case: Need to lock the Pipfile
+    patched_os.listdir = lambda *args, **kwargs: []
+    commands._lock_python_dependencies()
+
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'lock', '--pre'], check=True)
+
+    # Case: Pipfile.lock already exists
+    patched_subprocess.run.reset_mock()
+    patched_os.listdir = lambda *args, **kwargs: ['Pipfile.lock']
+
+    commands._lock_python_dependencies()
+
+    patched_subprocess.run.assert_not_called()

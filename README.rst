@@ -1,6 +1,6 @@
 ..
-    Copyright (C) 2019 CERN.
-    Copyright (C) 2019 Northwestern University.
+    Copyright (C) 2019-2020 CERN.
+    Copyright (C) 2019-2020 Northwestern University.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
@@ -31,11 +31,10 @@ Installation
 
 .. code-block:: console
 
-    (<custom virtualenv>)$ pip install invenio-cli
+    $ pip install invenio-cli
 
 Usage
 =====
-
 
 Local Development environment
 -----------------------------
@@ -43,46 +42,54 @@ Local Development environment
 .. code-block:: console
 
     # Initialize environment and cd into <created folder>
-    (<custom virtualenv>)$ invenio-cli init --flavour=RDM
-    (<custom virtualenv>)$ cd <created folder>
+    $ invenio-cli init --flavour=RDM
+    $ cd <created folder>
 
-    # Install python dependencies, link/copy assets + statics, install js
-    # dependencies, build assets and final statics
-    (<custom virtualenv>)$ invenio-cli build --local --pre
+    # Install locally
+    # install python dependencies (pre-release versions needed for now),
+    # link/copy assets + statics, install js dependencies, build assets and
+    # final statics
+    $ invenio-cli install --pre
 
     # Start and setup services (database, Elasticsearch, Redis, queue)
-    (<custom virtualenv>)$ invenio-cli services --local
+    $ invenio-cli services
 
     # Optional: add demo data
-    (<custom virtualenv>)$ invenio-cli demo --local
+    $ invenio-cli demo --local
 
     # Run the server
-    (<custom virtualenv>)$ invenio-cli runit
+    $ invenio-cli run
 
     # Update assets or statics
-    (<custom virtualenv>)$ invenio-cli update --local
-
-    # Get more help
-    (<custom virtualenv>)$ invenio-cli --help
+    $ invenio-cli update
 
 
 Containerized 'Production' environment
 --------------------------------------
 
-Just like the above, except with ``--containers``:
-
 .. code-block:: console
 
     # Initialize environment and cd into <created folder>
-    (<custom virtualenv>)$ invenio-cli init --flavour=RDM
-    (<custom virtualenv>)$ cd <created folder>
+    $ invenio-cli init --flavour=RDM
+    $ cd <created folder>
 
-    # Build Docker images
-    (<custom virtualenv>)$ invenio-cli build --containers --pre --verbose
+    # Spin-up InvenioRDM
+    $ invenio-cli containerize
 
-    # Setup services (database, Elasticsearch, Redis, queue)
-    (<custom virtualenv>)$ invenio-cli setup --containers --verbose
+    # Optional: add demo data
+    $ invenio-cli demo --containers
 
-    ...
+    # After updating statics or code, if you do not need to re-install JS
+    # dependencies which can take time
+    $ invenio-cli containerize --no-install-js
+
+
+More Help
+---------
+
+.. code-block:: console
+
+    # Get more help
+    $ invenio-cli --help
 
 Further documentation is available on https://invenio-cli.readthedocs.io/

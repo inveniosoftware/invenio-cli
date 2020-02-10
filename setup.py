@@ -45,13 +45,9 @@ install_requires = [
     'cookiecutter>=1.7.0,<1.8.0',
     'click>=7.0,<7.1',
     'docker>=4.1.0,<4.2.0',
-    'Flask-BabelEx>=0.9.3',
-    'invenio-app>=1.2.0,<1.3.0',
-    'invenio-base>=1.1.0,<1.2.0',
+    'Flask-BabelEx>=0.9.4',
     'pipenv==2018.11.26',
     'PyYAML>=5.1.2,<5.2.0',
-    'redis>=3.3.11,<3.4.0',
-    'Werkzeug>=0.16.1,<1.0.0'
 ]
 
 packages = find_packages()
@@ -79,30 +75,8 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'invenio-cli = invenio_app.cli:cli',
-        ],
-        'flask.commands': [
-            'init = invenio_cli.cli:init',
-            'build = invenio_cli.cli:build',
-            'services = invenio_cli.cli:services',
-            'setup = invenio_cli.cli:setup',  # TODO: remove when transitioned
-            'demo = invenio_cli.cli:demo',
-            'server = invenio_cli.cli:server',  # TODO: remove
-            'runit = invenio_cli.cli:run',  # TODO: Rename to run
-            'update = invenio_cli.cli:update',
-            'assets = invenio_cli.cli:assets',  # TODO: Remove
-            'destroy = invenio_cli.cli:destroy',
-            'upgrade = invenio_cli.cli:upgrade',
-        ],
-        'invenio_base.apps': [
-            'invenio_cli = invenio_cli:InvenioCli',
-        ],
-        'invenio_base.blueprints': [
-            'invenio_cli = invenio_cli.views:blueprint',
-        ],
-        'invenio_i18n.translations': [
-            'messages = invenio_cli',
-        ],
+            'invenio-cli = invenio_cli.cli:cli',
+        ]
     },
     extras_require=extras_require,
     install_requires=install_requires,

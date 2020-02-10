@@ -8,69 +8,15 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import logging
 import os
-import subprocess
-from configparser import ConfigParser
 from pathlib import Path
 
 import click
 
-from .helpers import DockerHelper, LoggingConfig, LogPipe, bootstrap, \
-    build_assets
-from .helpers import server as scripts_server
-from .helpers import setup as scripts_setup
-from .helpers import update_statics
 from .helpers.cli_config import CLIConfig
-from .helpers.commands import Commands, LocalCommands
+from .helpers.commands import Commands, ContainerizedCommands, LocalCommands
 from .helpers.cookiecutter_wrapper import CookiecutterWrapper
-
-CONFIG_FILENAME = '.invenio'
-CLI_SECTION = 'cli'
-CLI_PROJECT_NAME = 'project_shortname'
-CLI_FLAVOUR = 'flavour'
-CLI_LOGFILE = 'logfile'
-COOKIECUTTER_SECTION = 'cookiecutter'
-FILES_SECTION = 'files'
-
-
-class InvenioCli(object):
-    """Current application building properties."""
-
-    def __init__(self, flavour=None, verbose=False):
-        """Initialize builder.
-
-        :param flavour: Flavour name.
-        """
-        self.flavour = None
-        self.project_shortname = None
-        self.log_config = None
-        self.config = ConfigParser()
-        self.config.read(CONFIG_FILENAME)
-
-        # There is a .invenio config file
-        if os.path.isfile(CONFIG_FILENAME):
-            try:
-                self.flavour = self.config[CLI_SECTION][CLI_FLAVOUR]
-                self.project_shortname = \
-                    self.config[CLI_SECTION][CLI_PROJECT_NAME]
-                self.log_config = LoggingConfig(
-                    logfile=self.config[CLI_SECTION][CLI_LOGFILE],
-                    verbose=verbose
-                )
-            except KeyError:
-                logging.error(
-                    '{0}, {1} or {2} not configured in CLI section'.format(
-                        CLI_PROJECT_NAME, CLI_LOGFILE, CLI_FLAVOUR
-                    ))
-                exit(1)
-        elif flavour:
-            # There is no .invenio file but the flavour was provided via CLI
-            self.flavour = flavour
-        else:
-            # No value for flavour in .invenio nor CLI
-            logging.error('No flavour specified.')
-            exit(1)
+from .helpers.docker_helper import DockerHelper
 
 
 @click.group()
@@ -80,7 +26,7 @@ def cli():
 
 @cli.command()
 @click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
-              default=None, required=False)
+              default='RDM', required=False)
 def init(flavour):
     """Initializes the application according to the chosen flavour."""
     click.secho('Initializing {flavour} application...'.format(
@@ -107,68 +53,51 @@ def init(flavour):
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-def build(pre, local, lock):
-    """Either setups project locally or builds container images.
+def install(pre, lock):
+    """Installs the  project locally.
 
-    --local option installs dependencies, creates instance directory,
+    Installs dependencies, creates instance directory,
     links invenio.cfg + templates, copies images and other statics and finally
     builds front-end assets.
-
-    --containers creates docker images inside of which the equivalent of
-    --local has been run.
     """
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
-    commands.build(pre=pre, lock=lock)
+    commands = LocalCommands(cli_config)
+    commands.install(pre=pre, lock=lock)
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
 @click.option('--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
-def services(local, force):
-    """Starts services and ensures they are setup (DB, ES, queue, etc.).
+def services(force):
+    """Starts DB, ES, queue and cache services and ensures they are setup.
 
-    TODO: Forward any extra argument to docker-compose.
+    --force destroys and resets services
     """
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
+    commands = LocalCommands(cli_config)
     commands.services(force=force)
 
 
-# TODO: Remove when --containers implemented in the above
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
 @click.option('--force', default=False, is_flag=True,
-              help='Delete all content from the database, ES indexes, queues')
-@click.option('--stop-containers', default=False, is_flag=True, required=False,
-              help='Stop containers when finishing the setup operations.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def setup(local, force, stop_containers, verbose):
-    """Sets up the application for the first time (DB, ES, queue, etc.)."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
+              help='Force recreation of db tables, ES indices, queues...')
+@click.option('--install-js/--no-install-js', default=True, is_flag=True,
+              help="(re-)Install JS dependencies, defaults to True")
+def containerize(force, install_js):
+    """Setup and run all containers (docker-compose.full.yml).
 
-    click.secho('Setting up environment for {flavour} application...'
-                .format(flavour=invenio_cli.flavour), fg='green')
-
-    # Initialize docker client
-    docker_helper = DockerHelper(local=local,
-                                 log_config=invenio_cli.log_config)
-
-    scripts_setup(local=local, force=force, stop_containers=stop_containers,
-                  docker_helper=docker_helper,
-                  project_shortname=invenio_cli.project_shortname,
-                  log_config=invenio_cli.log_config)
+    Think of it as a production compilation build + running.
+    """
+    cli_config = CLIConfig()
+    commands = ContainerizedCommands(
+        cli_config,
+        DockerHelper(cli_config.get_project_shortname(), local=False)
+    )
+    commands.containerize(force=force, install=install_js)
 
 
 @cli.command()
@@ -179,30 +108,6 @@ def demo(local):
     cli_config = CLIConfig()
     commands = Commands(cli_config, local)
     commands.demo()
-
-
-# TODO: Remove when --containers implemented in the above
-@cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--start/--stop', default=True, is_flag=True,
-              help='Start or Stop application and services')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def server(local, start, verbose):
-    """Starts the application server."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-
-    docker_helper = DockerHelper(local=local,
-                                 log_config=invenio_cli.log_config)
-    if start:
-        click.secho('Booting up server...', fg='green')
-        scripts_server(local=local, docker_helper=docker_helper,
-                       log_config=invenio_cli.log_config)
-    else:
-        click.secho('Stopping server...', fg="green")
-        docker_helper.stop_containers()
 
 
 @cli.command()
@@ -217,37 +122,13 @@ def run():
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-@click.option('--install', default=False, is_flag=True,
-              help='Install dependencies, it defaults to false')
-def update(local, verbose, install):
+@click.option('--install-js/--no-install-js', default=False, is_flag=True,
+              help='(re-)Install JS dependencies, defaults to False')
+def update(install_js):
     """Updates the current application static/assets files."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
-    commands.update_statics_and_assets(install=install)
-
-
-@cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--statics/--skip-statics', default=True, is_flag=True,
-              help='Regenerate static files or skip this step.')
-@click.option('--webpack/--skip-webpack', default=True, is_flag=True,
-              help='Build the application using webpack or skip this step.')
-@click.option('--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
-def assets(local, statics, webpack, verbose):
-    """Locks the dependencies and builds the corresponding docker images."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-
-    click.secho('Generating assets...'.format(
-                flavour=invenio_cli.flavour), fg='green')
-
-    build_assets(local, statics, webpack, invenio_cli.log_config)
+    commands = LocalCommands(cli_config)
+    commands.update_statics_and_assets(install=install_js)
 
 
 @cli.command()
@@ -257,14 +138,7 @@ def assets(local, statics, webpack, verbose):
               help='Verbose mode will show all logs in the console.')
 def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-
-    click.secho('Destroying {flavour} application...'
-                .format(flavour=invenio_cli.flavour), fg='green')
-    docker_helper = DockerHelper(local=local,
-                                 log_config=invenio_cli.log_config)
-    docker_helper.destroy_containers()
+    click.secho('TODO: Revisit destroy command', fg='red')
 
 
 @cli.command()
@@ -272,9 +146,4 @@ def destroy(local, verbose):
               help='Verbose mode will show all logs in the console.')
 def upgrade(verbose):
     """Upgrades the current application to the specified newer version."""
-    # Create config object
-    invenio_cli = InvenioCli(verbose=verbose)
-
-    click.secho('Upgrading server for {flavour} application...'
-                .format(flavour=invenio_cli.flavour), fg='green')
-    click.secho('ERROR: Not supported yet...', fg='red')
+    click.secho('TODO: Implement upgrade command', fg='red')
