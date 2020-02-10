@@ -26,11 +26,13 @@ DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 class DockerHelper(object):
     """Utility class to interact with docker-compose."""
 
-    def __init__(self, local=True, log_config=None):
+    def __init__(self, project_shortname, local=True, log_config=None):
         """Constructor."""
         super(DockerHelper, self).__init__()
+        self.container_prefix = self._normalize_name(project_shortname)
         self.local = local
         self.docker_client = docker.from_env()
+
         # Set as INFO to allow all logs to be sent
         # TODO: revisit when dealing with logs
         self.log_config = log_config
@@ -67,10 +69,10 @@ class DockerHelper(object):
             # NOTE: docker-compose is smart about not rebuilding an image if
             #       there is no need to, so --build is not a slow default.
             '--build',
-            '--detach'
+            '-d'  # --detach not supported in 1.17.0
         ]
         # On a re-run everything is good.
-        subprocess.run(command)
+        subprocess.run(command, check=True)
 
     def stop_containers(self):
         """Stop currently running containers."""
@@ -111,7 +113,6 @@ class DockerHelper(object):
         """
         dc_version_command = subprocess.Popen(['docker-compose', '--version'],
                                               stdout=subprocess.PIPE)
-
         dc_version_string = dc_version_command.communicate()[0]
         dc_version_string = dc_version_string.decode("utf-8").strip()
 
@@ -136,20 +137,26 @@ class DockerHelper(object):
             data = io.BytesIO(fin.read())
             container.put_archive(dst_path, data)
 
+    def copy2(self, src_path, dst_path):
+        """Copy a file into the path of the specified container."""
+        container_name = '{}_web-ui_1'.format(self.container_prefix)
+        container_path = "{}:{}".format(container_name, dst_path)
+
+        commands = ['docker', 'cp', str(src_path), container_path]
+        subprocess.run(commands, check=True)
+
     def execute_cli_command(self, project_shortname, command):
         """Execute an invenio CLI command in the API container."""
-        container_name = '{}_web-api_1'.format(
-            self._normalize_name(project_shortname))
+        container_name = '{}_web-ui_1'.format(self.container_prefix)
         container = self.docker_client.containers.get(container_name)
 
         status = container.exec_run(
             cmd='/bin/bash -c "{}"'.format(command.replace('"', '\\"')),
-            user='invenio',
             tty=True,
             stdout=True,
             stderr=True)
 
-        if self.log_config.verbose:
+        if self.log_config and self.log_config.verbose:
             print(status.output.decode("utf-8"))
         else:
             level = logging.INFO if status.exit_code == 0 else logging.ERROR

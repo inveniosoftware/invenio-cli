@@ -32,7 +32,12 @@ class Commands(object):
         if local:
             self.environment = LocalCommands(cli_config)
         else:
-            self.environment = ContainerizedCommands()
+            self.environment = ContainerizedCommands(
+                cli_config,
+                DockerHelper(
+                    project_shortname=cli_config.get_project_shortname(),
+                    local=False)
+            )
 
     def __getattr__(self, name):
         """Delegate commands according to environment."""
@@ -54,7 +59,7 @@ class LocalCommands(object):
             command += ['--pre']
         if not lock:
             command += ['--skip-lock']
-        subprocess.run(command)
+        subprocess.run(command, check=True)
 
     def _update_instance_path(self):
         """Update path to instance in config."""
@@ -118,25 +123,25 @@ class LocalCommands(object):
         click.secho('Collecting statics and assets...', fg='green')
         # Collect into statics/ folder
         command = ['pipenv', 'run', 'invenio', 'collect', '--verbose']
-        subprocess.run(command)
+        subprocess.run(command, check=True)
         # Collect into assets/ folder
         command = ['pipenv', 'run', 'invenio', 'webpack', 'create']
-        subprocess.run(command)
+        subprocess.run(command, check=True)
 
         if install:
             click.secho('Installing js dependencies...', fg='green')
             # Installs in assets/node_modules/
             command = ['pipenv', 'run', 'invenio', 'webpack', 'install']
-            subprocess.run(command)
+            subprocess.run(command, check=True)
 
         copied_files = self._copy_statics_and_assets()
         self._symlink_assets_templates(copied_files)
 
         click.secho('Building assets...', fg='green')
         command = ['pipenv', 'run', 'invenio', 'webpack', 'build']
-        subprocess.run(command)
+        subprocess.run(command, check=True)
 
-    def build(self, pre, lock):
+    def install(self, pre, lock):
         """Local build."""
         self._install_py_dependencies(pre, lock)
         self._update_instance_path()
@@ -147,7 +152,9 @@ class LocalCommands(object):
     def _ensure_containers_running(self):
         """Ensures containers are running."""
         click.secho('Making sure containers are up...', fg='green')
-        docker_helper = DockerHelper(local=True)
+        docker_helper = DockerHelper(
+            self.cli_config.get_project_shortname(),
+            local=True)
         docker_helper.start_containers()
         # TODO: Find faster way to procede when containers are ready
         time.sleep(30)  # Give time to the containers to start properly
@@ -157,6 +164,9 @@ class LocalCommands(object):
 
         NOTE: We use check=True to mimic set -e from original setup script
               i.e. if a command fails, an exception is raised
+
+        A check in invenio-cli's config file is done to see if one-time setup
+        has been executed before.
         """
         self._ensure_containers_running()
 
@@ -167,11 +177,14 @@ class LocalCommands(object):
             ]
             subprocess.run(command, check=True)
 
+            # TODO: invenio-db#126 should make it idempotent
             command = [
                 'pipenv', 'run', 'invenio', 'db', 'destroy', '--yes-i-know',
             ]
             subprocess.run(command, check=True)
 
+            # TODO: invenio-indexer#114 should make destroy and queue init
+            #       purge idempotent
             command = [
                 'pipenv', 'run', 'invenio', 'index', 'destroy',
                 '--force', '--yes-i-know',
@@ -182,34 +195,41 @@ class LocalCommands(object):
                 'pipenv', 'run', 'invenio', 'index', 'queue', 'init', 'purge']
             subprocess.run(command, check=True)
 
-        # If re-run, this doesn't throw an error
-        command = ['pipenv', 'run', 'invenio', 'db', 'init', 'create']
-        subprocess.run(command, check=True)
+            self.cli_config.update_services_setup(False)
 
-        # If re-run, this throws an error
-        # TODO: invenio-files-rest should make it idempotent
-        command = [
-            'pipenv', 'run', 'invenio', 'files', 'location', '--default',
-            'default-location',
-            "{}/data".format(self.cli_config.get_instance_path())
-        ]
-        subprocess.run(command, check=True)
+        if not self.cli_config.get_services_setup():
+            command = ['pipenv', 'run', 'invenio', 'db', 'init', 'create']
+            subprocess.run(command, check=True)
 
-        # If re-run, this throws an error
-        # TODO: invenio-accounts should have a cli for find_or_create_role
-        command = ['pipenv', 'run', 'invenio', 'roles', 'create', 'admin']
-        subprocess.run(command, check=True)
+            # Without the self.cli_config.get_services_setup() check
+            # this throws an error on re-runs
+            # TODO: invenio-files-rest#238 should make it idempotent
+            command = [
+                'pipenv', 'run', 'invenio', 'files', 'location', '--default',
+                'default-location',
+                "{}/data".format(self.cli_config.get_instance_path())
+            ]
+            subprocess.run(command, check=True)
 
-        # If re-run, this doesn't throw an error
-        command = [
-            'pipenv', 'run', 'invenio', 'access', 'allow',
-            'superuser-access', 'role', 'admin'
-        ]
-        subprocess.run(command, check=True)
+            # Without the self.cli_config.get_services_setup() check
+            # this throws an error on re-runs
+            # TODO: invenio-accounts#297 should make it idempotent
+            command = ['pipenv', 'run', 'invenio', 'roles', 'create', 'admin']
+            subprocess.run(command, check=True)
 
-        # If re-run, this throws an error
-        command = ['pipenv', 'run', 'invenio', 'index', 'init']
-        subprocess.run(command, check=True)
+            command = [
+                'pipenv', 'run', 'invenio', 'access', 'allow',
+                'superuser-access', 'role', 'admin'
+            ]
+            subprocess.run(command, check=True)
+
+            # Without the self.cli_config.get_services_setup() check
+            # this throws an error on re-runs
+            # TODO: invenio-indexer#115 should make it idempotent
+            command = ['pipenv', 'run', 'invenio', 'index', 'init']
+            subprocess.run(command, check=True)
+
+            self.cli_config.update_services_setup(True)
 
     def demo(self):
         """Add demo records into the instance."""
@@ -243,13 +263,122 @@ class LocalCommands(object):
             'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
         ], env=run_env)
 
-        click.secho('Development server + worker are running!', fg='green')
+        click.secho(
+            'Instance running!\nVisit https://localhost:5000', fg='green')
         server.wait()
 
 
 class ContainerizedCommands(object):
     """Containerized environment CLI commands."""
 
-    def __init__(self):
+    def __init__(self, cli_config, docker_helper):
         """Constructor."""
-        pass
+        self.cli_config = cli_config
+        self.docker_helper = docker_helper
+
+    def update_statics_and_assets(self, install):
+        """Update application containers' statics and assets."""
+        project_shortname = self.cli_config.get_project_shortname()
+
+        click.secho('Collecting statics and assets...', fg='green')
+        # Collect into statics/ folder
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio collect')
+
+        # Collect into assets/ folder
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio webpack create')
+
+        if install:
+            click.secho('Installing js dependencies...', fg='green')
+            # Installs in assets/node_modules/
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio webpack install --unsafe')
+
+        # Use the copy approach rather than the symlink one in container
+        click.secho('Copying project statics and assets...', fg='green')
+        src_dir = self.cli_config.get_project_dir() / 'static'
+        # src_dir MUST be '<dir>/.' for docker cp to work
+        src_dir = os.path.join(src_dir, '.')
+        dst_dir = '/opt/invenio/var/instance/static/'
+        self.docker_helper.copy2(src_dir, dst_dir)
+
+        src_dir = self.cli_config.get_project_dir() / 'assets'
+        # src_dir MUST be '<dir>/.' for docker cp to work
+        src_dir = os.path.join(src_dir, '.')
+        dst_dir = '/opt/invenio/var/instance/assets/'
+        self.docker_helper.copy2(src_dir, dst_dir)
+
+        click.secho('Building assets...', fg='green')
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio webpack build')
+
+    def _lock_python_dependencies(self):
+        """Creates Pipfile.lock if not existing."""
+        locked = 'Pipfile.lock' in os.listdir('.')
+        if not locked:
+            subprocess.run(['pipenv', 'lock', '--pre'], check=True)
+
+    def containerize(self, force, install):
+        """Launch fully containerized application."""
+        self._lock_python_dependencies()
+
+        click.secho('Making sure containers are up...', fg='green')
+        self.docker_helper.start_containers()
+        # TODO: Find faster way to procede when containers are ready
+        time.sleep(30)  # Give time to the containers to start properly
+
+        project_shortname = self.cli_config.get_project_shortname()
+
+        if force:
+            self.cli_config.update_services_setup(False)
+            click.secho("Flushing redis cache...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname,
+                "invenio shell --no-term-title -c "
+                "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+            )
+            click.secho("Deleting database...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio db destroy --yes-i-know')
+            click.secho("Deleting indices...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname,
+                'invenio index destroy --force --yes-i-know')
+            click.secho("Purging queues...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio index queue init purge')
+
+        if not self.cli_config.get_services_setup():
+            click.secho("Creating database...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio db init create')
+
+            click.secho("Creating files location...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname,
+                "invenio files location --default default-location "
+                "${INVENIO_INSTANCE_PATH}/data"
+            )
+
+            click.secho("Creating admin role...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio roles create admin')
+
+            click.secho(
+                "Assigning superuser access to admin role...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname,
+                'invenio access allow superuser-access role admin')
+
+            click.secho("Creating indices...", fg="green")
+            self.docker_helper.execute_cli_command(
+                project_shortname, 'invenio index init')
+
+            self.cli_config.update_services_setup(True)
+
+        # statics and assets are always regenerated
+        self.update_statics_and_assets(install=install)
+
+        click.secho(
+            'Instance running!\nVisit https://localhost', fg='green')
