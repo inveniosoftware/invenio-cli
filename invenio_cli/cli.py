@@ -20,6 +20,7 @@ from .helpers.docker_helper import DockerHelper
 
 
 @click.group()
+@click.version_option()
 def cli():
     """Initialize CLI context."""
 
