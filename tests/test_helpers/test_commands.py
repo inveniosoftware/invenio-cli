@@ -317,7 +317,7 @@ def test_containerizedcommands_containerize(
         call(
             'project-shortname',
             "invenio shell --no-term-title -c "
-            "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+            "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\""  # noqa
         ),
         call('project-shortname', 'invenio db destroy --yes-i-know'),
         call(
