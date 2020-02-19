@@ -205,8 +205,8 @@ class LocalCommands(object):
             # this throws an error on re-runs
             # TODO: invenio-files-rest#238 should make it idempotent
             command = [
-                'pipenv', 'run', 'invenio', 'files', 'location', '--default',
-                'default-location',
+                'pipenv', 'run', 'invenio', 'files', 'location', 'create',
+                '--default', 'default-location',
                 "{}/data".format(self.cli_config.get_instance_path())
             ]
             subprocess.run(command, check=True)
@@ -362,7 +362,7 @@ class ContainerizedCommands(object):
             click.secho("Creating files location...", fg="green")
             self.docker_helper.execute_cli_command(
                 project_shortname,
-                "invenio files location --default default-location "
+                "invenio files location create --default default-location "
                 "${INVENIO_INSTANCE_PATH}/data"
             )
 

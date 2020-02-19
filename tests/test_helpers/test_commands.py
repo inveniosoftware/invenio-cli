@@ -181,8 +181,8 @@ def test_localcommands_services(
     expected_setup_calls = [
         call(['pipenv', 'run', 'invenio', 'db', 'init', 'create'], check=True),
         call([
-            'pipenv', 'run', 'invenio', 'files', 'location', '--default',
-            'default-location', 'instance_dir/data'
+            'pipenv', 'run', 'invenio', 'files', 'location', 'create',
+            '--default', 'default-location', 'instance_dir/data'
         ], check=True),
         call([
             'pipenv', 'run', 'invenio', 'roles', 'create', 'admin'
@@ -278,7 +278,7 @@ def test_containerizedcommands_containerize(
         call('project-shortname', 'invenio db init create'),
         call(
             'project-shortname',
-            'invenio files location --default default-location '
+            'invenio files location create --default default-location '
             '${INVENIO_INSTANCE_PATH}/data'
         ),
         call('project-shortname', 'invenio roles create admin'),
