@@ -12,6 +12,8 @@ import os
 from configparser import ConfigParser
 from pathlib import Path
 
+import click
+
 from .filesystem import get_created_files
 
 
@@ -30,7 +32,16 @@ class CLIConfig(object):
         """
         self.config = ConfigParser()
         self.fullpath = fullpath
-        self.config.read(fullpath)
+
+        try:
+            with open(fullpath) as cfg_file:
+                self.config.read_file(cfg_file)
+        except FileNotFoundError:
+            click.secho(
+                "Missing '.invenio' file in current directory. "
+                "Are you in the project folder?", fg='red'
+            )
+            exit(1)
 
     def get_project_dir(self):
         """Returns path to project directory."""
