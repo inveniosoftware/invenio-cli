@@ -23,11 +23,33 @@ from cookiecutter.main import cookiecutter
 class CookiecutterWrapper(object):
     """Cookiecutter helper object for InvenioCLI."""
 
-    def __init__(self, flavour):
-        """Constructor."""
+    @classmethod
+    def extract_template_name(cls, template):
+        """Extract template name from a template URL."""
+        name = template.rstrip('/').rpartition("/")[2]
+        git = '.git'
+        if name.endswith(git):
+            name = name[:-len(git)]
+        return name
+
+    def __init__(self, flavour, template_checkout):
+        """Constructor.
+
+        :param flavour: "RDM" or something else: String
+        :param cookiecutter: tuple of (template: URL, checkout: String)
+        """
         self.tmp_file = None
         self.template_name = None
         self.flavour = flavour
+
+        if self.flavour.upper() == 'RDM':
+            self.template = (
+                template_checkout[0] or
+                'https://github.com/inveniosoftware/'
+                'cookiecutter-invenio-rdm.git'
+            )
+            self.template_name = self.extract_template_name(self.template)
+            self.checkout = template_checkout[1] or 'master'
 
     def cookiecutter(self):
         """Wrap cookiecutter call."""
@@ -37,17 +59,12 @@ class CookiecutterWrapper(object):
         )
 
     def repository(self):
-        """Get the cookiecutter repository of a flavour."""
-        if self.flavour.upper() == 'RDM':
-            self.template_name = 'cookiecutter-invenio-rdm'
-            repo = {
-                'template': 'https://github.com/inveniosoftware/' +
-                            '{}.git'.format(self.template_name),
-                # set to cookiecutter release version
-                # reset to master in development
-                'checkout': 'master'
-            }
-            return repo
+        """Get the cookiecutter repository options."""
+        return {
+            'template': self.template,
+            # NOTE: if template is not a git url, then checkout is ignored
+            'checkout': self.checkout
+        }
 
     def create_and_dump_config_file(self):
         """Create a tmp file to store used configuration."""
