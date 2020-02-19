@@ -28,12 +28,17 @@ def cli():
 @cli.command()
 @click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
               default='RDM', required=False)
-def init(flavour):
+@click.option('--template', required=False,
+              help='Cookiecutter path or git url to template')
+@click.option('--checkout', required=False,
+              help='Branch, tag or commit to checkout if --template is a git url')  # noqa
+def init(flavour, template, checkout):
     """Initializes the application according to the chosen flavour."""
     click.secho('Initializing {flavour} application...'.format(
         flavour=flavour), fg='green')
 
-    cookiecutter_wrapper = CookiecutterWrapper(flavour)
+    template_checkout = (template, checkout)
+    cookiecutter_wrapper = CookiecutterWrapper(flavour, template_checkout)
 
     try:
         click.secho("Running cookiecutter...", fg='green')
