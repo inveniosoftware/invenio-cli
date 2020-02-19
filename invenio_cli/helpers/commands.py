@@ -336,7 +336,7 @@ class ContainerizedCommands(object):
             self.docker_helper.execute_cli_command(
                 project_shortname,
                 "invenio shell --no-term-title -c "
-                "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
+                "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\""  # noqa
             )
             click.secho("Deleting database...", fg="green")
             self.docker_helper.execute_cli_command(
