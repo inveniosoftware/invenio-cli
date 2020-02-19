@@ -11,6 +11,7 @@ import os
 import tempfile
 from configparser import ConfigParser
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -72,6 +73,17 @@ def config_path():
     # Need to yield in order for tmp_dir to not be gc'ed and therefore the
     # temporary directory deleted
     yield CLIConfig.write(project_dir, flavour, replay)
+
+
+@patch("invenio_cli.helpers.cli_config.exit")
+def test_cli_config_config_file_not_found(patched_exit, config_path):
+    wrong_path = os.path.join(
+        os.path.dirname(config_path), "non_exisiting_file"
+    )
+
+    cli_config = CLIConfig(wrong_path)
+
+    patched_exit.assert_called_with(1)
 
 
 def test_cli_config_get_project_dir(config_path):
