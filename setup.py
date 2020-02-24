@@ -47,7 +47,7 @@ install_requires = [
     'docker>=4.1.0,<4.2.0',
     'Flask-BabelEx>=0.9.4',
     'pipenv==2018.11.26',
-    'PyYAML>=5.1.2,<5.2.0',
+    'PyYAML>=5.1.2',
 ]
 
 packages = find_packages()
