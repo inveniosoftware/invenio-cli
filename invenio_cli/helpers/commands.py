@@ -201,9 +201,6 @@ class LocalCommands(object):
             command = ['pipenv', 'run', 'invenio', 'db', 'init', 'create']
             subprocess.run(command, check=True)
 
-            # Without the self.cli_config.get_services_setup() check
-            # this throws an error on re-runs
-            # TODO: invenio-files-rest#238 should make it idempotent
             command = [
                 'pipenv', 'run', 'invenio', 'files', 'location', 'create',
                 '--default', 'default-location',
@@ -392,7 +389,8 @@ class ContainerizedCommands(object):
         """Add demo records into the instance."""
         project_shortname = self.cli_config.get_project_shortname()
 
-        # The way of starting in container mode ensures the
-        # containers are up
+        # TODO: Shall we call ensure containers? If so move to
+        # parent object. Noentheless, the way of starting in
+        # container mode ensures the containers are up
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
