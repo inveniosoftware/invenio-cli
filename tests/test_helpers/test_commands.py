@@ -270,8 +270,8 @@ def test_containerizedcommands_containerize(
         fake_cli_config):
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
-    # Case: force=False, install=True
-    commands.containerize(force=False, install=True)
+    # Case: pre=False, force=False, install=True
+    commands.containerize(pre=False, force=False, install=True)
 
     commands.docker_helper.start_containers.assert_called()
     expected_setup_calls = [
@@ -298,20 +298,20 @@ def test_containerizedcommands_containerize(
         expected_setup_calls
     )
 
-    # Case: install=False
+    # Case: pre=False, force=False, install=False
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(force=False, install=False)
+    commands.containerize(pre=False, force=False, install=False)
 
     assert (
         call('project-shortname', 'invenio webpack install --unsafe') not in
         commands.docker_helper.execute_cli_command.mock_calls
     )
 
-    # Case: force=True
+    # Case: pre=False, force=True, install=True
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(force=True, install=True)
+    commands.containerize(pre=False, force=True, install=True)
 
     expected_force_calls = [
         call(
@@ -326,6 +326,17 @@ def test_containerizedcommands_containerize(
         ),
         call('project-shortname', 'invenio index queue init purge')
     ]
+    assert commands.docker_helper.execute_cli_command.mock_calls == (
+        expected_force_calls + expected_setup_calls
+    )
+
+    # Case: pre=True, force=True, install=True
+    # Testing pre does not change the commands result.
+    # Only the locking of the Pipfile. No need to test all combinations.
+    commands.docker_helper.execute_cli_command.reset_mock()
+
+    commands.containerize(pre=True, force=True, install=True)
+
     assert commands.docker_helper.execute_cli_command.mock_calls == (
         expected_force_calls + expected_setup_calls
     )
@@ -389,7 +400,12 @@ def test_containerizedcommands_lock_python_dependencies(
 
     # Case: Need to lock the Pipfile
     patched_os.listdir = lambda *args, **kwargs: []
-    commands._lock_python_dependencies()
+    commands._lock_python_dependencies(pre=False)
+
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'lock'], check=True)
+
+    commands._lock_python_dependencies(pre=True)
 
     patched_subprocess.run.assert_called_with(
         ['pipenv', 'lock', '--pre'], check=True)
@@ -398,7 +414,11 @@ def test_containerizedcommands_lock_python_dependencies(
     patched_subprocess.run.reset_mock()
     patched_os.listdir = lambda *args, **kwargs: ['Pipfile.lock']
 
-    commands._lock_python_dependencies()
+    commands._lock_python_dependencies(pre=False)
+
+    patched_subprocess.run.assert_not_called()
+
+    commands._lock_python_dependencies(pre=True)
 
     patched_subprocess.run.assert_not_called()
 

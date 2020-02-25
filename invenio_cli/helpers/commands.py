@@ -313,15 +313,20 @@ class ContainerizedCommands(object):
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio webpack build')
 
-    def _lock_python_dependencies(self):
+    def _lock_python_dependencies(self, pre):
         """Creates Pipfile.lock if not existing."""
+        command = ['pipenv', 'lock']
+
+        if pre:
+            command += ['--pre']
+
         locked = 'Pipfile.lock' in os.listdir('.')
         if not locked:
-            subprocess.run(['pipenv', 'lock', '--pre'], check=True)
+            subprocess.run(command, check=True)
 
-    def containerize(self, force, install):
+    def containerize(self, pre, force, install):
         """Launch fully containerized application."""
-        self._lock_python_dependencies()
+        self._lock_python_dependencies(pre)
 
         click.secho('Making sure containers are up...', fg='green')
         self.docker_helper.start_containers()
