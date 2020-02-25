@@ -401,3 +401,19 @@ def test_containerizedcommands_lock_python_dependencies(
     commands._lock_python_dependencies()
 
     patched_subprocess.run.assert_not_called()
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_demo(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    commands.demo()
+
+    assert (
+        commands.docker_helper.execute_cli_command.mock_calls ==
+        [call('project-shortname', 'invenio rdm-records demo')]
+    )

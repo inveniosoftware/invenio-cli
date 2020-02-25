@@ -382,3 +382,12 @@ class ContainerizedCommands(object):
 
         click.secho(
             'Instance running!\nVisit https://localhost', fg='green')
+
+    def demo(self):
+        """Add demo records into the instance."""
+        project_shortname = self.cli_config.get_project_shortname()
+
+        # The way of starting in container mode ensures the
+        # containers are up
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio rdm-records demo')
