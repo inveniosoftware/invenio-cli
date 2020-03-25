@@ -101,20 +101,18 @@ def fake_cli_config():
 
 
 @patch('invenio_cli.helpers.filesystem.os')
-def test_localcommands_symlink_project_config(patched_os, fake_cli_config):
+def test_symlink_project_file_or_folder(patched_os, fake_cli_config):
     commands = LocalCommands(fake_cli_config)
+    file = 'invenio.cfg'
 
-    commands._symlink_project_config()
+    commands._symlink_project_file_or_folder(file)
 
     patched_os.symlink.assert_called_with(
         Path('project_dir/invenio.cfg'), Path('instance_dir/invenio.cfg'))
 
+    folder = 'templates/'
 
-@patch('invenio_cli.helpers.filesystem.os')
-def test_localcommands_symlink_templates(patched_os, fake_cli_config):
-    commands = LocalCommands(fake_cli_config)
-
-    commands._symlink_templates()
+    commands._symlink_project_file_or_folder(folder)
 
     patched_os.symlink.assert_called_with(
         Path('project_dir/templates'), Path('instance_dir/templates'))

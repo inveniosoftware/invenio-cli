@@ -70,19 +70,11 @@ class LocalCommands(object):
         ).stdout.strip()
         self.cli_config.update_instance_path(path)
 
-    def _symlink_project_config(self):
-        project_config = 'invenio.cfg'
-        click.secho("Symlinking {}...".format(project_config), fg="green")
-        target_path = self.cli_config.get_project_dir() / project_config
-        link_path = self.cli_config.get_instance_path() / project_config
-        filesystem.force_symlink(target_path, link_path)
-
-    def _symlink_templates(self):
-        """Symlink the templates folder."""
-        templates = 'templates'
-        click.secho('Symlinking {}/...'.format(templates), fg='green')
-        target_path = self.cli_config.get_project_dir() / templates
-        link_path = self.cli_config.get_instance_path() / templates
+    def _symlink_project_file_or_folder(self, target):
+        """Create symlink in instance pointing to project file or folder."""
+        click.secho('Symlinking {}...'.format(target), fg='green')
+        target_path = self.cli_config.get_project_dir() / target
+        link_path = self.cli_config.get_instance_path() / target
         filesystem.force_symlink(target_path, link_path)
 
     def _symlink_assets_templates(self, files_to_link):
@@ -145,8 +137,9 @@ class LocalCommands(object):
         """Local build."""
         self._install_py_dependencies(pre, lock)
         self._update_instance_path()
-        self._symlink_project_config()
-        self._symlink_templates()
+        self._symlink_project_file_or_folder('invenio.cfg')
+        self._symlink_project_file_or_folder('templates')
+        self._symlink_project_file_or_folder('app_data')
         self.update_statics_and_assets(install=True)
 
     def _ensure_containers_running(self):
