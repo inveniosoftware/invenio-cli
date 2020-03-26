@@ -166,6 +166,29 @@ def test_localcommands_update_statics_and_assets(
     assert patched_subprocess.run.mock_calls == expected_calls
 
 
+def test_localcommands_install():
+    commands = LocalCommands(fake_cli_config)
+    commands._install_py_dependencies = Mock()
+    commands._update_instance_path = Mock()
+    commands._symlink_project_file_or_folder = Mock()
+    commands.update_statics_and_assets = Mock()
+
+    commands.install(False, False)
+
+    commands._install_py_dependencies.assert_called_with(False, False)
+    commands._update_instance_path.assert_called()
+    expected_symlink_calls = [
+        call('invenio.cfg'),
+        call('templates'),
+        call('app_data')
+    ]
+    assert (
+        commands._symlink_project_file_or_folder.mock_calls ==
+        expected_symlink_calls
+    )
+    commands.update_statics_and_assets.assert_called_with(install=True)
+
+
 @patch('invenio_cli.helpers.commands.subprocess')
 @patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
