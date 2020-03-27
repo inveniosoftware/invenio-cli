@@ -47,6 +47,7 @@ install_requires = [
     'docker>=4.1.0,<4.2.0',
     'Flask-BabelEx>=0.9.4',
     'pipenv==2018.11.26',
+    'python-slugify>=4.0.0,<5.0.0',
     'PyYAML>=5.1.2',
 ]
 
