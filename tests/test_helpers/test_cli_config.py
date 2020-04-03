@@ -89,7 +89,7 @@ def test_cli_config_config_file_not_found(patched_exit, config_path):
 def test_cli_config_get_project_dir(config_path):
     cli_config = CLIConfig(config_path)
 
-    assert cli_config.get_project_dir() == Path(os.path.dirname(config_path))
+    assert cli_config.get_project_dir() == Path(os.getcwd())
 
 
 def test_cli_config_instance_path(config_path):
