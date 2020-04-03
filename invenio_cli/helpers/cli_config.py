@@ -36,6 +36,10 @@ class CLIConfig(object):
         try:
             with open(fullpath) as cfg_file:
                 self.config.read_file(cfg_file)
+
+            # Assign current dir a project dir. If reached here, it exists.
+            self.project_dir = Path(os.getcwd())
+
         except FileNotFoundError:
             click.secho(
                 "Missing '.invenio' file in current directory. "
@@ -45,7 +49,7 @@ class CLIConfig(object):
 
     def get_project_dir(self):
         """Returns path to project directory."""
-        return Path(self.config[CLIConfig.CLI_SECTION]['project_dir'])
+        return self.project_dir
 
     def get_instance_path(self):
         """Returns path to application instance directory."""
@@ -88,11 +92,9 @@ class CLIConfig(object):
         # Internal to Invenio-cli section
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]['flavour'] = flavour
-        config_parser[cls.CLI_SECTION]['project_dir'] = project_dir
         config_parser[cls.CLI_SECTION]['instance_path'] = ''
         config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
-        config_parser[cls.CLI_SECTION]['logfile'] = \
-            '{path}/logs/invenio-cli.log'.format(path=project_dir)
+        config_parser[cls.CLI_SECTION]['logfile'] = '/logs/invenio-cli.log'
 
         # Cookiecutter user input section
         config_parser[cls.COOKIECUTTER_SECTION] = {}
