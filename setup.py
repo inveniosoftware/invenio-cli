@@ -43,7 +43,7 @@ setup_requires = [
 
 install_requires = [
     'cookiecutter>=1.7.0,<1.8.0',
-    'click>=7.0,<7.1',
+    'click>=7.0,<8.0',
     'docker>=4.1.0,<4.2.0',
     'Flask-BabelEx>=0.9.4',
     'pipenv==2018.11.26',
