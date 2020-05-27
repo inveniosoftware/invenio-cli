@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019 CERN.
-# Copyright (C) 2019 Northwestern University.
+# Copyright (C) 2019-2020 CERN.
+# Copyright (C) 2019-2020 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -55,7 +55,7 @@ setup(
     long_description=readme + '\n\n' + history,
     keywords='invenio-cli',
     license='MIT',
-    author='CERN',
+    author='CERN & Northwestern University',
     author_email='info@inveniosoftware.org',
     url='https://github.com/inveniosoftware/invenio-cli',
     packages=packages,
@@ -80,6 +80,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Development Status :: 3 - Alpha',
     ],
 )
