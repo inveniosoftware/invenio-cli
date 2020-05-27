@@ -18,7 +18,6 @@ Invenio-Cli.
    :maxdepth: 2
 
    installation
-   configuration
    usage
 
 
