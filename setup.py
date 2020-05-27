@@ -16,13 +16,7 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'check-manifest>=0.25',
-    'coverage>=4.0',
-    'isort>=4.3.21',
-    'pydocstyle>=2.0.0',
-    'pytest-cov>=2.5.1',
-    'pytest-pep8>=1.0.6',
-    'pytest-invenio>=1.0.5',
+    'pytest-invenio>=1.3.2',
 ]
 
 extras_require = {
@@ -36,16 +30,11 @@ extras_require['all'] = []
 for reqs in extras_require.values():
     extras_require['all'].extend(reqs)
 
-setup_requires = [
-    'Babel>=1.3',
-    'pytest-runner>=3.0.0,<5',
-]
 
 install_requires = [
-    'cookiecutter>=1.7.0,<1.8.0',
+    'cookiecutter>=1.7.1,<1.8.0',
     'click>=7.0,<8.0',
     'docker>=4.1.0,<4.2.0',
-    'Flask-BabelEx>=0.9.4',
     'pipenv==2018.11.26',
     'PyYAML>=5.1.2',
 ]
@@ -80,7 +69,6 @@ setup(
     },
     extras_require=extras_require,
     install_requires=install_requires,
-    setup_requires=setup_requires,
     tests_require=tests_require,
     classifiers=[
         'Environment :: Web Environment',

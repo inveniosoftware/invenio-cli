@@ -20,7 +20,6 @@ Invenio-Cli.
    installation
    configuration
    usage
-   examplesapp
 
 
 API Reference
