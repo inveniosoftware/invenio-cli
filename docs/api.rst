@@ -9,5 +9,15 @@
 API Docs
 ========
 
-.. automodule:: invenio_cli.ext
+CLI
+---
+
+.. automodule:: invenio_cli.cli
+   :members:
+
+
+Helpers
+-------
+
+.. automodule:: invenio_cli.helpers
    :members:
