@@ -42,7 +42,7 @@ Local Development environment
 .. code-block:: console
 
     # Initialize environment and cd into <created folder>
-    $ invenio-cli init --flavour=RDM
+    $ invenio-cli init rdm
     $ cd <created folder>
 
     # Install locally
@@ -70,7 +70,7 @@ Containerized 'Production' environment
 .. code-block:: console
 
     # Initialize environment and cd into <created folder>
-    $ invenio-cli init --flavour=RDM
+    $ invenio-cli init rdm
     $ cd <created folder>
 
     # Spin-up InvenioRDM
