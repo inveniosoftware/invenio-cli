@@ -26,8 +26,8 @@ def cli():
 
 
 @cli.command()
-@click.option('--flavour', type=click.Choice(['RDM'], case_sensitive=False),
-              default='RDM', required=False)
+@click.argument('flavour', type=click.Choice(['RDM'], case_sensitive=False),
+                default='RDM', required=False)
 @click.option('--template', required=False,
               help='Cookiecutter path or git url to template')
 @click.option('--checkout', required=False,
