@@ -376,7 +376,7 @@ class ContainerizedCommands(object):
         self.update_statics_and_assets(install=install)
 
         click.secho(
-            'Instance running!\nVisit https://localhost', fg='green')
+            'Instance running!\nVisit https://127.0.0.1', fg='green')
 
     def demo(self):
         """Add demo records into the instance."""
