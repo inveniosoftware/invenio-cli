@@ -35,7 +35,7 @@ install_requires = [
     'cookiecutter>=1.7.1,<1.8.0',
     'click>=7.0,<8.0',
     'docker>=4.1.0,<4.2.0',
-    'pipenv==2018.11.26',
+    'pipenv>=2020.6.2',
     'PyYAML>=5.1.2',
 ]
 
