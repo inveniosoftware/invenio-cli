@@ -53,10 +53,11 @@ class CLIConfig(object):
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
 
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             click.secho(
-                "Missing '.invenio' file in current directory. "
-                "Are you in the project folder?", fg='red'
+                "Missing '{0}' file in current directory. "
+                "Are you in the project folder?".format(e.filename),
+                fg='red'
             )
             exit(1)
 
