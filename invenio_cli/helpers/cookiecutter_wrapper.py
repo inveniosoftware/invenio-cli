@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2019 CERN.
-# Copyright (C) 2019 Northwestern University.
+# Copyright (C) 2019-2020 CERN.
+# Copyright (C) 2019-2020 Northwestern University.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -49,7 +49,7 @@ class CookiecutterWrapper(object):
                 'cookiecutter-invenio-rdm.git'
             )
             self.template_name = self.extract_template_name(self.template)
-            self.checkout = template_checkout[1] or 'v0.10.0'
+            self.checkout = template_checkout[1] or 'v0.11.0'
 
     def cookiecutter(self):
         """Wrap cookiecutter call."""
