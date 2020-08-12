@@ -82,28 +82,16 @@ class DockerHelper(object):
         if self.local:
             command[2] = 'docker-compose.yml'
 
-        # Open logging pipe
-        logpipe = LogPipe(self.log_config)
-
-        subprocess.call(command, stdout=logpipe, stderr=logpipe)
-
-        # Close logging pipe
-        logpipe.close()
+        subprocess.call(command)
 
     def destroy_containers(self):
         """Stop and remove all containers, volumes and images."""
-        # Open logging pipe
-        logpipe = LogPipe(self.log_config)
-
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
         if self.local:
             command[2] = 'docker-compose.yml'
 
-        subprocess.call(command, stdout=logpipe, stderr=logpipe)
-
-        # Close logging pipe
-        logpipe.close()
+        subprocess.call(command)
 
     def _normalize_name(self, project_shortname):
         """Normalize the container name according to the compose version.
