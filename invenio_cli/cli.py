@@ -146,7 +146,9 @@ def update(install_js):
               help='Verbose mode will show all logs in the console.')
 def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
-    click.secho('TODO: Revisit destroy command', fg='red')
+    cli_config = CLIConfig()
+    commands = Commands(cli_config, local)
+    commands.destroy()
 
 
 @cli.command()
