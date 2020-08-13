@@ -153,7 +153,7 @@ class LocalCommands(object):
         time.sleep(30)  # Give time to the containers to start properly
 
     def destroy(self):
-        """Destroys env, containers."""
+        """Destroys a virtualenv (if created with pipenv) and containers."""
         try:
             subprocess.run(['pipenv', '--rm'], check=True)
             click.secho('Virtual environment destroyed', fg='green')
