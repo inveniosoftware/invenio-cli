@@ -151,7 +151,7 @@ class LocalCommands(object):
         docker_helper.start_containers()
         # TODO: Find faster way to procede when containers are ready
         time.sleep(30)  # Give time to the containers to start properly
-    
+
     def destroy(self):
         """Destroys env, containers."""
         try:
