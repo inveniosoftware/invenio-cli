@@ -147,7 +147,12 @@ def update(install_js):
 def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
     cli_config = CLIConfig()
-    commands = LocalCommands(cli_config)
+
+    if local:
+        commands = LocalCommands(cli_config)
+    else:
+        commands = Commands(cli_config, local)
+
     commands.destroy()
 
 
