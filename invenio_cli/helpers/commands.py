@@ -158,8 +158,10 @@ class LocalCommands(object):
             subprocess.run(['pipenv', '--rm'], check=True)
             click.secho('Virtual environment destroyed', fg='green')
 
-        except:
-            pass
+        except subprocess.CalledProcessError:
+            click.secho('The virtual environment was '
+                        'not removed as it was not '
+                        'created by pipenv', fg='red')
 
         docker_helper = DockerHelper(
             self.cli_config.get_project_shortname(),
