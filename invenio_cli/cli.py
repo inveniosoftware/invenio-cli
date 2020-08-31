@@ -28,9 +28,9 @@ def cli():
 @cli.command()
 @click.argument('flavour', type=click.Choice(['RDM'], case_sensitive=False),
                 default='RDM', required=False)
-@click.option('--template', required=False,
+@click.option('-t', '--template', required=False,
               help='Cookiecutter path or git url to template')
-@click.option('--checkout', required=False,
+@click.option('-c', '--checkout', required=False,
               help='Branch, tag or commit to checkout if --template is a git url')  # noqa
 def init(flavour, template, checkout):
     """Initializes the application according to the chosen flavour."""
@@ -76,7 +76,7 @@ def install(pre, lock):
 
 
 @cli.command()
-@click.option('--force', default=False, is_flag=True,
+@click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
 def services(force):
     """Starts DB, ES, queue and cache services and ensures they are setup.
@@ -91,7 +91,7 @@ def services(force):
 @cli.command()
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
-@click.option('--force', default=False, is_flag=True,
+@click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
 @click.option('--install-js/--no-install-js', default=True, is_flag=True,
               help="(re-)Install JS dependencies, defaults to True")
@@ -145,7 +145,7 @@ def update(install_js):
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
-@click.option('--verbose', default=False, is_flag=True, required=False,
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
@@ -155,7 +155,7 @@ def destroy(local, verbose):
 
 
 @cli.command()
-@click.option('--verbose', default=False, is_flag=True, required=False,
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 def upgrade(verbose):
     """Upgrades the current application to the specified newer version."""
