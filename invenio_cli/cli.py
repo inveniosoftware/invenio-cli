@@ -148,7 +148,7 @@ def destroy(local, verbose):
     """Removes all associated resources (containers, images, volumes)."""
     cli_config = CLIConfig()
     commands = Commands(cli_config, local)
-    commands.destroy()
+    commands.destroy(local)
 
 
 @cli.command()

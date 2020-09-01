@@ -43,7 +43,7 @@ class Commands(object):
         """Delegate commands according to environment."""
         return getattr(self.environment, name)
 
-    def destroy(self):
+    def destroy(self, local):
         """Destroys a virtualenv (if created with pipenv) and containers."""
         try:
             subprocess.run(['pipenv', '--rm'], check=True)
@@ -56,7 +56,7 @@ class Commands(object):
 
         docker_helper = DockerHelper(
             self.cli_config.get_project_shortname(),
-            local=True)
+            local=local)
         docker_helper.stop_containers()
         self.cli_config.update_services_setup(False)
         docker_helper.destroy_containers()
