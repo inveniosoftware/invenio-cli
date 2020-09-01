@@ -43,25 +43,6 @@ class Commands(object):
         """Delegate commands according to environment."""
         return getattr(self.environment, name)
 
-    def destroy(self, local):
-        """Destroys a virtualenv (if created with pipenv) and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=local)
-        docker_helper.stop_containers()
-        self.cli_config.update_services_setup(False)
-        docker_helper.destroy_containers()
-        click.secho('Destroyed containers...', fg='green')
-
 
 class LocalCommands(object):
     """Local environment CLI commands."""
@@ -276,6 +257,11 @@ class LocalCommands(object):
             'Instance running!\nVisit https://127.0.0.1:5000', fg='green')
         server.wait()
 
+    def destroy(self):
+        """Destroys the instance's virtualenv and containers."""
+        click.secho('IMPLEMENT ME!', fg='red')
+        assert False
+
 
 class ContainerizedCommands(object):
     """Containerized environment CLI commands."""
@@ -406,3 +392,17 @@ class ContainerizedCommands(object):
         # container mode ensures the containers are up
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
+
+    def destroy(self):
+        """Destroys the instance's virtualenv and containers."""
+        try:
+            subprocess.run(['pipenv', '--rm'], check=True)
+            click.secho('Virtual environment destroyed', fg='green')
+        except subprocess.CalledProcessError:
+            click.secho('The virtual environment was '
+                        'not removed as it was not '
+                        'created by pipenv', fg='red')
+
+        self.docker_helper.destroy_containers()
+        self.cli_config.update_services_setup(False)
+        click.secho('Destroyed containers...', fg='green')

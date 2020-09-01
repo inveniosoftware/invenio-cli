@@ -458,3 +458,16 @@ def test_containerizedcommands_demo(
         commands.docker_helper.execute_cli_command.mock_calls ==
         [call('project-shortname', 'invenio rdm-records demo')]
     )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_destroy(
+        patched_docker_helper, patched_subprocess, fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    commands.destroy()
+
+    patched_subprocess.run.assert_called_with(['pipenv', '--rm'], check=True)
+    commands.docker_helper.destroy_containers.assert_called()
+    assert fake_cli_config.services_setup is False
