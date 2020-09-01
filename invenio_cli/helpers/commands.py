@@ -43,6 +43,25 @@ class Commands(object):
         """Delegate commands according to environment."""
         return getattr(self.environment, name)
 
+    def destroy(self):
+        """Destroys a virtualenv (if created with pipenv) and containers."""
+        try:
+            subprocess.run(['pipenv', '--rm'], check=True)
+            click.secho('Virtual environment destroyed', fg='green')
+
+        except subprocess.CalledProcessError:
+            click.secho('The virtual environment was '
+                        'not removed as it was not '
+                        'created by pipenv', fg='red')
+
+        docker_helper = DockerHelper(
+            self.cli_config.get_project_shortname(),
+            local=True)
+        docker_helper.stop_containers()
+        self.cli_config.update_services_setup(False)
+        docker_helper.destroy_containers()
+        click.secho('Destroyed containers...', fg='green')
+
 
 class LocalCommands(object):
     """Local environment CLI commands."""
@@ -151,25 +170,6 @@ class LocalCommands(object):
         docker_helper.start_containers()
         # TODO: Find faster way to procede when containers are ready
         time.sleep(30)  # Give time to the containers to start properly
-
-    def destroy(self):
-        """Destroys a virtualenv (if created with pipenv) and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=True)
-        docker_helper.stop_containers()
-        self.cli_config.update_services_setup(False)
-        docker_helper.destroy_containers()
-        click.secho('Destroyed containers...', fg='green')
 
     def services(self, force):
         """Local start of containers (services).
@@ -332,25 +332,6 @@ class ContainerizedCommands(object):
         locked = 'Pipfile.lock' in os.listdir('.')
         if not locked:
             subprocess.run(command, check=True)
-
-    def destroy(self):
-        """Destroys a virtualenv (if created with pipenv) and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=True)
-        docker_helper.stop_containers()
-        self.cli_config.update_services_setup(False)
-        docker_helper.destroy_containers()
-        click.secho('Destroyed containers...', fg='green')
 
     def containerize(self, pre, force, install):
         """Launch fully containerized application."""
