@@ -15,7 +15,6 @@ import pytest
 
 from invenio_cli.helpers.commands import Commands, ContainerizedCommands, \
     LocalCommands
-
 from invenio_cli.helpers.docker_helper import DockerHelper
 
 
