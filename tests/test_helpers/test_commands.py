@@ -16,6 +16,8 @@ import pytest
 from invenio_cli.helpers.commands import Commands, ContainerizedCommands, \
     LocalCommands
 
+from invenio_cli.helpers.docker_helper import DockerHelper
+
 
 def test_commands_delegates_to_environment():
     commands = Commands(Mock(), True)
@@ -259,19 +261,30 @@ def test_localcommands_demo(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.DockerHelper')
 @patch('invenio_cli.helpers.docker_helper.subprocess')
 def test_localcommands_destroy(
-        docker_helper_subprocess, patched_docker_helper, patched_subprocess,
-        fake_cli_config):
+        docker_helper_subprocess, patched_subprocess, fake_cli_config):
     commands = LocalCommands(fake_cli_config)
 
-    commands.destroy()
+    # Needed to fake call to docker-compose --version but not call
+    # to docker-compose up
+    def fake_normalize_name(self, project_shortname):
+        return 'project_shortname'
+
+    with patch.object(DockerHelper, '_normalize_name', fake_normalize_name):
+        def docker_helper(project_shortname, local):
+            return DockerHelper('project-shortname', local=True)
+        patch_handle = patch(
+            'invenio_cli.helpers.commands.DockerHelper', docker_helper
+        )
+        patch_handle.start()
+        commands.destroy()
+        patch_handle.stop()
 
     patched_subprocess.run.assert_called_with(['pipenv', '--rm'], check=True)
-
-    docker_helper_subprocess.run.destroy_containers()
-
+    docker_helper_subprocess.call.assert_called_with([
+        'docker-compose', '--file', 'docker-compose.yml', 'down', '--volumes'
+    ])
     assert fake_cli_config.services_setup is False
 
 

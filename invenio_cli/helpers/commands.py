@@ -262,7 +262,6 @@ class LocalCommands(object):
         try:
             subprocess.run(['pipenv', '--rm'], check=True)
             click.secho('Virtual environment destroyed', fg='green')
-
         except subprocess.CalledProcessError:
             click.secho('The virtual environment was '
                         'not removed as it was not '
