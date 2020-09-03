@@ -95,7 +95,9 @@ def services(force):
               help='Force recreation of db tables, ES indices, queues...')
 @click.option('--install-js/--no-install-js', default=True, is_flag=True,
               help="(re-)Install JS dependencies, defaults to True")
-def containerize(pre, force, install_js):
+@click.option('--stop', default=False, is_flag=True,
+              help='Stop containers')
+def containerize(pre, force, install_js, stop):
     """Setup and run all containers (docker-compose.full.yml).
 
     Think of it as a production compilation build + running.
@@ -105,7 +107,8 @@ def containerize(pre, force, install_js):
         cli_config,
         DockerHelper(cli_config.get_project_shortname(), local=False)
     )
-    commands.containerize(pre=pre, force=force, install=install_js)
+
+    commands.containerize(pre=pre, force=force, install=install_js, stop=stop)
 
 
 @cli.command()

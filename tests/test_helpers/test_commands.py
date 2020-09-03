@@ -321,7 +321,7 @@ def test_containerizedcommands_containerize(
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
     # Case: pre=False, force=False, install=True
-    commands.containerize(pre=False, force=False, install=True)
+    commands.containerize(pre=False, force=False, install=True, stop=False)
 
     commands.docker_helper.start_containers.assert_called()
     expected_setup_calls = [
@@ -351,7 +351,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=False, install=False
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=False, install=False)
+    commands.containerize(pre=False, force=False, install=False, stop=False)
 
     assert (
         call('project-shortname', 'invenio webpack install --unsafe') not in
@@ -361,7 +361,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=True, install=True
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=True, install=True)
+    commands.containerize(pre=False, force=True, install=True, stop=False)
 
     expected_force_calls = [
         call(
@@ -385,7 +385,7 @@ def test_containerizedcommands_containerize(
     # Only the locking of the Pipfile. No need to test all combinations.
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=True, force=True, install=True)
+    commands.containerize(pre=True, force=True, install=True, stop=False)
 
     assert commands.docker_helper.execute_cli_command.mock_calls == (
         expected_force_calls + expected_setup_calls
