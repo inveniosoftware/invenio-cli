@@ -332,8 +332,13 @@ class ContainerizedCommands(object):
         if not locked:
             subprocess.run(command, check=True)
 
-    def containerize(self, pre, force, install):
+    def containerize(self, pre, force, install, stop):
         """Launch fully containerized application."""
+        if stop:
+            self.docker_helper.stop_containers()
+            click.secho("Stopping containers...", fg="green")
+            return
+
         self._lock_python_dependencies(pre)
 
         click.secho('Making sure containers are up...', fg='green')
