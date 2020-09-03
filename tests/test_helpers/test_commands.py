@@ -391,6 +391,12 @@ def test_containerizedcommands_containerize(
         expected_force_calls + expected_setup_calls
     )
 
+    # Case: pre=True, force=True, install=True, stop=True
+    # Testing the stop_containers
+    commands.docker_helper.stop_containers.reset_mock()
+    commands.containerize(pre=False, force=False, install=False, stop=True)
+    commands.docker_helper.stop_containers.assert_called()
+
 
 @patch('invenio_cli.helpers.commands.subprocess')
 @patch('invenio_cli.helpers.commands.DockerHelper')
