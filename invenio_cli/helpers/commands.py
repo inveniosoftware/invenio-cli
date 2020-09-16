@@ -228,7 +228,7 @@ class LocalCommands(object):
         command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
         subprocess.run(command, check=True)
 
-    def run(self):
+    def run(self, host, port):
         """Run development server and celery queue."""
         self._ensure_containers_running()
 
@@ -242,7 +242,7 @@ class LocalCommands(object):
 
         click.secho("Starting celery worker...", fg="green")
         worker = subprocess.Popen([
-            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+            'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
         ])
 
         click.secho("Starting up local (development) server...", fg='green')
@@ -250,30 +250,14 @@ class LocalCommands(object):
         run_env['FLASK_ENV'] = 'development'
         server = subprocess.Popen([
             'pipenv', 'run', 'invenio', 'run', '--cert',
-            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
+            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
+            '--host', host, '--port', port
         ], env=run_env)
 
         click.secho(
-            'Instance running!\nVisit https://127.0.0.1:5000', fg='green')
+            'Instance running!\nVisit https://{}:{}'.format(host, port),
+            fg='green')
         server.wait()
-
-    def destroy(self):
-        """Destroys a virtualenv (if created with pipenv) and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=True)
-
-        self.cli_config.update_services_setup(False)
-        docker_helper.destroy_containers()
-        click.secho('Destroyed containers...', fg='green')
 
 
 class ContainerizedCommands(object):
@@ -332,13 +316,8 @@ class ContainerizedCommands(object):
         if not locked:
             subprocess.run(command, check=True)
 
-    def containerize(self, pre, force, install, stop):
+    def containerize(self, pre, force, install):
         """Launch fully containerized application."""
-        if stop:
-            self.docker_helper.stop_containers()
-            click.secho("Stopping containers...", fg="green")
-            return
-
         self._lock_python_dependencies(pre)
 
         click.secho('Making sure containers are up...', fg='green')
@@ -411,6 +390,11 @@ class ContainerizedCommands(object):
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
 
+    def stop(self):
+        """Stops containers."""
+        self.docker_helper.stop_containers()
+        click.secho('Stopped containers', fg='green')
+
     def destroy(self):
         """Destroys the instance's virtualenv and containers."""
         try:
@@ -423,4 +407,4 @@ class ContainerizedCommands(object):
 
         self.docker_helper.destroy_containers()
         self.cli_config.update_services_setup(False)
-        click.secho('Destroyed containers...', fg='green')
+        click.secho('Destroyed containers', fg='green')

@@ -28,9 +28,9 @@ def cli():
 @cli.command()
 @click.argument('flavour', type=click.Choice(['RDM'], case_sensitive=False),
                 default='RDM', required=False)
-@click.option('--template', required=False,
+@click.option('-t', '--template', required=False,
               help='Cookiecutter path or git url to template')
-@click.option('--checkout', required=False,
+@click.option('-c', '--checkout', required=False,
               help='Branch, tag or commit to checkout if --template is a git url')  # noqa
 def init(flavour, template, checkout):
     """Initializes the application according to the chosen flavour."""
@@ -76,7 +76,7 @@ def install(pre, lock):
 
 
 @cli.command()
-@click.option('--force', default=False, is_flag=True,
+@click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
 def services(force):
     """Starts DB, ES, queue and cache services and ensures they are setup.
@@ -91,7 +91,7 @@ def services(force):
 @cli.command()
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
-@click.option('--force', default=False, is_flag=True,
+@click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
 @click.option('--install-js/--no-install-js', default=True, is_flag=True,
               help="(re-)Install JS dependencies, defaults to True")
@@ -108,7 +108,7 @@ def containerize(pre, force, install_js, stop):
         DockerHelper(cli_config.get_project_shortname(), local=False)
     )
 
-    commands.containerize(pre=pre, force=force, install=install_js, stop=stop)
+    commands.containerize(pre=pre, force=force, install=install_js)
 
 
 @cli.command()
@@ -122,14 +122,18 @@ def demo(local):
 
 
 @cli.command()
-def run():
+@click.option('--host', '-h',  default='127.0.0.1',
+              help='bind address')
+@click.option('--port', '-p',  default=5000,
+              help='bind port')
+def run(host, port):
     """Starts the local development server.
 
     NOTE: this only makes sense locally so no --local option
     """
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
-    commands.run()
+    commands.run(host=host, port=str(port))
 
 
 @cli.command()
@@ -143,15 +147,23 @@ def update(install_js):
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
-@click.option('--verbose', default=False, is_flag=True, required=False,
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def destroy(local, verbose):
+def destroy(verbose):
     """Removes all associated resources (containers, images, volumes)."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
+    commands = Commands(cli_config, False)
     commands.destroy()
+
+
+@cli.command()
+@click.option('--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def stop(verbose):
+    """Stops containers."""
+    cli_config = CLIConfig()
+    commands = Commands(cli_config, False)
+    commands.stop()
 
 
 @cli.command()

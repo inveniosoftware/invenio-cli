@@ -40,25 +40,6 @@ class DockerHelper(object):
             logging.basicConfig(filename=self.log_config.logfile,
                                 level=logging.INFO)
 
-    def build_image(self, dockerfile, tag):
-        """Build docker image."""
-        self.docker_client.images.build(path=os.getcwd(),
-                                        dockerfile=dockerfile, tag=tag)
-
-    def create_images(self):
-        """Create images according to the specified environment."""
-        # Open logging pipe
-        logpipe = LogPipe(self.log_config)
-
-        command = ['docker-compose',
-                   '--file', 'docker-compose.full.yml', 'up', '--no-start']
-        if self.local:
-            command[2] = 'docker-compose.yml'
-
-        subprocess.call(command, stdout=logpipe, stderr=logpipe)
-        # Close logging pipe
-        logpipe.close()
-
     def start_containers(self):
         """Start containers according to the specified environment."""
         command = [
@@ -76,11 +57,12 @@ class DockerHelper(object):
 
     def stop_containers(self):
         """Stop currently running containers."""
-        command = ['docker-compose',
-                   '--file', 'docker-compose.full.yml', 'stop']
-
-        if self.local:
-            command[2] = 'docker-compose.yml'
+        command = [
+            'docker-compose',
+            '--file',
+            'docker-compose.full.yml',
+            'stop'
+        ]
 
         subprocess.call(command)
 
@@ -88,8 +70,6 @@ class DockerHelper(object):
         """Stop and remove all containers, volumes and images."""
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
-        if self.local:
-            command[2] = 'docker-compose.yml'
 
         subprocess.call(command)
 
@@ -111,19 +91,6 @@ class DockerHelper(object):
             return re.sub(r'[^a-z0-9]', '', project_shortname)
         else:
             return project_shortname
-
-    def copy(self, src_file, dst_path, project_shortname):
-        """Copy a file into the path of the specified container."""
-        container_name = '{}_web-ui_1'.format(
-            self._normalize_name(project_shortname))
-        container = self.docker_client.containers.get(container_name)
-
-        with tarfile.open('tmp.tar', "w") as tar:
-            tar.add(src_file, arcname=os.path.basename(src_file),
-                    recursive=False)
-        with open('tmp.tar', 'rb') as fin:
-            data = io.BytesIO(fin.read())
-            container.put_archive(dst_path, data)
 
     def copy2(self, src_path, dst_path):
         """Copy a file into the path of the specified container."""

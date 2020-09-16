@@ -260,34 +260,6 @@ def test_localcommands_demo(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.docker_helper.subprocess')
-def test_localcommands_destroy(
-        docker_helper_subprocess, patched_subprocess, fake_cli_config):
-    commands = LocalCommands(fake_cli_config)
-
-    # Needed to fake call to docker-compose --version but not call
-    # to docker-compose up
-    def fake_normalize_name(self, project_shortname):
-        return 'project_shortname'
-
-    with patch.object(DockerHelper, '_normalize_name', fake_normalize_name):
-        def docker_helper(project_shortname, local):
-            return DockerHelper('project-shortname', local=True)
-        patch_handle = patch(
-            'invenio_cli.helpers.commands.DockerHelper', docker_helper
-        )
-        patch_handle.start()
-        commands.destroy()
-        patch_handle.stop()
-
-    patched_subprocess.run.assert_called_with(['pipenv', '--rm'], check=True)
-    docker_helper_subprocess.call.assert_called_with([
-        'docker-compose', '--file', 'docker-compose.yml', 'down', '--volumes'
-    ])
-    assert fake_cli_config.services_setup is False
-
-
-@patch('invenio_cli.helpers.commands.subprocess')
 @patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
 def test_localcommands_run(
@@ -295,17 +267,18 @@ def test_localcommands_run(
         fake_cli_config):
     commands = LocalCommands(fake_cli_config)
 
-    commands.run()
+    commands.run(host='127.0.0.1', port='5000')
 
     run_env = os.environ.copy()
     run_env['FLASK_ENV'] = 'development'
     expected_calls = [
         call([
-            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+            'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
         ]),
         call([
             'pipenv', 'run', 'invenio', 'run', '--cert',
-            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
+            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
+            '--host', '127.0.0.1', '--port', '5000'
         ], env=run_env),
         call().wait()
     ]
@@ -321,7 +294,7 @@ def test_containerizedcommands_containerize(
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
     # Case: pre=False, force=False, install=True
-    commands.containerize(pre=False, force=False, install=True, stop=False)
+    commands.containerize(pre=False, force=False, install=True)
 
     commands.docker_helper.start_containers.assert_called()
     expected_setup_calls = [
@@ -351,7 +324,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=False, install=False
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=False, install=False, stop=False)
+    commands.containerize(pre=False, force=False, install=False)
 
     assert (
         call('project-shortname', 'invenio webpack install --unsafe') not in
@@ -361,7 +334,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=True, install=True
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=True, install=True, stop=False)
+    commands.containerize(pre=False, force=True, install=True)
 
     expected_force_calls = [
         call(
@@ -385,16 +358,20 @@ def test_containerizedcommands_containerize(
     # Only the locking of the Pipfile. No need to test all combinations.
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=True, force=True, install=True, stop=False)
+    commands.containerize(pre=True, force=True, install=True)
 
     assert commands.docker_helper.execute_cli_command.mock_calls == (
         expected_force_calls + expected_setup_calls
     )
 
-    # Case: pre=False, force=False, install=False, stop=True
-    # Testing the stop_containers
-    commands.docker_helper.stop_containers.reset_mock()
-    commands.containerize(pre=False, force=False, install=False, stop=True)
+
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_stop(
+        patched_docker_helper, fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    commands.stop()
+
     commands.docker_helper.stop_containers.assert_called()
 
 
