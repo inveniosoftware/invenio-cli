@@ -6,6 +6,10 @@
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
+branches:
+  except:
+  - /^v\d+\.\d+(\.\d+)?(\S*)?$/
+
 notifications:
   email: false
 
@@ -24,7 +28,7 @@ cache:
 
 env:
   - REQUIREMENTS=lowest
-  - REQUIREMENTS=release DEPLOY=true
+  - REQUIREMENTS=release
   - REQUIREMENTS=devel
 
 python:
@@ -48,14 +52,3 @@ script:
 
 after_success:
   - coveralls
-
-deploy:
-  provider: pypi
-  user: inveniosoftware
-  password:
-    secure: J8tqlDNeL8vSnJ7T5+nUfbnUS87PUY8x2WTjGkII1ZN1pTQUYlbk2syOTV2gdCFI9nGxD+Oi55LLc53FZfpWG7VlGl3Qz8ya71H8NOhsAL4C2eznPHVE6lHVQAN+XhUpDYBxKSeN4PnU7UuKxNsrkk14oUCQOPHwnC96qdUQgq24GylgNMC1cP7paApCZAhZ1yvcjI7gj6j6RPSMqWDtvoLEM/X8L8LVQPYDibenJZXdROzLqBNtt9q+God/aVgM8xVIzAFWqU7nf28CylfesDLscRfV67I8kwLv2p/5G95Tqb/pO6iQnVkJhTx7KcorOb5km+NOmAIqeFgmB/nR6DHyv5kWk39K1zXbubFFhD/bwjQCrMPxmfkX+g4gyA6iAEDSnNvEpYpDHQLKf4cTz/Sd4djf9f1RLx1SXNqNBOB5Om+WxOYyZgyu7sw5vsjugwZ7yTI10XedqpEUf4sxFoak3Z1MUtcr+Rppj49Ym+tLgx/nZjYLRojGMsiVhQSTHLcPnuqkohyKa6yy46QZmNgZCpyIYsBT864YukWlxjy/TRKpNTun4sWyhVSc7N5BenPMVJVQYu3PkwfJZer449Fqr9cwY+w13GZ586jwWReTgeeyMPwysRv6YEfHawTYivoDDwIqm66ERHeS/fXZB77QnMlPi1lKhbumiXqEwdg=
-  distributions: "sdist bdist_wheel"
-  on:
-    tags: true
-    repo: inveniosoftware/invenio-cli
-  skip_existing: true
