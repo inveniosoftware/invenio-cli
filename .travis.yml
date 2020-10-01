@@ -32,7 +32,9 @@ env:
   - REQUIREMENTS=devel
 
 python:
-  - "3.6"
+  # Lower than 3.6.9 distutils imports `imp` and throws a deprecation
+  # warning that makes the test suit fail.
+  - "3.6.9"
   - "3.7"
   - "3.8"
 
