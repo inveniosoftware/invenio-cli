@@ -301,7 +301,7 @@ def test_localcommands_run(
     run_env['FLASK_ENV'] = 'development'
     expected_calls = [
         call([
-            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+            'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
         ]),
         call([
             'pipenv', 'run', 'invenio', 'run', '--cert',
