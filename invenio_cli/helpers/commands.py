@@ -242,7 +242,7 @@ class LocalCommands(object):
 
         click.secho("Starting celery worker...", fg="green")
         worker = subprocess.Popen([
-            'pipenv', 'run', 'celery', 'worker', '--app', 'invenio_app.celery'
+            'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
         ])
 
         click.secho("Starting up local (development) server...", fg='green')
