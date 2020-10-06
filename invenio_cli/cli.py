@@ -122,14 +122,18 @@ def demo(local):
 
 
 @cli.command()
-def run():
+@click.option('--host', '-h',  default='127.0.0.1',
+              help='bind address')
+@click.option('--port', '-p',  default=5000,
+              help='bind port')
+def run(host, port):
     """Starts the local development server.
 
     NOTE: this only makes sense locally so no --local option
     """
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
-    commands.run()
+    commands.run(host=host, port=str(port))
 
 
 @cli.command()

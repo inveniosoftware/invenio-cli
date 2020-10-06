@@ -228,7 +228,7 @@ class LocalCommands(object):
         command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
         subprocess.run(command, check=True)
 
-    def run(self):
+    def run(self, host, port):
         """Run development server and celery queue."""
         self._ensure_containers_running()
 
@@ -250,11 +250,13 @@ class LocalCommands(object):
         run_env['FLASK_ENV'] = 'development'
         server = subprocess.Popen([
             'pipenv', 'run', 'invenio', 'run', '--cert',
-            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key'
+            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
+            '--host', host, '--port', port
         ], env=run_env)
 
         click.secho(
-            'Instance running!\nVisit https://127.0.0.1:5000', fg='green')
+            'Instance running!\nVisit https://{}:{}'.format(host, port),
+            fg='green')
         server.wait()
 
     def destroy(self):
