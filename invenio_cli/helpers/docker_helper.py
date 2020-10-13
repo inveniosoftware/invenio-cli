@@ -69,8 +69,6 @@ class DockerHelper(object):
         """Stop and remove all containers, volumes and images."""
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
-        if self.local:
-            command[2] = 'docker-compose.yml'
 
         subprocess.call(command)
 
