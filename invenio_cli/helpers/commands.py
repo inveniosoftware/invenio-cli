@@ -35,8 +35,7 @@ class Commands(object):
             self.environment = ContainerizedCommands(
                 cli_config,
                 DockerHelper(
-                    project_shortname=cli_config.get_project_shortname(),
-                    local=False)
+                    project_shortname=cli_config.get_project_shortname())
             )
 
     def __getattr__(self, name):
@@ -260,6 +259,7 @@ class LocalCommands(object):
         server.wait()
 
     def destroy(self):
+        click.secho('Hey boyyy 2', fg='green')
         """Destroys a virtualenv (if created with pipenv) and containers."""
         try:
             subprocess.run(['pipenv', '--rm'], check=True)
@@ -270,8 +270,7 @@ class LocalCommands(object):
                         'created by pipenv', fg='red')
 
         docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=True)
+            self.cli_config.get_project_shortname())
 
         self.cli_config.update_services_setup(False)
         docker_helper.destroy_containers()
@@ -414,6 +413,7 @@ class ContainerizedCommands(object):
             project_shortname, 'invenio rdm-records demo')
 
     def destroy(self):
+        click.secho('Hey boyyy 1', fg='green')
         """Destroys the instance's virtualenv and containers."""
         try:
             subprocess.run(['pipenv', '--rm'], check=True)
