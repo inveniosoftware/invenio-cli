@@ -147,17 +147,12 @@ def update(install_js):
 
 
 @cli.command()
-@click.option('--local/--containers', default=True, is_flag=True,
-              help='Which environment to build, it defaults to local')
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def destroy(local, verbose):
+def destroy(verbose):
     """Removes all associated resources (containers, images, volumes)."""
-    #local = False
-    print(local)
-
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
+    commands = Commands(cli_config, False)
     commands.destroy()
 
 
