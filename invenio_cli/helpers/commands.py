@@ -30,7 +30,7 @@ class Commands(object):
         :param local: boolean True if local environment
         """
         if local:
-            self.environment = LocalCommands(cli_config, local)
+            self.environment = LocalCommands(cli_config)
         else:
             self.environment = ContainerizedCommands(
                 cli_config,
