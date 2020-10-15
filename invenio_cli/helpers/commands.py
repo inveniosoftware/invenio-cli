@@ -259,24 +259,6 @@ class LocalCommands(object):
             fg='green')
         server.wait()
 
-    def destroy(self):
-        """Destroys a virtualenv (if created with pipenv) and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
-            local=True)
-
-        self.cli_config.update_services_setup(False)
-        docker_helper.destroy_containers()
-        click.secho('Destroyed containers...', fg='green')
-
 
 class ContainerizedCommands(object):
     """Containerized environment CLI commands."""
