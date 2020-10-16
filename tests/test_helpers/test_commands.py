@@ -294,7 +294,7 @@ def test_containerizedcommands_containerize(
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
     # Case: pre=False, force=False, install=True
-    commands.containerize(pre=False, force=False, install=True, stop=False)
+    commands.containerize(pre=False, force=False, install=True)
 
     commands.docker_helper.start_containers.assert_called()
     expected_setup_calls = [
@@ -324,7 +324,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=False, install=False
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=False, install=False, stop=False)
+    commands.containerize(pre=False, force=False, install=False)
 
     assert (
         call('project-shortname', 'invenio webpack install --unsafe') not in
@@ -334,7 +334,7 @@ def test_containerizedcommands_containerize(
     # Case: pre=False, force=True, install=True
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=False, force=True, install=True, stop=False)
+    commands.containerize(pre=False, force=True, install=True)
 
     expected_force_calls = [
         call(
@@ -358,16 +358,20 @@ def test_containerizedcommands_containerize(
     # Only the locking of the Pipfile. No need to test all combinations.
     commands.docker_helper.execute_cli_command.reset_mock()
 
-    commands.containerize(pre=True, force=True, install=True, stop=False)
+    commands.containerize(pre=True, force=True, install=True)
 
     assert commands.docker_helper.execute_cli_command.mock_calls == (
         expected_force_calls + expected_setup_calls
     )
 
-    # Case: pre=False, force=False, install=False, stop=True
-    # Testing the stop_containers
-    commands.docker_helper.stop_containers.reset_mock()
-    commands.containerize(pre=False, force=False, install=False, stop=True)
+
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_containerizedcommands_stop(
+        patched_docker_helper, fake_cli_config):
+    commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
+
+    commands.stop()
+
     commands.docker_helper.stop_containers.assert_called()
 
 

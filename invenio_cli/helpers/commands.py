@@ -316,13 +316,8 @@ class ContainerizedCommands(object):
         if not locked:
             subprocess.run(command, check=True)
 
-    def containerize(self, pre, force, install, stop):
+    def containerize(self, pre, force, install):
         """Launch fully containerized application."""
-        if stop:
-            self.docker_helper.stop_containers()
-            click.secho("Stopping containers...", fg="green")
-            return
-
         self._lock_python_dependencies(pre)
 
         click.secho('Making sure containers are up...', fg='green')
@@ -395,6 +390,12 @@ class ContainerizedCommands(object):
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
 
+    def stop(self):
+        """Stops containers."""
+        click.secho("Stopping containers...", fg="green")
+        self.docker_helper.stop_containers()
+        click.secho('Stopped containers', fg='green')
+
     def destroy(self):
         """Destroys the instance's virtualenv and containers."""
         try:
@@ -407,4 +408,4 @@ class ContainerizedCommands(object):
 
         self.docker_helper.destroy_containers()
         self.cli_config.update_services_setup(False)
-        click.secho('Destroyed containers...', fg='green')
+        click.secho('Destroyed containers', fg='green')
