@@ -57,11 +57,12 @@ class DockerHelper(object):
 
     def stop_containers(self):
         """Stop currently running containers."""
-        command = ['docker-compose',
-                   '--file', 'docker-compose.full.yml', 'stop']
-
-        if self.local:
-            command[2] = 'docker-compose.yml'
+        command = [
+            'docker-compose',
+            '--file',
+            'docker-compose.full.yml',
+            'stop'
+        ]
 
         subprocess.call(command)
 
