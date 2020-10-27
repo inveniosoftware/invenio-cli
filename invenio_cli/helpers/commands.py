@@ -248,6 +248,7 @@ class LocalCommands(object):
         click.secho("Starting up local (development) server...", fg='green')
         run_env = os.environ.copy()
         run_env['FLASK_ENV'] = 'development'
+        run_env['INVENIO_SITE_HOSTNAME'] = f"{host}:{port}"
         server = subprocess.Popen([
             'pipenv', 'run', 'invenio', 'run', '--cert',
             'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
