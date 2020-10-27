@@ -267,10 +267,13 @@ def test_localcommands_run(
         fake_cli_config):
     commands = LocalCommands(fake_cli_config)
 
-    commands.run(host='127.0.0.1', port='5000')
+    host = '127.0.0.1'
+    port = '5000'
+    commands.run(host=host, port=port)
 
     run_env = os.environ.copy()
     run_env['FLASK_ENV'] = 'development'
+    run_env['INVENIO_SITE_HOSTNAME'] = f"{host}:{port}"
     expected_calls = [
         call([
             'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
