@@ -37,6 +37,7 @@ install_requires = [
     'docker>=4.1.0,<4.2.0',
     'pipenv>=2020.6.2',
     'PyYAML>=5.1.2',
+    'pynpm>=0.1.2',
 ]
 
 packages = find_packages()

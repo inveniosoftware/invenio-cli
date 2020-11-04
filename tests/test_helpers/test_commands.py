@@ -203,7 +203,8 @@ def test_localcommands_install():
         commands._symlink_project_file_or_folder.mock_calls ==
         expected_symlink_calls
     )
-    commands.update_statics_and_assets.assert_called_with(force=True)
+    commands.update_statics_and_assets.assert_called_with(
+        force=True, flask_env='production')
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
@@ -285,7 +286,7 @@ def test_localcommands_run(
 
     host = '127.0.0.1'
     port = '5000'
-    commands.run(host=host, port=port)
+    commands.run(host=host, port=port, debug=True)
 
     run_env = os.environ.copy()
     run_env['FLASK_ENV'] = 'development'
@@ -502,3 +503,75 @@ def test_containerizedcommands_destroy(
     patched_subprocess.run.assert_called_with(['pipenv', '--rm'], check=True)
     commands.docker_helper.destroy_containers.assert_called()
     assert fake_cli_config.services_setup is False
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_shell(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    LocalCommands(fake_cli_config).shell()
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'shell', ],
+        check=True
+    )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_pyshell(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+    LocalCommands(fake_cli_config).pyshell()
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'run', 'invenio', 'shell'],
+        check=True
+    )
+
+
+@pytest.fixture()
+def testpkg():
+    return str(Path(__file__).parent / 'testpkg')
+
+
+@patch('pynpm.package.run_npm')
+def test_localcommands_link_js_module(
+        patched_run_npm, testpkg, fake_cli_config):
+
+    LocalCommands(fake_cli_config).link_js_module(testpkg)
+
+    expected_calls = [
+        call(testpkg, 'run-script', npm_bin='npm', args=('link-dist',)),
+        call('instance_dir/assets', 'link', npm_bin='npm', args=('testpkg',))
+    ]
+
+    assert expected_calls == patched_run_npm.mock_calls
+
+
+@patch('pynpm.package.run_npm')
+def test_localcommands_watch_js_module(
+        patched_run_npm, testpkg, fake_cli_config):
+
+    LocalCommands(fake_cli_config).watch_js_module(
+        testpkg, link=False)
+
+    expected_calls = [
+        call(testpkg, 'run-script', npm_bin='npm', args=('watch',)),
+    ]
+    assert expected_calls == patched_run_npm.mock_calls
+
+
+@patch('pynpm.package.run_npm')
+def test_localcommands_watch_js_module_w_build(
+        patched_run_npm, testpkg, fake_cli_config):
+
+    LocalCommands(fake_cli_config).watch_js_module(testpkg, link=True)
+
+    expected_calls = [
+        call(testpkg, 'run-script', npm_bin='npm', args=('link-dist',)),
+        call('instance_dir/assets', 'link', npm_bin='npm', args=('testpkg',)),
+        call(testpkg, 'run-script', npm_bin='npm', args=('watch',)),
+    ]
+    assert expected_calls == patched_run_npm.mock_calls

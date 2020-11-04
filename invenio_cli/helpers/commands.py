@@ -13,8 +13,10 @@ import signal
 import subprocess
 import time
 from distutils import dir_util
+from pathlib import Path
 
 import click
+from pynpm import NPMPackage
 
 from . import filesystem
 from .docker_helper import DockerHelper
@@ -154,14 +156,49 @@ class LocalCommands(object):
                         fg='green')
             subprocess.run(watch_cmd, check=True)
 
-    def install(self, pre, lock):
+    @staticmethod
+    def _watch_js_module(pkg):
+        """Watch the JS module for changes."""
+        click.secho('Starting watching module...', fg='green')
+        pkg.run_script('watch')
+
+    @staticmethod
+    def _module_pkg(path):
+        """NPM package for the given path."""
+        return NPMPackage(Path(path) / 'package.json')
+
+    def _assets_pkg(self):
+        """NPM package for the instance's webpack project."""
+        return self._module_pkg(self.cli_config.get_instance_path() / 'assets')
+
+    def link_js_module(self, path):
+        """High-level command to install and build a JS module."""
+        module_pkg = self._module_pkg(path)
+        assets_pkg = self._assets_pkg()
+
+        # Create link to global folder
+        click.secho('Linking module...', fg='green')
+        module_pkg.run_script('link-dist')
+
+        # Link the global folder to the assets folder.
+        assets_pkg.link(module_pkg.package_json['name'])
+
+    def watch_js_module(self, path, link=True):
+        """High-level command to watch a JS module for changes."""
+        if link:
+            self.link_js_module(path)
+
+        click.secho('Starting watching module...', fg='green')
+        self._module_pkg(path).run_script('watch')
+
+    def install(self, pre, lock, flask_env='production'):
         """Local build."""
         self._install_py_dependencies(pre, lock)
         self._update_instance_path()
         self._symlink_project_file_or_folder('invenio.cfg')
         self._symlink_project_file_or_folder('templates')
         self._symlink_project_file_or_folder('app_data')
-        self.update_statics_and_assets(force=True)
+        self.update_statics_and_assets(force=True, flask_env=flask_env)
 
     def _ensure_containers_running(self):
         """Ensures containers are running."""
@@ -249,7 +286,7 @@ class LocalCommands(object):
         command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
         subprocess.run(command, check=True)
 
-    def run(self, host, port):
+    def run(self, host, port, debug):
         """Run development server and celery queue."""
         self._ensure_containers_running()
 
@@ -268,7 +305,7 @@ class LocalCommands(object):
 
         click.secho("Starting up local (development) server...", fg='green')
         run_env = os.environ.copy()
-        run_env['FLASK_ENV'] = 'development'
+        run_env['FLASK_ENV'] = 'development' if debug else 'production'
         run_env['INVENIO_SITE_HOSTNAME'] = f"{host}:{port}"
         server = subprocess.Popen([
             'pipenv', 'run', 'invenio', 'run', '--cert',
@@ -280,6 +317,17 @@ class LocalCommands(object):
             'Instance running!\nVisit https://{}:{}'.format(host, port),
             fg='green')
         server.wait()
+
+    def shell(self):
+        """Start a shell in the virtual environment."""
+        command = ['pipenv', 'shell', ]
+        subprocess.run(command, check=True)
+
+    def pyshell(self, debug=False):
+        """Start a Python shell."""
+        with env(FLASK_ENV='development' if debug else 'production'):
+            command = ['pipenv', 'run', 'invenio', 'shell']
+            subprocess.run(command, check=True)
 
 
 class ContainerizedCommands(object):
