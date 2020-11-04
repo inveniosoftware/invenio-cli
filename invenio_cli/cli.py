@@ -63,7 +63,12 @@ def init(flavour, template, checkout):
               help='If specified, allows the installation of alpha releases')
 @click.option('--lock/--skip-lock', default=True, is_flag=True,
               help='Lock dependencies or avoid this step')
-def install(pre, lock):
+@click.option(
+    '--production/--development', '-p/-d', default=True, is_flag=True,
+    help='Production mode copies statics/assets. Development mode symlinks'
+         ' statics/assets.'
+)
+def install(pre, lock, production):
     """Installs the  project locally.
 
     Installs dependencies, creates instance directory,
@@ -72,7 +77,11 @@ def install(pre, lock):
     """
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
-    commands.install(pre=pre, lock=lock)
+    commands.install(
+        pre=pre,
+        lock=lock,
+        flask_env='production' if production else 'development'
+    )
 
 
 @cli.command()
@@ -121,17 +130,20 @@ def demo(local):
 
 @cli.command()
 @click.option('--host', '-h',  default='127.0.0.1',
-              help='bind address')
+              help='The interface to bind to.')
 @click.option('--port', '-p',  default=5000,
-              help='bind port')
-def run(host, port):
+              help='The port to bind to.')
+@click.option('--debug/--no-debug', '-d/',  default=True, is_flag=True,
+              help='Enable/disable debug mode including auto-reloading '
+                   '(default: enabled).')
+def run(host, port, debug):
     """Starts the local development server.
 
     NOTE: this only makes sense locally so no --local option
     """
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
-    commands.run(host=host, port=str(port))
+    commands.run(host=host, port=str(port), debug=debug)
 
 
 @cli.group()
@@ -164,6 +176,26 @@ def watch():
     commands.watch_assets()
 
 
+@assets.command('install-module')
+@click.argument('path', type=click.Path(exists=True))
+def install_module(path):
+    """Install and link a React module."""
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.link_js_module(path)
+
+
+@assets.command('watch-module')
+@click.option('--link', '-l', default=False, is_flag=True,
+              help='Link the module.')
+@click.argument('path', type=click.Path(exists=True))
+def watch_module(path, link):
+    """Watch a React module."""
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.watch_js_module(path, link=link)
+
+
 @cli.command()
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
@@ -188,3 +220,23 @@ def stop():
 def upgrade(verbose):
     """Upgrades the current application to the specified newer version."""
     click.secho('TODO: Implement upgrade command', fg='red')
+
+
+@cli.command()
+def shell():
+    """Shell command."""
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.shell()
+
+
+@cli.command()
+@click.option(
+    '--debug/--no-debug', '-d/', default=False, is_flag=True,
+    help='Enable Flask development mode (default: disabled).'
+)
+def pyshell(debug):
+    """Python shell command."""
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.pyshell(debug=debug)
