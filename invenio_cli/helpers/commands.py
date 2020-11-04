@@ -18,6 +18,7 @@ import click
 
 from . import filesystem
 from .docker_helper import DockerHelper
+from .env import env
 
 
 class Commands(object):
@@ -110,28 +111,48 @@ class LocalCommands(object):
         copied_files = dir_util.copy_tree(src_dir, dst_dir)
         return copied_files
 
-    def update_statics_and_assets(self, install):
-        """High-level command to update scss/js/images... files."""
-        click.secho('Collecting statics and assets...', fg='green')
-        # Collect into statics/ folder
-        command = ['pipenv', 'run', 'invenio', 'collect', '--verbose']
-        subprocess.run(command, check=True)
-        # Collect into assets/ folder
-        command = ['pipenv', 'run', 'invenio', 'webpack', 'create']
-        subprocess.run(command, check=True)
+    def update_statics_and_assets(self, force, flask_env='production'):
+        """High-level command to update less/js/images/... files."""
+        # Commands
+        prefix = ['pipenv', 'run']
+        collect_cmd = prefix + ['invenio', 'collect', '--verbose']
+        clean_create_cmd = prefix + ['invenio', 'webpack', 'clean', 'create']
+        create_cmd = prefix + ['invenio', 'webpack', 'create']
+        install_cmd = prefix + ['invenio', 'webpack', 'install']
+        build_cmd = prefix + ['invenio', 'webpack', 'build']
 
-        if install:
-            click.secho('Installing js dependencies...', fg='green')
-            # Installs in assets/node_modules/
-            command = ['pipenv', 'run', 'invenio', 'webpack', 'install']
-            subprocess.run(command, check=True)
+        with env(FLASK_ENV=flask_env):
+            # Collect into statics/ and assets/ folder
+            click.secho('Collecting statics and assets...', fg='green')
+            subprocess.run(collect_cmd, check=True)
+            if force:
+                subprocess.run(clean_create_cmd, check=True)
 
-        copied_files = self._copy_statics_and_assets()
-        self._symlink_assets_templates(copied_files)
+                # Installs in assets/node_modules/
+                click.secho('Installing JS dependencies...', fg='green')
+                subprocess.run(install_cmd, check=True)
+            else:
+                subprocess.run(create_cmd, check=True)
 
-        click.secho('Building assets...', fg='green')
-        command = ['pipenv', 'run', 'invenio', 'webpack', 'build']
-        subprocess.run(command, check=True)
+            # Symlink the instance's statics and assets
+            copied_files = self._copy_statics_and_assets()
+            self._symlink_assets_templates(copied_files)
+
+            # Build project
+            click.secho('Building assets...', fg='green')
+            subprocess.run(build_cmd, check=True)
+
+    def watch_assets(self):
+        """High-level command to watch assets for changes."""
+        # Commands
+        prefix = ['pipenv', 'run']
+        watch_cmd = prefix + ['invenio', 'webpack', 'run', 'start']
+
+        with env(FLASK_ENV='development'):
+            # Collect into statics/ and assets/ folder
+            click.secho('Starting assets watching (press CTRL+C to stop)...',
+                        fg='green')
+            subprocess.run(watch_cmd, check=True)
 
     def install(self, pre, lock):
         """Local build."""
@@ -140,7 +161,7 @@ class LocalCommands(object):
         self._symlink_project_file_or_folder('invenio.cfg')
         self._symlink_project_file_or_folder('templates')
         self._symlink_project_file_or_folder('app_data')
-        self.update_statics_and_assets(install=True)
+        self.update_statics_and_assets(force=True)
 
     def _ensure_containers_running(self):
         """Ensures containers are running."""

@@ -134,14 +134,34 @@ def run(host, port):
     commands.run(host=host, port=str(port))
 
 
-@cli.command()
-@click.option('--install-js/--no-install-js', default=False, is_flag=True,
-              help='(re-)Install JS dependencies, defaults to False')
-def update(install_js):
+@cli.group()
+def assets():
+    """Statics and assets management commands."""
+
+
+@assets.command()
+@click.option('--force', '-f', default=False, is_flag=True,
+              help='Force the full recreation the assets and statics.')
+@click.option(
+    '--production/--development', '-p/-d', default=True, is_flag=True,
+    help='Production mode copies files. Development mode symlinks files.'
+)
+def update(force, production):
     """Updates the current application static/assets files."""
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
-    commands.update_statics_and_assets(install=install_js)
+    commands.update_statics_and_assets(
+        force=force,
+        flask_env='production' if production else 'development'
+    )
+
+
+@assets.command()
+def watch():
+    """Watch assets files for changes and rebuild."""
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.watch_assets()
 
 
 @cli.command()

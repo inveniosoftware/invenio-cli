@@ -138,11 +138,12 @@ def test_localcommands_update_statics_and_assets(
 
     commands = LocalCommands(fake_cli_config)
 
-    commands.update_statics_and_assets(install=True)
+    commands.update_statics_and_assets(force=True)
 
     expected_calls = [
         call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'create'], check=True),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'clean', 'create'],
+             check=True),
         call(['pipenv', 'run', 'invenio', 'webpack', 'install'], check=True),
         call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True),
     ]
@@ -157,7 +158,7 @@ def test_localcommands_update_statics_and_assets(
     # Reset for install=False assertions
     patched_subprocess.run.reset_mock()
 
-    commands.update_statics_and_assets(install=False)
+    commands.update_statics_and_assets(force=False)
 
     expected_calls = [
         call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
@@ -165,6 +166,21 @@ def test_localcommands_update_statics_and_assets(
         call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True)
     ]
     assert patched_subprocess.run.mock_calls == expected_calls
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.commands.time')
+@patch('invenio_cli.helpers.commands.DockerHelper')
+def test_localcommands_watch(
+        patched_docker_helper, patched_time, patched_subprocess,
+        fake_cli_config):
+
+    LocalCommands(fake_cli_config).watch_assets()
+
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'run', 'invenio', 'webpack', 'run', 'start'],
+        check=True
+    )
 
 
 def test_localcommands_install():
@@ -187,7 +203,7 @@ def test_localcommands_install():
         commands._symlink_project_file_or_folder.mock_calls ==
         expected_symlink_calls
     )
-    commands.update_statics_and_assets.assert_called_with(install=True)
+    commands.update_statics_and_assets.assert_called_with(force=True)
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
