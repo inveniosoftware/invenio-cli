@@ -80,7 +80,7 @@ class LocalCommands(object):
     def _symlink_assets_templates(self, files_to_link):
         """Symlink the assets folder."""
         assets = 'assets'
-        click.secho('Symlinking {}/...'.format(assets), fg='green')
+        click.secho('Symlinking {}...'.format(assets), fg='green')
 
         instance_path = str(self.cli_config.get_instance_path()) + '/'
         project_dir = str(self.cli_config.get_project_dir())
