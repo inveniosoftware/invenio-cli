@@ -64,6 +64,21 @@ class LocalCommands(object):
             command += ['--skip-lock']
         subprocess.run(command, check=True)
 
+    def install_modules(self, modules):
+        """Install modules."""
+        if len(modules) < 1:
+            raise click.UsageError("You must specify at least one module.")
+
+        cmd = ['pipenv', 'run', 'pip', 'install']
+        for m in modules:
+            cmd.append('-e')
+            cmd.append(m)
+
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError:
+            click.secho('You must specify a valid path.', fg='red')
+
     def _update_instance_path(self):
         """Update path to instance in config."""
         path = subprocess.run(

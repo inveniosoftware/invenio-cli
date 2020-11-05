@@ -8,9 +8,12 @@
 
 """Module commands.py's tests."""
 import os
+import pathlib
+import subprocess
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
+import click
 import pytest
 
 from invenio_cli.helpers.commands import Commands, ContainerizedCommands, \
@@ -529,6 +532,52 @@ def test_localcommands_pyshell(
         ['pipenv', 'run', 'invenio', 'shell'],
         check=True
     )
+
+
+@patch('invenio_cli.helpers.commands.subprocess')
+def test_localcommands_install_modules(
+        patched_subprocess, fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
+
+    """1 module"""
+    modules = [pathlib.Path().absolute()]
+    commands.install_modules(modules)
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'run', 'pip', 'install', '-e', modules[0]], check=True)
+
+    """2 modules"""
+    modules = [pathlib.Path().absolute(), pathlib.Path().absolute()]
+    commands.install_modules(modules)
+    patched_subprocess.run.assert_called_with(
+        ['pipenv', 'run', 'pip', 'install', '-e', modules[0],
+            '-e', modules[1]], check=True)
+
+    """No modules"""
+    modules = []
+    with pytest.raises(click.UsageError):
+        commands.install_modules(modules)
+        cmd = ['pipenv', 'run', 'pip', 'install', '-e', modules]
+        patched_subprocess.run(cmd, check=True)
+
+    """Empty String"""
+    """
+    modules = [" "]
+    with pytest.raises(click.UsageError):
+        commands.install_modules(modules)
+        cmd = ['invenio-cli', 'ext', 'module-install', modules[0]]
+        print("comando")
+        print(cmd)
+        patched_subprocess.run(cmd, check=True)
+    """
+
+    """Invalid Path"""
+    """
+    modules = ["~/test/"]
+    with pytest.raises(subprocess.CalledProcessError):
+        commands.install_modules(modules)
+        cmd = ['invenio-cli', 'ext', 'module-install', modules]
+        patched_subprocess.run(cmd, check=True)
+    """
 
 
 @pytest.fixture()

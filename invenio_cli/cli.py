@@ -240,3 +240,17 @@ def pyshell(debug):
     cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.pyshell(debug=debug)
+
+
+@cli.group()
+def ext():
+    """Commands for development."""
+
+
+@ext.command('module-install')
+@click.argument("modules", nargs=-1, type=str)
+def module_install(modules):
+    """Install a Python module in development mode."""
+    cli_config = CLIConfig()
+    commands = Commands(cli_config, True)
+    commands.install_modules(modules)
