@@ -16,6 +16,8 @@ from distutils import dir_util
 from pathlib import Path
 
 import click
+import docker_services_cli.services as docker_services
+import docker_services_cli.env as docker_services_env
 from pynpm import NPMPackage
 
 from . import filesystem
@@ -234,7 +236,9 @@ class LocalCommands(object):
         A check in invenio-cli's config file is done to see if one-time setup
         has been executed before.
         """
-        self._ensure_containers_running()
+        #self._ensure_containers_running()
+        docker_services_env.set_env()
+        docker_services.services_up(["es", "postgresql","redis", "mysql"], "/Users/rodrigo/Documents/dev/2020/November/docker-services-cli/docker_services_cli/docker-services.yml")
 
         if force:
             command = [
