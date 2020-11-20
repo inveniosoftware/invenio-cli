@@ -13,8 +13,8 @@ from pathlib import Path
 
 import click
 
+from .commands import Commands, ContainersCommands, LocalCommands
 from .helpers.cli_config import CLIConfig
-from .helpers.commands import Commands, ContainerizedCommands, LocalCommands
 from .helpers.cookiecutter_wrapper import CookiecutterWrapper
 
 
@@ -123,7 +123,7 @@ def containerize(pre, force, install_js):
     Think of it as a production compilation build + running.
     """
     cli_config = CLIConfig()
-    commands = ContainerizedCommands(cli_config)
+    commands = ContainersCommands(cli_config)
 
     commands.containerize(pre=pre, force=force, install=install_js)
 
