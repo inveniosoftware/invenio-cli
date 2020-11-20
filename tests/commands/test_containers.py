@@ -56,11 +56,11 @@ def expected_force_calls():
     ]
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_containerize_install(
-        p_popen, p_docker_helper, p_run_proc, mock_cli_config, mocked_pipe,
+        p_popen, p_docker_helper, p_run_cmd, mock_cli_config, mocked_pipe,
         expected_setup_calls):
     """Case: pre=False, force=False, install=True."""
     p_popen.return_value = mocked_pipe
@@ -74,11 +74,11 @@ def test_containerize_install(
     )
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_containerize_no_install(
-        p_popen, p_docker_helper, p_run_proc, mock_cli_config, mocked_pipe):
+        p_popen, p_docker_helper, p_run_cmd, mock_cli_config, mocked_pipe):
     """Case: pre=False, force=False, install=False"""
     p_popen.return_value = mocked_pipe
     commands = ContainersCommands(mock_cli_config, p_docker_helper())
@@ -92,11 +92,11 @@ def test_containerize_no_install(
     )
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_containerize_install_force(
-        p_popen, p_docker_helper, p_run_proc, mock_cli_config, mocked_pipe,
+        p_popen, p_docker_helper, p_run_cmd, mock_cli_config, mocked_pipe,
         expected_setup_calls, expected_force_calls):
     """Case: pre=False, force=True, install=True."""
     p_popen.return_value = mocked_pipe
@@ -110,11 +110,11 @@ def test_containerize_install_force(
     )
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_containerize_install_pre_force(
-        p_popen, p_docker_helper, p_run_proc, mock_cli_config, mocked_pipe,
+        p_popen, p_docker_helper, p_run_cmd, mock_cli_config, mocked_pipe,
         expected_setup_calls, expected_force_calls):
     """Case: pre=True, force=True, install=True.
     Testing pre does not change the commands result.
@@ -130,10 +130,10 @@ def test_containerize_install_pre_force(
     )
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
 def test_update_statics_and_assets(
-        p_docker_helper, p_run_proc, mock_cli_config):
+        p_docker_helper, p_run_cmd, mock_cli_config):
     commands = ContainersCommands(mock_cli_config, p_docker_helper())
 
     commands.update_statics_and_assets(install=True)
@@ -179,42 +179,39 @@ def test_update_statics_and_assets(
 
 
 @patch('invenio_cli.commands.containers.listdir', return_value=[])
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
 def test_lock_python_dependencies(
-        p_docker_helper, p_run_proc, p_listdir,
+        p_docker_helper, p_run_cmd, p_listdir,
         mock_cli_config):
     commands = ContainersCommands(mock_cli_config, p_docker_helper())
     commands._lock_python_dependencies(pre=False)
-
-    p_run_proc.assert_called_with(
-        ['pipenv', 'lock'], check=True)
+    p_run_cmd.assert_called_with(['pipenv', 'lock'])
 
     commands._lock_python_dependencies(pre=True)
 
-    p_run_proc.assert_called_with(
-        ['pipenv', 'lock', '--pre'], check=True)
+    p_run_cmd.assert_called_with(['pipenv', 'lock', '--pre'])
 
 
 @patch('invenio_cli.commands.containers.listdir',
        return_value=['Pipfile.lock'])
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
 def test_no_lock_python_dependencies(
-        p_docker_helper, p_run_proc, p_listdir,
+        p_docker_helper, p_run_cmd, p_listdir,
         mock_cli_config):
     commands = ContainersCommands(mock_cli_config, p_docker_helper())
     commands._lock_python_dependencies(pre=False)
-    p_run_proc.assert_not_called()
+    p_run_cmd.assert_not_called()
 
     commands._lock_python_dependencies(pre=True)
-    p_run_proc.assert_not_called()
+    p_run_cmd.assert_not_called()
 
 
-@patch('invenio_cli.commands.containers.run_proc')
+@patch('invenio_cli.commands.containers.run_cmd')
 @patch('invenio_cli.commands.containers.DockerHelper')
 def test_demo(
-        p_run_proc, p_docker_helper, mock_cli_config):
+        p_run_cmd, p_docker_helper, mock_cli_config):
     commands = ContainersCommands(mock_cli_config, p_docker_helper())
 
     commands.demo()

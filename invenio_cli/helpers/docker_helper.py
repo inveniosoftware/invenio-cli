@@ -9,16 +9,11 @@
 
 """Invenio CLI Docker Compose class."""
 
-import io
-import logging
-import os
 import re
-import subprocess
-import tarfile
 
 import docker
 
-from .log import LogPipe
+from .process import ProcessResponse, run_cmd
 
 DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 
@@ -33,12 +28,20 @@ class DockerHelper(object):
         self.local = local
         self.docker_client = docker.from_env()
 
-        # Set as INFO to allow all logs to be sent
-        # TODO: revisit when dealing with logs
-        self.log_config = log_config
-        if log_config:
-            logging.basicConfig(filename=self.log_config.logfile,
-                                level=logging.INFO)
+    def _normalize_name(self, project_shortname):
+        """Normalize the container name according to the compose version.
+
+        Docker-Compose introduced support for dash and underscore in
+        version 1.21.0.
+        """
+        dc_version_string = run_cmd(['docker-compose', '--version'])
+        groups = re.search(r'1.[0-9]*.[0-9]*', dc_version_string.output)
+        dc_version = groups.group(0)
+
+        if dc_version < DOCKER_COMPOSE_VERSION_DASH:
+            return re.sub(r'[^a-z0-9]', '', project_shortname)
+        else:
+            return project_shortname
 
     def start_containers(self):
         """Start containers according to the specified environment."""
@@ -53,52 +56,27 @@ class DockerHelper(object):
             '-d'  # --detach not supported in 1.17.0
         ]
         # On a re-run everything is good.
-        subprocess.run(command, check=True)
+        return run_cmd(command)
 
     def stop_containers(self):
         """Stop currently running containers."""
-        command = [
-            'docker-compose',
-            '--file',
-            'docker-compose.full.yml',
-            'stop'
-        ]
-
-        subprocess.call(command)
+        command = ['docker-compose', '--file', 'docker-compose.full.yml',
+                   'stop']
+        return run_cmd(command)
 
     def destroy_containers(self):
         """Stop and remove all containers, volumes and images."""
         command = ['docker-compose', '--file', 'docker-compose.full.yml',
                    'down', '--volumes']
 
-        subprocess.call(command)
-
-    def _normalize_name(self, project_shortname):
-        """Normalize the container name according to the compose version.
-
-        Docker-Compose introduced support for dash and underscore in
-        version 1.21.0.
-        """
-        dc_version_command = subprocess.Popen(['docker-compose', '--version'],
-                                              stdout=subprocess.PIPE)
-        dc_version_string = dc_version_command.communicate()[0]
-        dc_version_string = dc_version_string.decode("utf-8").strip()
-
-        groups = re.search(r'1.[0-9]*.[0-9]*', dc_version_string)
-        dc_version = groups.group(0)
-
-        if dc_version < DOCKER_COMPOSE_VERSION_DASH:
-            return re.sub(r'[^a-z0-9]', '', project_shortname)
-        else:
-            return project_shortname
+        return run_cmd(command)
 
     def copy2(self, src_path, dst_path):
         """Copy a file into the path of the specified container."""
         container_name = '{}_web-ui_1'.format(self.container_prefix)
         container_path = "{}:{}".format(container_name, dst_path)
 
-        commands = ['docker', 'cp', str(src_path), container_path]
-        subprocess.run(commands, check=True)
+        return run_cmd(['docker', 'cp', str(src_path), container_path])
 
     def execute_cli_command(self, project_shortname, command):
         """Execute an invenio CLI command in the API container."""
@@ -111,10 +89,8 @@ class DockerHelper(object):
             stdout=True,
             stderr=True)
 
-        if self.log_config and self.log_config.verbose:
-            print(status.output.decode("utf-8"))
-        else:
-            level = logging.INFO if status.exit_code == 0 else logging.ERROR
-            logging.log(level, status.output.decode("utf-8").strip('\n'))
-
-        return status.exit_code
+        return ProcessResponse(
+            output=status.output.decode("utf-8"),
+            error=status.error.decode("utf-8"),
+            status_code=status.exit_code
+        )

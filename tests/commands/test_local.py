@@ -18,49 +18,43 @@ from click import UsageError
 from invenio_cli.commands import LocalCommands
 
 
-@patch('invenio_cli.commands.local.run_proc')
-def test_install_py_dependencies(p_run_proc, mock_cli_config):
+@patch('invenio_cli.commands.local.run_cmd')
+def test_install_py_dependencies(p_run_cmd, mock_cli_config):
     commands = LocalCommands(mock_cli_config)
 
     commands._install_py_dependencies(pre=True, lock=True)
 
-    p_run_proc.assert_any_call(
-        ['pipenv', 'install', '--dev', '--pre'],
-        check=True
+    p_run_cmd.assert_any_call(
+        ['pipenv', 'install', '--dev', '--pre']
     )
 
     commands._install_py_dependencies(pre=True, lock=False)
 
-    p_run_proc.assert_any_call(
-        ['pipenv', 'install', '--dev', '--pre', '--skip-lock'],
-        check=True
+    p_run_cmd.assert_any_call(
+        ['pipenv', 'install', '--dev', '--pre', '--skip-lock']
     )
 
     commands._install_py_dependencies(pre=False, lock=True)
 
-    p_run_proc.assert_any_call(
-        ['pipenv', 'install', '--dev'],
-        check=True
-    )
+    p_run_cmd.assert_any_call(['pipenv', 'install', '--dev'])
 
     commands._install_py_dependencies(pre=False, lock=False)
 
-    p_run_proc.assert_any_call(
+    p_run_cmd.assert_any_call(
         ['pipenv', 'install', '--dev', '--skip-lock'],
-        check=True
     )
 
 
 @patch('invenio_cli.commands.local.PIPE')
-@patch('invenio_cli.commands.local.run_proc')
-def test_update_instance_path(p_run_proc, p_PIPE):
+@patch('invenio_cli.commands.local.run_cmd')
+def test_update_instance_path(p_run_cmd, p_PIPE):
     cli_config = Mock()
-    p_run_proc.return_value = Mock(stdout='instance_dir')
+    p_run_cmd.return_value = Mock(stdout='instance_dir')
     commands = LocalCommands(cli_config)
 
     commands._update_instance_path()
 
-    p_run_proc.assert_called_with(
+    p_run_cmd.assert_called_with(
         ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
             '-c', '"print(app.instance_path, end=\'\')"'],
         check=True, universal_newlines=True, stdout=p_PIPE
@@ -100,19 +94,18 @@ def test_symlink_assets_templates(p_symlink, mock_cli_config):
 
 
 @patch('invenio_cli.commands.local.copy_tree')
-@patch('invenio_cli.commands.local.run_proc')
-def test_update_statics_and_assets(p_run_proc, p_copy_tree, mock_cli_config):
+@patch('invenio_cli.commands.local.run_cmd')
+def test_update_statics_and_assets(p_run_cmd, p_copy_tree, mock_cli_config):
     commands = LocalCommands(mock_cli_config)
     commands.update_statics_and_assets(force=True)
 
     expected_calls = [
-        call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'clean', 'create'],
-             check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'install'], check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True),
+        call(['pipenv', 'run', 'invenio', 'collect', '--verbose']),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'clean', 'create']),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'install']),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'build']),
     ]
-    assert p_run_proc.mock_calls == expected_calls
+    assert p_run_cmd.mock_calls == expected_calls
     p_copy_tree.assert_any_call(
         'project_dir/static', 'instance_dir/static'
     )
@@ -121,26 +114,25 @@ def test_update_statics_and_assets(p_run_proc, p_copy_tree, mock_cli_config):
     )
 
     # Reset for install=False assertions
-    p_run_proc.reset_mock()
+    p_run_cmd.reset_mock()
 
     commands.update_statics_and_assets(force=False)
 
     expected_calls = [
-        call(['pipenv', 'run', 'invenio', 'collect', '--verbose'], check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'create'], check=True),
-        call(['pipenv', 'run', 'invenio', 'webpack', 'build'], check=True)
+        call(['pipenv', 'run', 'invenio', 'collect', '--verbose']),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'create']),
+        call(['pipenv', 'run', 'invenio', 'webpack', 'build'])
     ]
-    assert p_run_proc.mock_calls == expected_calls
+    assert p_run_cmd.mock_calls == expected_calls
 
 
-@patch('invenio_cli.commands.local.run_proc')
+@patch('invenio_cli.commands.local.run_cmd')
 @patch('invenio_cli.commands.local.DockerHelper')
-def test_watch(p_docker_helper, p_run_proc, mock_cli_config):
+def test_watch(p_docker_helper, p_run_cmd, mock_cli_config):
     LocalCommands(mock_cli_config).watch_assets()
 
-    p_run_proc.assert_called_with(
-        ['pipenv', 'run', 'invenio', 'webpack', 'run', 'start'],
-        check=True
+    p_run_cmd.assert_called_with(
+        ['pipenv', 'run', 'invenio', 'webpack', 'run', 'start']
     )
 
 
@@ -169,34 +161,34 @@ def test_install(mock_cli_config):
 
 
 @patch('invenio_cli.commands.local.DockerHelper')
-@patch('invenio_cli.commands.local.run_proc')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.commands.local.run_cmd')
+@patch('invenio_cli.helpers.process.popen')
 def test_services(
-        p_popen, p_run_proc, p_docker_helper, mock_cli_config, mocked_pipe):
+        p_popen, p_run_cmd, p_docker_helper, mock_cli_config, mocked_pipe):
     commands = LocalCommands(mock_cli_config)
 
     p_popen.return_value = mocked_pipe
     commands.services(force=False)
 
     expected_setup_calls = [
-        call(['pipenv', 'run', 'invenio', 'db', 'init', 'create'], check=True),
+        call(['pipenv', 'run', 'invenio', 'db', 'init', 'create']),
         call([
             'pipenv', 'run', 'invenio', 'files', 'location', 'create',
             '--default', 'default-location', 'instance_dir/data'
-        ], check=True),
+        ]),
         call([
             'pipenv', 'run', 'invenio', 'roles', 'create', 'admin'
-        ], check=True),
+        ]),
         call([
             'pipenv', 'run', 'invenio', 'access', 'allow',
             'superuser-access', 'role', 'admin'
-        ], check=True),
-        call(['pipenv', 'run', 'invenio', 'index', 'init'], check=True)
+        ]),
+        call(['pipenv', 'run', 'invenio', 'index', 'init'])
     ]
-    assert p_run_proc.mock_calls == expected_setup_calls
+    assert p_run_cmd.mock_calls == expected_setup_calls
 
     # Reset for install=False assertions
-    p_run_proc.reset_mock()
+    p_run_cmd.reset_mock()
 
     commands.services(force=True)
 
@@ -204,45 +196,44 @@ def test_services(
         call([
             'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
             "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
-        ], check=True),
+        ]),
         call([
             'pipenv', 'run', 'invenio', 'db', 'destroy', '--yes-i-know',
-        ], check=True),
+        ]),
         call([
             'pipenv', 'run', 'invenio', 'index', 'destroy', '--force',
             '--yes-i-know'
-        ], check=True),
+        ]),
         call([
             'pipenv', 'run', 'invenio', 'index', 'queue', 'init', 'purge',
-        ], check=True)
+        ])
     ]
-    assert p_run_proc.mock_calls == (
+    assert p_run_cmd.mock_calls == (
         expected_force_calls + expected_setup_calls
     )
 
 
-@patch('invenio_cli.commands.local.run_proc')
+@patch('invenio_cli.commands.local.run_cmd')
 @patch('invenio_cli.commands.local.DockerHelper')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_demo(
-        p_popen, p_docker_helper, p_run_proc, mock_cli_config, mocked_pipe):
+        p_popen, p_docker_helper, p_run_cmd, mock_cli_config, mocked_pipe):
     commands = LocalCommands(mock_cli_config)
 
     p_popen.return_value = mocked_pipe
     commands.demo()
 
-    p_run_proc.assert_called_with(
-        ['pipenv', 'run', 'invenio', 'rdm-records', 'demo'],
-        check=True
+    p_run_cmd.assert_called_with(
+        ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
     )
 
 
 @patch('invenio_cli.commands.local.DockerHelper')
-@patch('invenio_cli.commands.local.run_proc')
+@patch('invenio_cli.commands.local.run_cmd')
 @patch('invenio_cli.commands.local.popen')
-@patch('invenio_cli.helpers.services.Popen')
+@patch('invenio_cli.helpers.process.popen')
 def test_run(
-        p_services_popen, p_commands_popen, p_run_proc, p_docker_helper,
+        p_services_popen, p_commands_popen, p_run_cmd, p_docker_helper,
         mock_cli_config, mocked_pipe):
     commands = LocalCommands(mock_cli_config)
     p_services_popen.return_value = mocked_pipe
@@ -306,29 +297,29 @@ def test_watch_js_module_w_build(p_run_npm, testpkg, mock_cli_config):
     assert expected_calls == p_run_npm.mock_calls
 
 
-@patch('invenio_cli.commands.local.run_proc')
-def test_install_modules(p_run_proc, mock_cli_config):
+@patch('invenio_cli.commands.local.run_cmd')
+def test_install_modules(p_run_cmd, mock_cli_config):
     commands = LocalCommands(mock_cli_config)
 
     """1 module"""
     modules = [Path().absolute()]
     commands.install_modules(modules)
-    p_run_proc.assert_called_with(
-        ['pipenv', 'run', 'pip', 'install', '-e', modules[0]], check=True)
+    p_run_cmd.assert_called_with(
+        ['pipenv', 'run', 'pip', 'install', '-e', modules[0]])
 
     """2 modules"""
     modules = [Path().absolute(), Path().absolute()]
     commands.install_modules(modules)
-    p_run_proc.assert_called_with(
+    p_run_cmd.assert_called_with(
         ['pipenv', 'run', 'pip', 'install', '-e', modules[0],
-            '-e', modules[1]], check=True)
+            '-e', modules[1]])
 
     """No modules"""
     modules = []
     with pytest.raises(UsageError):
         commands.install_modules(modules)
         cmd = ['pipenv', 'run', 'pip', 'install', '-e', modules]
-        p_run_proc(cmd, check=True)
+        p_run_cmd(cmd)
 
     """Empty String"""
     """
@@ -338,7 +329,7 @@ def test_install_modules(p_run_proc, mock_cli_config):
         cmd = ['invenio-cli', 'ext', 'module-install', modules[0]]
         print("comando")
         print(cmd)
-        p_run_proc(cmd, check=True)
+        p_run_cmd(cmd)
     """
 
     """Invalid Path"""
@@ -347,5 +338,5 @@ def test_install_modules(p_run_proc, mock_cli_config):
     with pytest.raises(subprocess.CalledProcessError):
         commands.install_modules(modules)
         cmd = ['invenio-cli', 'ext', 'module-install', modules]
-        p_run_proc(cmd, check=True)
+        p_run_cmd(cmd)
     """

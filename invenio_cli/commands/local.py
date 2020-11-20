@@ -21,6 +21,7 @@ from pynpm import NPMPackage
 from ..helpers import filesystem
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.env import env
+from ..helpers.process import run_cmd
 from ..helpers.services import wait_for_services
 from .commands import Commands
 
@@ -43,7 +44,7 @@ class LocalCommands(Commands):
             command += ['--pre']
         if not lock:
             command += ['--skip-lock']
-        run_proc(command, check=True)
+        run_cmd(command)
 
     def install_modules(self, modules):
         """Install modules."""
@@ -227,13 +228,13 @@ class LocalCommands(Commands):
                 'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
                 "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"  # noqa
             ]
-            run_proc(command, check=True)
+            run_cmd(command)
 
             # TODO: invenio-db#126 should make it idempotent
             command = [
                 'pipenv', 'run', 'invenio', 'db', 'destroy', '--yes-i-know',
             ]
-            run_proc(command, check=True)
+            run_cmd(command)
 
             # TODO: invenio-indexer#114 should make destroy and queue init
             #       purge idempotent
@@ -241,42 +242,42 @@ class LocalCommands(Commands):
                 'pipenv', 'run', 'invenio', 'index', 'destroy',
                 '--force', '--yes-i-know',
             ]
-            run_proc(command, check=True)
+            run_cmd(command)
 
             command = [
                 'pipenv', 'run', 'invenio', 'index', 'queue', 'init', 'purge']
-            run_proc(command, check=True)
+            run_cmd(command)
 
             self.cli_config.update_services_setup(False)
 
         if not self.cli_config.get_services_setup():
             command = ['pipenv', 'run', 'invenio', 'db', 'init', 'create']
-            run_proc(command, check=True)
+            run_cmd(command)
 
             command = [
                 'pipenv', 'run', 'invenio', 'files', 'location', 'create',
                 '--default', 'default-location',
                 "{}/data".format(self.cli_config.get_instance_path())
             ]
-            run_proc(command, check=True)
+            run_cmd(command)
 
             # Without the self.cli_config.get_services_setup() check
             # this throws an error on re-runs
             # TODO: invenio-accounts#297 should make it idempotent
             command = ['pipenv', 'run', 'invenio', 'roles', 'create', 'admin']
-            run_proc(command, check=True)
+            run_cmd(command)
 
             command = [
                 'pipenv', 'run', 'invenio', 'access', 'allow',
                 'superuser-access', 'role', 'admin'
             ]
-            run_proc(command, check=True)
+            run_cmd(command)
 
             # Without the self.cli_config.get_services_setup() check
             # this throws an error on re-runs
             # TODO: invenio-indexer#115 should make it idempotent
             command = ['pipenv', 'run', 'invenio', 'index', 'init']
-            run_proc(command, check=True)
+            run_cmd(command)
 
             self.cli_config.update_services_setup(True)
 
@@ -285,7 +286,7 @@ class LocalCommands(Commands):
         self._ensure_containers_running()
 
         command = ['pipenv', 'run', 'invenio', 'rdm-records', 'demo']
-        run_proc(command, check=True)
+        run_cmd(command)
 
     def run(self, host, port, debug):
         """Run development server and celery queue."""

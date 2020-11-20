@@ -12,8 +12,8 @@ from unittest.mock import patch
 from invenio_cli.helpers.docker_helper import DockerHelper
 
 
-@patch('invenio_cli.helpers.docker_helper.subprocess')
-def test_start_containers(patched_subprocess):
+@patch('invenio_cli.helpers.docker_helper.run_cmd')
+def test_start_containers(p_run_cmd):
     # Needed to fake call to docker-compose --version but not call
     # to docker-compose up
     def fake_normalize_name(self, project_shortname):
@@ -24,12 +24,9 @@ def test_start_containers(patched_subprocess):
 
     docker_helper.start_containers()
 
-    patched_subprocess.run.assert_called_with(
-        [
-            'docker-compose', '--file', 'docker-compose.yml', 'up', '--build',
-            '-d'
-        ],
-        check=True
+    p_run_cmd.run.assert_called_with(
+        ['docker-compose', '--file', 'docker-compose.yml', 'up',
+         '--build', '-d']
     )
 
     with patch.object(DockerHelper, '_normalize_name', fake_normalize_name):
@@ -37,10 +34,7 @@ def test_start_containers(patched_subprocess):
 
     docker_helper.start_containers()
 
-    patched_subprocess.run.assert_called_with(
-        [
-            'docker-compose', '--file', 'docker-compose.full.yml', 'up',
-            '--build', '-d'
-        ],
-        check=True
+    p_run_cmd.run.assert_called_with(
+        ['docker-compose', '--file', 'docker-compose.full.yml', 'up',
+         '--build', '-d']
     )

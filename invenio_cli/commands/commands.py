@@ -8,12 +8,10 @@
 """Invenio module to ease the creation and management of applications."""
 
 from subprocess import CalledProcessError
-from subprocess import run as run_proc
-
-import click
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.env import env
+from ..helpers.process import run_cmd
 from ..helpers.services import HEALTHCHECKS
 
 
@@ -34,55 +32,54 @@ class Commands(object):
     def shell(self):
         """Start a shell in the virtual environment."""
         command = ['pipenv', 'shell', ]
-        run_proc(command, check=True)
+        return run_cmd(command)
 
     def pyshell(self, debug=False):
         """Start a Python shell."""
         with env(FLASK_ENV='development' if debug else 'production'):
             command = ['pipenv', 'run', 'invenio', 'shell']
-            run_proc(command, check=True)
+            return run_cmd(command)
 
     def status(self, services, verbose):
-        """Checks the status of the given service."""
+        """Checks the status of the given service.
+
+        :returns: A list of the same length than services. Each item will be a
+                  code corresponding to: 0 success, 1 failure, 2 healthcheck
+                  not defined.
+        """
         project_shortname = self.cli_config.get_project_shortname()
 
+        statuses = []
         for service in services:
             check = HEALTHCHECKS.get(service)
             if check:
-                if check(
+                # Append 0 if True, 1 if False
+                statuses.append(int(not check(
                     filepath="docker-services.yml",
                     verbose=verbose,
                     project_shortname=project_shortname,
-                ):
-                    click.secho(f"{service} up and running.", fg="green")
-                else:
-                    click.secho(
-                        f"{service}: unable to connect or bad status" +
-                        " response.",
-                        fg="red"
-                    )
+                )))
             else:
-                click.secho(
-                    f"{service}: no healthcheck function defined.",
-                    fg="yellow"
-                )
+                statuses.append(2)
+
+        return statuses
 
     def stop(self):
         """Stops containers."""
-        click.secho("Stopping containers...", fg="green")
-        self.docker_helper.stop_containers()
-        click.secho('Stopped containers', fg='green')
+        return self.docker_helper.stop_containers()
 
     def destroy(self):
         """Destroys the instance's virtualenv and containers."""
         try:
-            run_proc(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
+            run_cmd(['pipenv', '--rm'])
         except CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
+            # TODO: Control possible errors from pipenv run
+            # `pipenv` not installed, not in a pipenv managed venve, etc.
+            pass
 
-        self.docker_helper.destroy_containers()
+        response = self.docker_helper.destroy_containers()
+        # TODO: Check the response status code before updating services setup.
+        # Careful not to leave in an inconsistent state.
         self.cli_config.update_services_setup(False)
-        click.secho('Destroyed containers', fg='green')
+
+        return response

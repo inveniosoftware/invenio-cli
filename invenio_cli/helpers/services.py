@@ -18,40 +18,20 @@
 #####
 
 import time
-from os import path
-from subprocess import PIPE, Popen, check_call
 
 import click
 
-
-def _run_healthcheck_command(command, verbose=False):
-    """Runs a given command, returns True if it succeeds, False otherwise."""
-    p = Popen(command, stdout=PIPE, stderr=PIPE)
-    output, error = p.communicate()
-    output = output.decode("utf-8")
-    error = error.decode("utf-8")
-    if p.returncode == 0:
-        if verbose:
-            click.secho(output, fg="green")
-        return True
-    if p.returncode != 0:
-        if verbose:
-            click.secho(
-                f"Healthcheck failed.\nOutput: {output}\nError:{error}",
-                fg="red"
-            )
-        return False
+from .process import run_cmd
 
 
 def es_healthcheck(*args, **kwargs):
     """Elasticsearch healthcheck."""
     verbose = kwargs['verbose']
 
-    return _run_healthcheck_command([
-        "curl",
-        "-f",
+    return run_cmd([
+        "curl", "-f",
         "localhost:9200/_cluster/health?wait_for_status=yellow"
-    ], verbose)
+    ])
 
 
 def postgresql_healthcheck(*args, **kwargs):
@@ -59,17 +39,10 @@ def postgresql_healthcheck(*args, **kwargs):
     filepath = kwargs['filepath']
     verbose = kwargs['verbose']
 
-    return _run_healthcheck_command([
-        "docker-compose",
-        "--file",
-        filepath,
-        "exec",
-        "-T",
-        "db",
-        "bash",
-        "-c",
-        "pg_isready",
-    ], verbose)
+    return run_cmd([
+        "docker-compose", "--file", filepath,
+        "exec", "-T", "db", "bash", "-c", "pg_isready",
+    ])
 
 
 def mysql_healthcheck(*args, **kwargs):
@@ -78,17 +51,11 @@ def mysql_healthcheck(*args, **kwargs):
     verbose = kwargs['verbose']
     password = kwargs['project_shortname']
 
-    return _run_healthcheck_command([
-        "docker-compose",
-        "--file",
-        filepath,
-        "exec",
-        "-T",
-        "db",
-        "bash",
-        "-c",
+    return run_cmd([
+        "docker-compose", "--file", filepath,
+        "exec", "-T", "db", "bash", "-c",
         f"mysql -p{password} -e \"select Version();\"",
-    ], verbose)
+    ])
 
 
 def redis_healthcheck(*args, **kwargs):
@@ -96,20 +63,11 @@ def redis_healthcheck(*args, **kwargs):
     filepath = kwargs['filepath']
     verbose = kwargs['verbose']
 
-    return _run_healthcheck_command([
-        "docker-compose",
-        "--file",
-        filepath,
-        "exec",
-        "-T",
-        "cache",
-        "bash",
-        "-c",
-        "redis-cli ping",
-        "|",
-        "grep 'PONG'",
-        "&>/dev/null;",
-    ], verbose)
+    return run_cmd([
+        "docker-compose", "--file", filepath,
+        "exec", "-T", "cache", "bash", "-c",
+        "redis-cli ping", "|", "grep 'PONG'", "&>/dev/null;",
+    ])
 
 
 HEALTHCHECKS = {
@@ -142,7 +100,6 @@ def wait_for_services(
     for service in services:
         exp_backoff_time = 2
         try_ = 1
-        # Using plain __import__ to avoid depending on invenio-base
         check = HEALTHCHECKS[service]
         ready = check(
             filepath=filepath,

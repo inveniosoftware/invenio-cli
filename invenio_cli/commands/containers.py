@@ -8,11 +8,11 @@
 """Invenio module to ease the creation and management of applications."""
 
 from os import listdir
-from subprocess import run as run_proc
 
 import click
 
 from ..helpers.docker_helper import DockerHelper
+from ..helpers.process import run_cmd
 from ..helpers.services import wait_for_services
 from .commands import Commands
 
@@ -72,8 +72,7 @@ class ContainersCommands(Commands):
             command += ['--pre']
 
         locked = 'Pipfile.lock' in listdir('.')
-        if not locked:
-            run_proc(command, check=True)
+        return 0 if locked else run_cmd(command).status_code
 
     def containerize(self, pre, force, install):
         """Launch fully containerized application."""

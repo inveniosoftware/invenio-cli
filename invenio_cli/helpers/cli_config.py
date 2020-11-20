@@ -8,12 +8,10 @@
 
 """Invenio-cli configuration file."""
 
-import os
 from configparser import ConfigParser
 from pathlib import Path
 
-import click
-
+from ..errors import InvenioCLIConfigError
 from .filesystem import get_created_files
 
 
@@ -54,12 +52,10 @@ class CLIConfig(object):
                 self.private_config.read_file(cfg_file)
 
         except FileNotFoundError as e:
-            click.secho(
+            raise InvenioCLIConfigError(
                 "Missing '{0}' file in current directory. "
                 "Are you in the project folder?".format(e.filename),
-                fg='red'
             )
-            exit(1)
 
     def get_project_dir(self):
         """Returns path to project directory."""

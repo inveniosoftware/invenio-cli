@@ -14,14 +14,24 @@ from pathlib import Path
 import click
 
 from .commands import Commands, ContainersCommands, LocalCommands
+from .errors import InvenioCLIConfigError
 from .helpers.cli_config import CLIConfig
 from .helpers.cookiecutter_wrapper import CookiecutterWrapper
+
+pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
 
 
 @click.group()
 @click.version_option()
-def cli():
+@click.pass_context
+def cli(ctx):
     """Initialize CLI context."""
+    # Config loading is not needed when initializing
+    if ctx.invoked_subcommand != "init":
+        try:
+            ctx.cli_config = CLIConfig()
+        except InvenioCLIConfigError as e:
+            click.secho(e.message, fg="red")
 
 
 @cli.command()
@@ -67,14 +77,14 @@ def init(flavour, template, checkout):
     help='Production mode copies statics/assets. Development mode symlinks'
          ' statics/assets.'
 )
-def install(pre, lock, production):
+@pass_cli_config
+def install(cli_config, pre, lock, production):
     """Installs the  project locally.
 
     Installs dependencies, creates instance directory,
     links invenio.cfg + templates, copies images and other statics and finally
     builds front-end assets.
     """
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.install(
         pre=pre,
@@ -86,12 +96,12 @@ def install(pre, lock, production):
 @cli.command()
 @click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
-def services(force):
+@pass_cli_config
+def services(cli_config, force):
     """Starts DB, ES, queue and cache services and ensures they are setup.
 
     --force destroys and resets services
     """
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.services(force=force)
 
@@ -99,15 +109,28 @@ def services(force):
 @cli.command()
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def status(verbose):
+@pass_cli_config
+def status(cli_config, verbose):
     """Checks if the services are up and running.
 
     NOTE: currently only ES, DB (postgresql/mysql) and redis are supported.
     """
-    cli_config = CLIConfig()
     commands = Commands(cli_config)
-    commands.status(
-        services=["redis", cli_config.get_db_type(), "es"], verbose=verbose)
+    services = ["redis", cli_config.get_db_type(), "es"]
+    statuses = commands.status(services=services, verbose=verbose)
+
+    messages = [
+        {"message": "{}: up and running.", "fg": "green"},
+        {"message": "{}: unable to connect or bad response.", "fg": "red"},
+        {"message": "{}: no healthcheck function defined.", "fg": "yellow"}
+    ]
+
+    for idx, status in enumerate(statuses):
+        message = messages[status]
+        click.secho(
+            message=message.get("message").format(services[idx]),
+            fg=message.get("fg")
+        )
 
 
 @cli.command()
@@ -117,12 +140,12 @@ def status(verbose):
               help='Force recreation of db tables, ES indices, queues...')
 @click.option('--install-js/--no-install-js', default=True, is_flag=True,
               help="(re-)Install JS dependencies, defaults to True")
-def containerize(pre, force, install_js):
+@pass_cli_config
+def containerize(cli_config, pre, force, install_js):
     """Setup and run all containers (docker-compose.full.yml).
 
     Think of it as a production compilation build + running.
     """
-    cli_config = CLIConfig()
     commands = ContainersCommands(cli_config)
 
     commands.containerize(pre=pre, force=force, install=install_js)
@@ -131,9 +154,9 @@ def containerize(pre, force, install_js):
 @cli.command()
 @click.option('--local/--containers', default=True, is_flag=True,
               help='Which environment to build, it defaults to local')
-def demo(local):
+@pass_cli_config
+def demo(cli_config, local):
     """Populates instance with demo records."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.demo()
 
@@ -146,12 +169,12 @@ def demo(local):
 @click.option('--debug/--no-debug', '-d/',  default=True, is_flag=True,
               help='Enable/disable debug mode including auto-reloading '
                    '(default: enabled).')
-def run(host, port, debug):
+@pass_cli_config
+def run(cli_config, host, port, debug):
     """Starts the local development server.
 
     NOTE: this only makes sense locally so no --local option
     """
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.run(host=host, port=str(port), debug=debug)
 
@@ -168,9 +191,9 @@ def assets():
     '--production/--development', '-p/-d', default=True, is_flag=True,
     help='Production mode copies files. Development mode symlinks files.'
 )
-def update(force, production):
+@pass_cli_config
+def update(cli_config, force, production):
     """Updates the current application static/assets files."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.update_statics_and_assets(
         force=force,
@@ -179,18 +202,18 @@ def update(force, production):
 
 
 @assets.command()
-def watch():
+@pass_cli_config
+def watch(cli_config):
     """Watch assets files for changes and rebuild."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.watch_assets()
 
 
 @assets.command('install-module')
 @click.argument('path', type=click.Path(exists=True))
-def install_module(path):
+@pass_cli_config
+def install_module(cli_config, path):
     """Install and link a React module."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.link_js_module(path)
 
@@ -199,9 +222,9 @@ def install_module(path):
 @click.option('--link', '-l', default=False, is_flag=True,
               help='Link the module.')
 @click.argument('path', type=click.Path(exists=True))
-def watch_module(path, link):
+@pass_cli_config
+def watch_module(cli_config, path, link):
     """Watch a React module."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.watch_js_module(path, link=link)
 
@@ -209,19 +232,24 @@ def watch_module(path, link):
 @cli.command()
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
-def destroy(verbose):
+@pass_cli_config
+def destroy(cli_config, verbose):
     """Removes all associated resources (containers, images, volumes)."""
-    cli_config = CLIConfig()
     commands = Commands(cli_config)
+    click.secho(
+        "Destroying containers, volumes, virtual environment...", fg="green")
     commands.destroy()
+    click.secho('Instance destroyed', fg='green')
 
 
 @cli.command()
-def stop():
+@pass_cli_config
+def stop(cli_config):
     """Stops containers."""
-    cli_config = CLIConfig()
     commands = Commands(cli_config)
+    click.secho("Stopping containers...", fg="green")
     commands.stop()
+    click.secho('Stopped containers', fg='green')
 
 
 @cli.command()
@@ -233,9 +261,9 @@ def upgrade(verbose):
 
 
 @cli.command()
-def shell():
+@pass_cli_config
+def shell(cli_config, ):
     """Shell command."""
-    cli_config = CLIConfig()
     commands = Commands(cli_config)
     commands.shell()
 
@@ -245,9 +273,9 @@ def shell():
     '--debug/--no-debug', '-d/', default=False, is_flag=True,
     help='Enable Flask development mode (default: disabled).'
 )
-def pyshell(debug):
+@pass_cli_config
+def pyshell(cli_config, debug):
     """Python shell command."""
-    cli_config = CLIConfig()
     commands = Commands(cli_config)
     commands.pyshell(debug=debug)
 
@@ -259,8 +287,8 @@ def ext():
 
 @ext.command('module-install')
 @click.argument("modules", nargs=-1, type=str)
-def module_install(modules):
+@pass_cli_config
+def module_install(cli_config, modules):
     """Install a Python module in development mode."""
-    cli_config = CLIConfig()
     commands = LocalCommands(cli_config)
     commands.install_modules(modules)
