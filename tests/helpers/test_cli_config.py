@@ -77,6 +77,7 @@ def config_dir():
     yield CLIConfig.write(project_dir, flavour, replay)
 
 
+@pytest.mark.skip()
 @patch("invenio_cli.helpers.cli_config.exit")
 def test_cli_config_config_files_not_found(patched_exit, config_dir):
     wrong_path = tempfile.TemporaryDirectory()

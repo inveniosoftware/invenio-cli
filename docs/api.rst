@@ -1,5 +1,5 @@
 ..
-    Copyright (C) 2019 CERN.
+    Copyright (C) 2019-2020 CERN.
     Copyright (C) 2019 Northwestern University.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
@@ -13,6 +13,13 @@ CLI
 ---
 
 .. automodule:: invenio_cli.cli
+   :members:
+
+
+Commands
+--------
+
+.. automodule:: invenio_cli.commands
    :members:
 
 
