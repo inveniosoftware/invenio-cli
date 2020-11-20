@@ -11,6 +11,7 @@ import os
 import pathlib
 import subprocess
 from pathlib import Path
+from subprocess import PIPE
 from unittest.mock import Mock, call, patch
 
 import click
@@ -20,20 +21,55 @@ from invenio_cli.helpers.commands import Commands, ContainerizedCommands, \
     LocalCommands
 from invenio_cli.helpers.docker_helper import DockerHelper
 
+healthcheck_commands = [
+    ["curl", "-f", "localhost:9200/_cluster/health?wait_for_status=yellow"],
+    ["docker-compose", "--file", "docker-services.yml", "exec", "-T", "cache",
+     "bash", "-c", "redis-cli ping", "|", "grep 'PONG'", "&>/dev/null;"]
+]
 
-def test_commands_delegates_to_environment():
-    commands = Commands(Mock(), True)
 
-    assert isinstance(commands.environment, LocalCommands)
+@pytest.fixture
+def fake_cli_config():
+    class FakeCLIConfig(object):
+        def __init__(self):
+            self.services_setup = False
 
-    commands = Commands(Mock(), False)
+        def get_project_dir(self):
+            return Path('project_dir')
 
-    assert isinstance(commands.environment, ContainerizedCommands)
+        def get_instance_path(self):
+            return Path('instance_dir')
+
+        def get_services_setup(self):
+            return self.services_setup
+
+        def update_services_setup(self, is_setup):
+            self.services_setup = bool(is_setup)
+
+        def get_project_shortname(self):
+            return 'project-shortname'
+
+        def get_db_type(self):
+            return 'sqlite'
+
+    return FakeCLIConfig()
+
+
+@pytest.fixture(scope="function")
+def mocked_pipe():
+    mocked_pipe = Mock()
+    attrs = {
+        'communicate.return_value': (b'output', b'error'),
+        'returncode': 0
+    }
+    mocked_pipe.configure_mock(**attrs)
+    return mocked_pipe
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-def test_localcommands_install_py_dependencies(patched_subprocess):
-    commands = LocalCommands(Mock())
+def test_localcommands_install_py_dependencies(
+        patched_subprocess, fake_cli_config):
+    commands = LocalCommands(fake_cli_config)
 
     commands._install_py_dependencies(pre=True, lock=True)
 
@@ -80,30 +116,6 @@ def test_localcommands_update_instance_path(patched_subprocess):
     cli_config.update_instance_path.assert_called_with('instance_dir')
 
 
-@pytest.fixture
-def fake_cli_config():
-    class FakeCLIConfig(object):
-        def __init__(self):
-            self.services_setup = False
-
-        def get_project_dir(self):
-            return Path('project_dir')
-
-        def get_instance_path(self):
-            return Path('instance_dir')
-
-        def get_services_setup(self):
-            return self.services_setup
-
-        def update_services_setup(self, is_setup):
-            self.services_setup = bool(is_setup)
-
-        def get_project_shortname(self):
-            return 'project-shortname'
-
-    return FakeCLIConfig()
-
-
 @patch('invenio_cli.helpers.filesystem.os')
 def test_symlink_project_file_or_folder(patched_os, fake_cli_config):
     commands = LocalCommands(fake_cli_config)
@@ -138,9 +150,7 @@ def test_localcommands_symlink_assets_templates(patched_os, fake_cli_config):
 @patch('invenio_cli.helpers.commands.subprocess')
 def test_localcommands_update_statics_and_assets(
         patched_subprocess, patched_dir_util, fake_cli_config):
-
     commands = LocalCommands(fake_cli_config)
-
     commands.update_statics_and_assets(force=True)
 
     expected_calls = [
@@ -172,12 +182,9 @@ def test_localcommands_update_statics_and_assets(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
 def test_localcommands_watch(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
-
+        patched_docker_helper, patched_subprocess, fake_cli_config):
     LocalCommands(fake_cli_config).watch_assets()
 
     patched_subprocess.run.assert_called_with(
@@ -186,7 +193,7 @@ def test_localcommands_watch(
     )
 
 
-def test_localcommands_install():
+def test_localcommands_install(fake_cli_config):
     commands = LocalCommands(fake_cli_config)
     commands._install_py_dependencies = Mock()
     commands._update_instance_path = Mock()
@@ -210,14 +217,15 @@ def test_localcommands_install():
         force=True, flask_env='production')
 
 
-@patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
+@patch('invenio_cli.helpers.commands.subprocess')
+@patch('invenio_cli.helpers.services.Popen')
 def test_localcommands_services(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
+        services_popen, patched_subprocess, docker_helper,
+        fake_cli_config, mocked_pipe):
     commands = LocalCommands(fake_cli_config)
 
+    services_popen.return_value = mocked_pipe
     commands.services(force=False)
 
     expected_setup_calls = [
@@ -264,13 +272,14 @@ def test_localcommands_services(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
+@patch('invenio_cli.helpers.services.Popen')
 def test_localcommands_demo(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
+        services_popen, patched_docker_helper, patched_subprocess,
+        fake_cli_config, mocked_pipe):
     commands = LocalCommands(fake_cli_config)
 
+    services_popen.return_value = mocked_pipe
     commands.demo()
 
     patched_subprocess.run.assert_called_with(
@@ -280,13 +289,14 @@ def test_localcommands_demo(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
+@patch('invenio_cli.helpers.services.Popen')
 def test_localcommands_run(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
+        services_popen, patched_docker_helper, patched_subprocess,
+        fake_cli_config, mocked_pipe):
     commands = LocalCommands(fake_cli_config)
 
+    services_popen.return_value = mocked_pipe
     host = '127.0.0.1'
     port = '5000'
     commands.run(host=host, port=port, debug=True)
@@ -309,13 +319,14 @@ def test_localcommands_run(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
+@patch('invenio_cli.helpers.services.Popen')
 def test_containerizedcommands_containerize(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
+        services_popen, patched_docker_helper, patched_subprocess,
+        fake_cli_config, mocked_pipe):
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
+    services_popen.return_value = mocked_pipe
     # Case: pre=False, force=False, install=True
     commands.containerize(pre=False, force=False, install=True)
 
@@ -480,11 +491,9 @@ def test_containerizedcommands_lock_python_dependencies(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
 def test_containerizedcommands_demo(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
+        patched_subprocess, patched_docker_helper, fake_cli_config):
     commands = ContainerizedCommands(fake_cli_config, patched_docker_helper())
 
     commands.demo()
@@ -509,12 +518,10 @@ def test_containerizedcommands_destroy(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
 def test_localcommands_shell(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
-    LocalCommands(fake_cli_config).shell()
+        patched_docker_helper, patched_subprocess, fake_cli_config):
+    Commands(fake_cli_config).shell()
     patched_subprocess.run.assert_called_with(
         ['pipenv', 'shell', ],
         check=True
@@ -522,12 +529,10 @@ def test_localcommands_shell(
 
 
 @patch('invenio_cli.helpers.commands.subprocess')
-@patch('invenio_cli.helpers.commands.time')
 @patch('invenio_cli.helpers.commands.DockerHelper')
 def test_localcommands_pyshell(
-        patched_docker_helper, patched_time, patched_subprocess,
-        fake_cli_config):
-    LocalCommands(fake_cli_config).pyshell()
+        patched_docker_helper, patched_subprocess, fake_cli_config):
+    Commands(fake_cli_config).pyshell()
     patched_subprocess.run.assert_called_with(
         ['pipenv', 'run', 'invenio', 'shell'],
         check=True
