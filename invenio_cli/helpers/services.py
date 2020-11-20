@@ -50,7 +50,7 @@ def es_healthcheck(*args, **kwargs):
     return _run_healthcheck_command([
         "curl",
         "-f",
-        "localhost:9200/_cluster/health?wait_for_status=green"
+        "localhost:9200/_cluster/health?wait_for_status=yellow"
     ], verbose)
 
 
@@ -102,7 +102,7 @@ def redis_healthcheck(*args, **kwargs):
         filepath,
         "exec",
         "-T",
-        "redis",
+        "cache",
         "bash",
         "-c",
         "redis-cli ping",
@@ -144,7 +144,11 @@ def wait_for_services(
         try_ = 1
         # Using plain __import__ to avoid depending on invenio-base
         check = HEALTHCHECKS[service]
-        ready = check(filepath=filepath, verbose=verbose)
+        ready = check(
+            filepath=filepath,
+            verbose=verbose,
+            project_shortname=project_shortname,
+        )
         while not ready and try_ < max_retries:
             click.secho(
                 f"{service} not ready at {try_} retries, waiting " \
@@ -157,7 +161,7 @@ def wait_for_services(
             ready = check(
                 filepath=filepath,
                 verbose=verbose,
-                project_shortname=project_shortname
+                project_shortname=project_shortname,
             )
 
         if not ready:

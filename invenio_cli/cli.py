@@ -98,6 +98,19 @@ def services(force):
 
 
 @cli.command()
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
+              help='Verbose mode will show all logs in the console.')
+def status(verbose):
+    """Checks if the services are up and running.
+
+    NOTE: currently only ES, DB (postgresql/mysql) and redis are supported.
+    """
+    cli_config = CLIConfig()
+    commands = LocalCommands(cli_config)
+    commands.status(services=["redis", cli_config.get_db_type(), "es"], verbose=verbose)
+
+
+@cli.command()
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option('-f', '--force', default=False, is_flag=True,

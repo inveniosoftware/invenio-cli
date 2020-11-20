@@ -21,7 +21,7 @@ from pynpm import NPMPackage
 from . import filesystem
 from .docker_helper import DockerHelper
 from .env import env
-from .services import wait_for_services
+from .services import wait_for_services, HEALTHCHECKS
 
 
 class Commands(object):
@@ -337,6 +337,24 @@ class LocalCommands(object):
             'Instance running!\nVisit https://{}:{}'.format(host, port),
             fg='green')
         server.wait()
+
+    def status(self, services, verbose):
+        """Checks the status of the given service."""
+        project_shortname = self.cli_config.get_project_shortname()
+
+        for service in services:
+            check = HEALTHCHECKS.get(service)
+            if check:
+                if check(
+                    filepath="docker-services.yml",
+                    verbose=verbose,
+                    project_shortname=project_shortname,
+                ):
+                    click.secho(f"{service} up and running.", fg="green")
+                else:
+                    click.secho(f"{service}: unable to connect or bad status response.", fg="red")
+            else:
+                click.secho(f"{service}: no healthcheck function defined.", fg="yellow")
 
     def shell(self):
         """Start a shell in the virtual environment."""
