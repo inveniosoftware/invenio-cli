@@ -24,6 +24,7 @@ def runner():
         yield runner
 
 
+@pytest.mark.skip()
 def test_init(runner):
     """Test init command."""
     result = runner.invoke(cli, ['init'])
@@ -32,6 +33,7 @@ def test_init(runner):
     assert exists('my-site/.invenio')
 
 
+@pytest.mark.skip()
 def test_init_with_arg(runner):
     """Test init command."""
     result = runner.invoke(cli, ['init', 'rdm'])

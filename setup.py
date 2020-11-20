@@ -34,6 +34,7 @@ for reqs in extras_require.values():
 install_requires = [
     'cookiecutter>=1.7.1,<1.8.0',
     'click>=7.0,<8.0',
+    'click-default-group>=1.2.2,<2.0.0',
     'docker>=4.1.0,<4.2.0',
     'pipenv>=2020.6.2',
     'PyYAML>=5.1.2',
@@ -65,7 +66,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'invenio-cli = invenio_cli.cli:cli',
+            'invenio-cli = invenio_cli.cli:invenio_cli',
         ]
     },
     extras_require=extras_require,

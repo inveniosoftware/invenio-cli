@@ -8,13 +8,12 @@
 
 """Invenio-cli configuration file."""
 
-import os
 from configparser import ConfigParser
 from pathlib import Path
 
-import click
-
+from ..errors import InvenioCLIConfigError
 from .filesystem import get_created_files
+from .process import ProcessResponse
 
 
 class CLIConfig(object):
@@ -54,12 +53,10 @@ class CLIConfig(object):
                 self.private_config.read_file(cfg_file)
 
         except FileNotFoundError as e:
-            click.secho(
+            raise InvenioCLIConfigError(
                 "Missing '{0}' file in current directory. "
                 "Are you in the project folder?".format(e.filename),
-                fg='red'
             )
-            exit(1)
 
     def get_project_dir(self):
         """Returns path to project directory."""
@@ -79,6 +76,11 @@ class CLIConfig(object):
         with open(self.private_config_path, 'w') as configfile:
             self.private_config.write(configfile)
 
+        return ProcessResponse(
+            output=f"Instance path updated (new value {new_instance_path}).",
+            status_code=0
+        )
+
     def get_services_setup(self):
         """Returns bool whether services have been setup or not."""
         return self.private_config.getboolean(
@@ -92,6 +94,11 @@ class CLIConfig(object):
 
         with open(self.private_config_path, 'w') as configfile:
             self.private_config.write(configfile)
+
+        return ProcessResponse(
+            output=f"Service setup status updated (new value {is_setup}).",
+            status_code=0
+        )
 
     def get_project_shortname(self):
         """Returns the project's shortname."""
