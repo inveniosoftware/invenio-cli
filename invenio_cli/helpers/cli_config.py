@@ -97,6 +97,10 @@ class CLIConfig(object):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['project_shortname']
 
+    def get_db_type(self):
+        """Returns the database type (mysql, postgresql, sqlite)."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]['database']
+
     @classmethod
     def write(cls, project_dir, flavour, replay):
         """Write invenio-cli config file.

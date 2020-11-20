@@ -21,6 +21,7 @@ from pynpm import NPMPackage
 from . import filesystem
 from .docker_helper import DockerHelper
 from .env import env
+from .services import wait_for_services
 
 
 class Commands(object):
@@ -218,12 +219,16 @@ class LocalCommands(object):
     def _ensure_containers_running(self):
         """Ensures containers are running."""
         click.secho('Making sure containers are up...', fg='green')
+        project_shortname = self.cli_config.get_project_shortname()
         docker_helper = DockerHelper(
-            self.cli_config.get_project_shortname(),
+            project_shortname,
             local=True)
         docker_helper.start_containers()
-        # TODO: Find faster way to procede when containers are ready
-        time.sleep(30)  # Give time to the containers to start properly
+
+        wait_for_services(
+            services=["redis", self.cli_config.get_db_type(), "es"],
+            project_shortname=project_shortname,
+        )
 
     def services(self, force):
         """Local start of containers (services).
@@ -407,10 +412,13 @@ class ContainerizedCommands(object):
 
         click.secho('Making sure containers are up...', fg='green')
         self.docker_helper.start_containers()
-        # TODO: Find faster way to procede when containers are ready
-        time.sleep(30)  # Give time to the containers to start properly
 
         project_shortname = self.cli_config.get_project_shortname()
+
+        wait_for_services(
+            services=["redis", self.cli_config.get_db_type(), "es"],
+            project_shortname=project_shortname,
+        )
 
         if force:
             self.cli_config.update_services_setup(False)
