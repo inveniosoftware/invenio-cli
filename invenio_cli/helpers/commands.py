@@ -11,7 +11,6 @@
 import os
 import signal
 import subprocess
-import time
 from distutils import dir_util
 from pathlib import Path
 
@@ -21,39 +20,89 @@ from pynpm import NPMPackage
 from . import filesystem
 from .docker_helper import DockerHelper
 from .env import env
-from .services import wait_for_services, HEALTHCHECKS
+from .services import HEALTHCHECKS, wait_for_services
 
 
 class Commands(object):
     """Abstraction over CLI commands that are either local or containerized."""
 
-    def __init__(self, cli_config, local):
+    def __init__(self, cli_config, docker_helper=None):
         """Constructor.
 
         :param cli_config: :class:CLIConfig instance
-        :param local: boolean True if local environment
+        :param docker_helper: :class:DockerHelper instance, defaults to
+            containerized docker file (`docker-compose.full.yml`).
         """
-        if local:
-            self.environment = LocalCommands(cli_config)
-        else:
-            self.environment = ContainerizedCommands(
-                cli_config,
-                DockerHelper(
-                    project_shortname=cli_config.get_project_shortname(),
-                    local=False)
-            )
+        self.cli_config = cli_config
+        self.docker_helper = docker_helper or \
+            DockerHelper(cli_config.get_project_shortname(), local=False)
 
-    def __getattr__(self, name):
-        """Delegate commands according to environment."""
-        return getattr(self.environment, name)
+    def shell(self):
+        """Start a shell in the virtual environment."""
+        command = ['pipenv', 'shell', ]
+        subprocess.run(command, check=True)
+
+    def pyshell(self, debug=False):
+        """Start a Python shell."""
+        with env(FLASK_ENV='development' if debug else 'production'):
+            command = ['pipenv', 'run', 'invenio', 'shell']
+            subprocess.run(command, check=True)
+
+    def status(self, services, verbose):
+        """Checks the status of the given service."""
+        project_shortname = self.cli_config.get_project_shortname()
+
+        for service in services:
+            check = HEALTHCHECKS.get(service)
+            if check:
+                if check(
+                    filepath="docker-services.yml",
+                    verbose=verbose,
+                    project_shortname=project_shortname,
+                ):
+                    click.secho(f"{service} up and running.", fg="green")
+                else:
+                    click.secho(
+                        f"{service}: unable to connect or bad status" +
+                        " response.",
+                        fg="red"
+                    )
+            else:
+                click.secho(
+                    f"{service}: no healthcheck function defined.",
+                    fg="yellow"
+                )
+
+    def stop(self):
+        """Stops containers."""
+        click.secho("Stopping containers...", fg="green")
+        self.docker_helper.stop_containers()
+        click.secho('Stopped containers', fg='green')
+
+    def destroy(self):
+        """Destroys the instance's virtualenv and containers."""
+        try:
+            subprocess.run(['pipenv', '--rm'], check=True)
+            click.secho('Virtual environment destroyed', fg='green')
+        except subprocess.CalledProcessError:
+            click.secho('The virtual environment was '
+                        'not removed as it was not '
+                        'created by pipenv', fg='red')
+
+        self.docker_helper.destroy_containers()
+        self.cli_config.update_services_setup(False)
+        click.secho('Destroyed containers', fg='green')
 
 
-class LocalCommands(object):
+class LocalCommands(Commands):
     """Local environment CLI commands."""
 
-    def __init__(self, cli_config):
+    def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
-        self.cli_config = cli_config
+        docker_helper = docker_helper or \
+            DockerHelper(cli_config.get_project_shortname(), local=True)
+
+        super(LocalCommands, self).__init__(cli_config, docker_helper)
 
     def _install_py_dependencies(self, pre, lock):
         """Install Python dependencies."""
@@ -338,43 +387,16 @@ class LocalCommands(object):
             fg='green')
         server.wait()
 
-    def status(self, services, verbose):
-        """Checks the status of the given service."""
-        project_shortname = self.cli_config.get_project_shortname()
 
-        for service in services:
-            check = HEALTHCHECKS.get(service)
-            if check:
-                if check(
-                    filepath="docker-services.yml",
-                    verbose=verbose,
-                    project_shortname=project_shortname,
-                ):
-                    click.secho(f"{service} up and running.", fg="green")
-                else:
-                    click.secho(f"{service}: unable to connect or bad status response.", fg="red")
-            else:
-                click.secho(f"{service}: no healthcheck function defined.", fg="yellow")
-
-    def shell(self):
-        """Start a shell in the virtual environment."""
-        command = ['pipenv', 'shell', ]
-        subprocess.run(command, check=True)
-
-    def pyshell(self, debug=False):
-        """Start a Python shell."""
-        with env(FLASK_ENV='development' if debug else 'production'):
-            command = ['pipenv', 'run', 'invenio', 'shell']
-            subprocess.run(command, check=True)
-
-
-class ContainerizedCommands(object):
+class ContainerizedCommands(Commands):
     """Containerized environment CLI commands."""
 
-    def __init__(self, cli_config, docker_helper):
+    def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
-        self.cli_config = cli_config
-        self.docker_helper = docker_helper
+        docker_helper = docker_helper or \
+            DockerHelper(cli_config.get_project_shortname(), local=False)
+
+        super(ContainerizedCommands, self).__init__(cli_config, docker_helper)
 
     def update_statics_and_assets(self, install):
         """Update application containers' statics and assets."""
@@ -500,23 +522,3 @@ class ContainerizedCommands(object):
         # container mode ensures the containers are up
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
-
-    def stop(self):
-        """Stops containers."""
-        click.secho("Stopping containers...", fg="green")
-        self.docker_helper.stop_containers()
-        click.secho('Stopped containers', fg='green')
-
-    def destroy(self):
-        """Destroys the instance's virtualenv and containers."""
-        try:
-            subprocess.run(['pipenv', '--rm'], check=True)
-            click.secho('Virtual environment destroyed', fg='green')
-        except subprocess.CalledProcessError:
-            click.secho('The virtual environment was '
-                        'not removed as it was not '
-                        'created by pipenv', fg='red')
-
-        self.docker_helper.destroy_containers()
-        self.cli_config.update_services_setup(False)
-        click.secho('Destroyed containers', fg='green')

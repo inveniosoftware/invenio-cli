@@ -16,7 +16,6 @@ import click
 from .helpers.cli_config import CLIConfig
 from .helpers.commands import Commands, ContainerizedCommands, LocalCommands
 from .helpers.cookiecutter_wrapper import CookiecutterWrapper
-from .helpers.docker_helper import DockerHelper
 
 
 @click.group()
@@ -106,8 +105,9 @@ def status(verbose):
     NOTE: currently only ES, DB (postgresql/mysql) and redis are supported.
     """
     cli_config = CLIConfig()
-    commands = LocalCommands(cli_config)
-    commands.status(services=["redis", cli_config.get_db_type(), "es"], verbose=verbose)
+    commands = Commands(cli_config)
+    commands.status(
+        services=["redis", cli_config.get_db_type(), "es"], verbose=verbose)
 
 
 @cli.command()
@@ -123,10 +123,7 @@ def containerize(pre, force, install_js):
     Think of it as a production compilation build + running.
     """
     cli_config = CLIConfig()
-    commands = ContainerizedCommands(
-        cli_config,
-        DockerHelper(cli_config.get_project_shortname(), local=False)
-    )
+    commands = ContainerizedCommands(cli_config)
 
     commands.containerize(pre=pre, force=force, install=install_js)
 
@@ -137,7 +134,7 @@ def containerize(pre, force, install_js):
 def demo(local):
     """Populates instance with demo records."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, local)
+    commands = LocalCommands(cli_config)
     commands.demo()
 
 
@@ -215,7 +212,7 @@ def watch_module(path, link):
 def destroy(verbose):
     """Removes all associated resources (containers, images, volumes)."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, False)
+    commands = Commands(cli_config)
     commands.destroy()
 
 
@@ -223,7 +220,7 @@ def destroy(verbose):
 def stop():
     """Stops containers."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, False)
+    commands = Commands(cli_config)
     commands.stop()
 
 
@@ -239,7 +236,7 @@ def upgrade(verbose):
 def shell():
     """Shell command."""
     cli_config = CLIConfig()
-    commands = LocalCommands(cli_config)
+    commands = Commands(cli_config)
     commands.shell()
 
 
@@ -251,7 +248,7 @@ def shell():
 def pyshell(debug):
     """Python shell command."""
     cli_config = CLIConfig()
-    commands = LocalCommands(cli_config)
+    commands = Commands(cli_config)
     commands.pyshell(debug=debug)
 
 
@@ -265,5 +262,5 @@ def ext():
 def module_install(modules):
     """Install a Python module in development mode."""
     cli_config = CLIConfig()
-    commands = Commands(cli_config, True)
+    commands = LocalCommands(cli_config)
     commands.install_modules(modules)

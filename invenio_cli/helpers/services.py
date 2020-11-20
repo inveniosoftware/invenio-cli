@@ -17,9 +17,9 @@
 # reaches a higher maturity level.
 #####
 
-from os import path
-from subprocess import check_call, Popen, PIPE
 import time
+from os import path
+from subprocess import PIPE, Popen, check_call
 
 import click
 
@@ -128,7 +128,7 @@ def wait_for_services(
     filepath="docker-services.yml",
     max_retries=6,
     verbose=False,
-    ):
+):
     """Wait for services to be up.
 
     It performs configured healthchecks in a serial fashion, following the
@@ -151,7 +151,7 @@ def wait_for_services(
         )
         while not ready and try_ < max_retries:
             click.secho(
-                f"{service} not ready at {try_} retries, waiting " \
+                f"{service} not ready at {try_} retries, waiting " +
                 f"{exp_backoff_time}s",
                 fg="yellow"
             )
