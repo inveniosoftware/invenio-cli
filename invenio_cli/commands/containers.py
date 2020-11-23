@@ -12,7 +12,7 @@ from os import listdir
 import click
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.process import run_cmd
+from ..helpers.process import run_cmd, ProcessResponse
 from ..helpers.services import wait_for_services
 from .commands import Commands
 
@@ -27,126 +27,127 @@ class ContainersCommands(Commands):
 
         super(ContainersCommands, self).__init__(cli_config, docker_helper)
 
-    def update_statics_and_assets(self, install):
-        """Update application containers' statics and assets."""
-        project_shortname = self.cli_config.get_project_shortname()
+    def build(self, pull=True, cache=True):
+        """Build images.
 
-        click.secho('Collecting statics and assets...', fg='green')
-        # Collect into statics/ folder
-        self.docker_helper.execute_cli_command(
-            project_shortname, 'invenio collect')
-
-        # Collect into assets/ folder
-        self.docker_helper.execute_cli_command(
-            project_shortname, 'invenio webpack create')
-
-        if install:
-            click.secho('Installing js dependencies...', fg='green')
-            # Installs in assets/node_modules/
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio webpack install --unsafe')
-
-        # Use the copy approach rather than the symlink one in container
-        click.secho('Copying project statics and assets...', fg='green')
-        src_dir = self.cli_config.get_project_dir() / 'static'
-        # src_dir MUST be '<dir>/.' for docker cp to work
-        src_dir = src_dir / '.'
-        dst_dir = '/opt/invenio/var/instance/static/'
-        self.docker_helper.copy2(src_dir, dst_dir)
-
-        src_dir = self.cli_config.get_project_dir() / 'assets'
-        # src_dir MUST be '<dir>/.' for docker cp to work
-        src_dir = src_dir / '.'
-        dst_dir = '/opt/invenio/var/instance/assets/'
-        self.docker_helper.copy2(src_dir, dst_dir)
-
-        click.secho('Building assets...', fg='green')
-        self.docker_helper.execute_cli_command(
-            project_shortname, 'invenio webpack build')
-
-    def _lock_python_dependencies(self, pre):
-        """Creates Pipfile.lock if not existing."""
-        command = ['pipenv', 'lock']
-
-        if pre:
-            command += ['--pre']
-
+        :param pull: Attempt to pull newer versions of the images.
+        :param cache: Use cached images and layers.
+        """
         locked = 'Pipfile.lock' in listdir('.')
-        return 0 if locked else run_cmd(command).status_code
+        if not locked:
+            return ProcessResponse(
+                error="Dependencies were not locked. " +
+                      "Please run `invenio-cli packages lock`.",
+                status_code=1,
+            )
 
-    def containerize(self, pre, force, install):
-        """Launch fully containerized application."""
-        self._lock_python_dependencies(pre)
+        self.docker_helper.build_images(pull, cache)
 
-        click.secho('Making sure containers are up...', fg='green')
-        self.docker_helper.start_containers()
+    def _cleanup(self, project_shortname="/opt/var/instance/"):
+        """Execute cleanup commands."""
+        click.secho("Flushing redis cache...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname,
+            "invenio shell --no-term-title -c "
+            "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\""  # noqa
+        )
+        click.secho("Deleting database...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio db destroy --yes-i-know')
+        click.secho("Deleting indices...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname,
+            'invenio index destroy --force --yes-i-know')
+        click.secho("Purging queues...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio index queue init purge')
+        self.cli_config.update_services_setup(False)
 
-        project_shortname = self.cli_config.get_project_shortname()
+    def _setup(self, project_shortname="/opt/var/instance/"):
+        """Initialize services."""
+        click.secho("Creating database...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio db init create')
 
-        wait_for_services(
-            services=["redis", self.cli_config.get_db_type(), "es"],
-            project_shortname=project_shortname,
+        click.secho("Creating files location...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname,
+            "invenio files location create --default default-location "
+            "${INVENIO_INSTANCE_PATH}/data"
         )
 
-        if force:
-            self.cli_config.update_services_setup(False)
-            click.secho("Flushing redis cache...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname,
-                "invenio shell --no-term-title -c "
-                "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\""  # noqa
-            )
-            click.secho("Deleting database...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio db destroy --yes-i-know')
-            click.secho("Deleting indices...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname,
-                'invenio index destroy --force --yes-i-know')
-            click.secho("Purging queues...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio index queue init purge')
-
-        if not self.cli_config.get_services_setup():
-            click.secho("Creating database...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio db init create')
-
-            click.secho("Creating files location...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname,
-                "invenio files location create --default default-location "
-                "${INVENIO_INSTANCE_PATH}/data"
-            )
-
-            click.secho("Creating admin role...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio roles create admin')
-
-            click.secho(
-                "Assigning superuser access to admin role...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname,
-                'invenio access allow superuser-access role admin')
-
-            click.secho("Creating indices...", fg="green")
-            self.docker_helper.execute_cli_command(
-                project_shortname, 'invenio index init')
-
-            self.cli_config.update_services_setup(True)
-
-        # statics and assets are always regenerated
-        self.update_statics_and_assets(install=install)
+        click.secho("Creating admin role...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio roles create admin')
 
         click.secho(
-            'Instance running!\nVisit https://127.0.0.1', fg='green')
+            "Assigning superuser access to admin role...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname,
+            'invenio access allow superuser-access role admin')
 
-    def demo(self):
+        click.secho("Creating indices...", fg="green")
+        self.docker_helper.execute_cli_command(
+            project_shortname, 'invenio index init')
+
+        self.cli_config.update_services_setup(True)
+
+    def demo(self, project_shortname):
         """Add demo records into the instance."""
-        project_shortname = self.cli_config.get_project_shortname()
-
-        # TODO: Shall we call ensure containers? If so move to
-        # parent object. Noentheless, the way of starting in
-        # container mode ensures the containers are up
         self.docker_helper.execute_cli_command(
             project_shortname, 'invenio rdm-records demo')
+
+    def setup(self, force, demo_data=True, stop=False):
+        """Setup containerize services.
+
+        :param force: Remove existing content (db, indices, etc.).
+        :param demo_data: Include demo records.
+        :param stop: Stop services after setup.
+        """
+        self.ensure_containers_running()
+        project_shortname = self.cli_config.get_project_shortname()
+        if force:
+            self._cleanup(project_shortname)
+        if not self.cli_config.get_services_setup():
+            self._setup(project_shortname)
+        if demo_data:
+            self.demo(project_shortname)
+        if stop:
+            self.docker_helper.stop_containers()
+
+        # FIXME: Implemente proper error control.
+        # Use run_cmd and check output instead of run_interactive
+        return ProcessResponse(
+            output="Successfully setup all services.",
+            status_code=0
+        )
+
+    def start(self, lock=False, build=False, setup=False, demo_data=True,
+              services=True):
+        """Start service and application containers.
+
+        :param lock: Lock dependencies.
+        :param build: Build containers if not built.
+        :param setup: Setup services (db, indices, etc.).
+        :param demo_data: Include demo records.
+        :param services: Start services or only the application containers.
+                         This option is incompatible will all the other flags.
+        """
+        if lock:
+            # FIXME: Should this params be accepted? sensible defaults?
+            self.lock(pre=True, dev=True)
+        if build:
+            self.build()
+
+        if services and setup:
+            # NOTE: Setup will boot up all service and not bring down
+            self.setup(force=True, demo_data=demo_data)
+            # FIXME: Should control errors and return proper output
+            return
+
+        # NOTE: Needed in case there is no setup
+        self.docker_helper.start_containers(app_only=not services)
+        # FIXME: Should control errors and return proper output
+        return
+
+

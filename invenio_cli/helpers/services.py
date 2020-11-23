@@ -119,7 +119,7 @@ def wait_for_services(
                 filepath=filepath,
                 verbose=verbose,
                 project_shortname=project_shortname,
-            )
+            ).status_code == 0
 
         if not ready:
             click.secho(f"Unable to boot up {service}", fg="red")

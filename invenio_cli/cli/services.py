@@ -89,7 +89,7 @@ def status(cli_config, verbose):
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False,
               help='Verbose mode will show all logs in the console.')
 @pass_cli_config
-def Destroy(cli_config, verbose):
+def destroy(cli_config, verbose):
     """Destroy local services."""
     # FIXME: This destroy should not remove the venv
     commands = Commands(cli_config)

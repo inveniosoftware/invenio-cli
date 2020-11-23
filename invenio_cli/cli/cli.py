@@ -13,12 +13,13 @@ from pathlib import Path
 
 import click
 
-from ..commands import Commands, ContainersCommands, InstallCommands, \
+from ..commands import Commands, InstallCommands, \
     LocalCommands
 from ..errors import InvenioCLIConfigError
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
 from .assets import assets
+from .containers import containers
 from .packages import packages
 from .services import services
 
@@ -40,8 +41,10 @@ def invenio_cli(ctx):
 
 
 invenio_cli.add_command(assets)
+invenio_cli.add_command(containers)
 invenio_cli.add_command(packages)
 invenio_cli.add_command(services)
+
 
 @invenio_cli.command()
 @click.argument('flavour', type=click.Choice(['RDM'], case_sensitive=False),
@@ -107,24 +110,6 @@ def install(cli_config, pre, production):
         )
     else:
         click.secho("Dependencies installed successfully.", fg="green")
-
-
-@invenio_cli.command()
-@click.option('--pre', default=False, is_flag=True,
-              help='If specified, allows the installation of alpha releases')
-@click.option('-f', '--force', default=False, is_flag=True,
-              help='Force recreation of db tables, ES indices, queues...')
-@click.option('--install-js/--no-install-js', default=True, is_flag=True,
-              help="(re-)Install JS dependencies, defaults to True")
-@pass_cli_config
-def containerize(cli_config, pre, force, install_js):
-    """Setup and run all containers (docker-compose.full.yml).
-
-    Think of it as a production compilation build + running.
-    """
-    commands = ContainersCommands(cli_config)
-
-    commands.containerize(pre=pre, force=force, install=install_js)
 
 
 @invenio_cli.command()

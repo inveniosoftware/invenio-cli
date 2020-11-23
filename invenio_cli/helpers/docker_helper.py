@@ -13,7 +13,8 @@ import re
 
 import docker
 
-from .process import ProcessResponse, run_cmd
+from .process import ProcessResponse, run_cmd, run_interactive
+
 
 DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 
@@ -43,19 +44,42 @@ class DockerHelper(object):
         else:
             return project_shortname
 
-    def start_containers(self):
-        """Start containers according to the specified environment."""
+    def build_images(self, pull=False, cache=True):
+        """Build images.
+
+        :param pull: Adds --pull to the docker-compose command.
+        :param cache: Removes --no-cache to the docker-compose command.
+        """
+        command = [
+            'docker-compose',
+            '--file',
+            'docker-compose.full.yml',
+            'build',
+        ]
+        if pull:
+            command.append('--pull')
+        if not cache:
+            command.append('--no-cache')
+
+        # FIXME: To get real-time output
+        return run_interactive(command)
+
+    def start_containers(self, app_only=False):
+        """Start containers according to the specified environment.
+
+        :param app_only: Boot up only ui and api containers.
+        """
         command = [
             'docker-compose',
             '--file',
             'docker-compose.yml' if self.local else 'docker-compose.full.yml',
             'up',
-            # NOTE: docker-compose is smart about not rebuilding an image if
-            #       there is no need to, so --build is not a slow default.
-            '--build',
             '-d'  # --detach not supported in 1.17.0
         ]
-        # On a re-run everything is good.
+
+        if app_only:
+            command.extend(['web-ui','web-api'])
+
         return run_cmd(command)
 
     def stop_containers(self):
@@ -71,26 +95,17 @@ class DockerHelper(object):
 
         return run_cmd(command)
 
-    def copy2(self, src_path, dst_path):
-        """Copy a file into the path of the specified container."""
-        container_name = '{}_web-ui_1'.format(self.container_prefix)
-        container_path = "{}:{}".format(container_name, dst_path)
-
-        return run_cmd(['docker', 'cp', str(src_path), container_path])
-
     def execute_cli_command(self, project_shortname, command):
         """Execute an invenio CLI command in the API container."""
         container_name = '{}_web-ui_1'.format(self.container_prefix)
         container = self.docker_client.containers.get(container_name)
-
         status = container.exec_run(
             cmd='/bin/bash -c "{}"'.format(command.replace('"', '\\"')),
             tty=True,
             stdout=True,
             stderr=True)
-
+        # FIXME: What happens when exec_run fails? handle exception.
         return ProcessResponse(
-            output=status.output.decode("utf-8"),
-            error=status.error.decode("utf-8"),
+            output=status.output,
             status_code=status.exit_code
         )

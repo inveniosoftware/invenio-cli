@@ -16,7 +16,6 @@ import click
 from ...helpers.docker_helper import DockerHelper
 from ...helpers.env import env
 from ...helpers.process import ProcessResponse, run_interactive
-from ...helpers.services import wait_for_services
 from ..commands import Commands
 
 
@@ -29,20 +28,6 @@ class LocalCommands(Commands):
             DockerHelper(cli_config.get_project_shortname(), local=True)
 
         super(LocalCommands, self).__init__(cli_config, docker_helper)
-
-    def ensure_containers_running(self):
-        """Ensures containers are running."""
-        click.secho('Making sure containers are up...', fg='green')
-        project_shortname = self.cli_config.get_project_shortname()
-        docker_helper = DockerHelper(
-            project_shortname,
-            local=True)
-        docker_helper.start_containers()
-
-        wait_for_services(
-            services=["redis", self.cli_config.get_db_type(), "es"],
-            project_shortname=project_shortname,
-        )
 
     def update_statics_and_assets(self, force, flask_env='production'):
         """High-level command to update less/js/images/... files.

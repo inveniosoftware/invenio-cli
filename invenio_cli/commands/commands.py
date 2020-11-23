@@ -7,12 +7,13 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import click
 from subprocess import CalledProcessError
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.env import env
 from ..helpers.process import run_cmd, run_interactive
-from ..helpers.services import HEALTHCHECKS
+from ..helpers.services import HEALTHCHECKS, wait_for_services
 
 
 class Commands(object):
@@ -28,6 +29,20 @@ class Commands(object):
         self.cli_config = cli_config
         self.docker_helper = docker_helper or \
             DockerHelper(cli_config.get_project_shortname(), local=False)
+
+    def ensure_containers_running(self):
+        """Ensures containers are running.
+
+        NOTE: Used by ContainersCommands, InstallCommands and ServicesCommands
+        """
+        click.secho('Making sure containers are up...', fg='green')
+        project_shortname = self.cli_config.get_project_shortname()
+        self.docker_helper.start_containers()
+
+        wait_for_services(
+            services=["redis", self.cli_config.get_db_type(), "es"],
+            project_shortname=project_shortname,
+        )
 
     def shell(self):
         """Start a shell in the virtual environment."""
