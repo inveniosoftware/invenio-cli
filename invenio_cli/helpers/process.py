@@ -9,15 +9,18 @@
 
 """Invenio CLI Process helper module."""
 
-from subprocess import PIPE
+from subprocess import PIPE, run, CalledProcessError
 from subprocess import Popen as popen
 
 
 class ProcessResponse():
     """Process response class."""
 
-    def __init__(self, output, error, status_code):
-        """Constructor."""
+    def __init__(self, output=None, error=None, status_code=0):
+        """Constructor.
+
+        By default it is a successful response (0) wiht no error nor ouput.
+        """
         self.output = output
         self.error = error
         self.status_code = status_code
@@ -31,3 +34,17 @@ def run_cmd(command):
     error = error.decode("utf-8")
 
     return ProcessResponse(output, error, p.returncode)
+
+
+def run_interactive(command):
+    """Runs a given command without blocking, allows interactive shells.
+
+    Stdout and stderr are not piped and therefore allows interaction.
+    """
+    try:
+        response = run(command, check=True)
+        return ProcessResponse(
+            output=None, error=None, status_code=0)
+    except CalledProcessError as e:
+        return ProcessResponse(
+            output=None, error=e.message, status_code=e.returncode)

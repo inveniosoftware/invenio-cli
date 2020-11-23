@@ -13,3 +13,4 @@ from .cookiecutter_wrapper import CookiecutterWrapper
 from .docker_helper import DockerHelper
 from .filesystem import get_created_files
 from .log import LoggingConfig, LogPipe
+from .env import env

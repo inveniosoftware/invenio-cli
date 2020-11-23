@@ -11,7 +11,7 @@ from subprocess import CalledProcessError
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.env import env
-from ..helpers.process import run_cmd
+from ..helpers.process import run_cmd, run_interactive
 from ..helpers.services import HEALTHCHECKS
 
 
@@ -38,7 +38,7 @@ class Commands(object):
         """Start a Python shell."""
         with env(FLASK_ENV='development' if debug else 'production'):
             command = ['pipenv', 'run', 'invenio', 'shell']
-            return run_cmd(command)
+            return run_interactive(command)
 
     def status(self, services, verbose):
         """Checks the status of the given service.
@@ -48,17 +48,19 @@ class Commands(object):
                   not defined.
         """
         project_shortname = self.cli_config.get_project_shortname()
-
         statuses = []
         for service in services:
             check = HEALTHCHECKS.get(service)
             if check:
-                # Append 0 if True, 1 if False
-                statuses.append(int(not check(
+                result = check(
                     filepath="docker-services.yml",
                     verbose=verbose,
                     project_shortname=project_shortname,
-                )))
+                )
+                # Append 0 if OK, else 1
+                # FIXME: Deal with codes higher than 1. Needed?
+                code = 0 if result.status_code == 0 else 1
+                statuses.append(code)
             else:
                 statuses.append(2)
 
@@ -83,3 +85,13 @@ class Commands(object):
         self.cli_config.update_services_setup(False)
 
         return response
+
+    def lock(self, pre, dev):
+        """Lock Python dependencies."""
+        command = ['pipenv', 'install']
+        if pre:
+            command += ['--pre']
+        if dev:
+            command += ['--dev']
+        # NOTE: Interactive to allow real-time output of pipenv
+        return run_interactive(command)

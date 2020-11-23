@@ -7,16 +7,13 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+from .assets import AssetsCommands
+from .local import LocalCommands
+from .install import InstallCommands
+from .services import ServicesCommands
 
-from .commands import Commands
-from .containers import ContainersCommands
-from .local import AssetsCommands, LocalCommands, InstallCommands, \
-    ServicesCommands
 
 __all__ = (
-    "Commands",
-    "ContainersCommands",
-    "AssetsCommands",
     "LocalCommands",
     "InstallCommands",
     "ServicesCommands",
