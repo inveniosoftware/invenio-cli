@@ -9,9 +9,8 @@
 
 import click
 
-from ..helpers.cli_config import CLIConfig
 from ..commands import AssetsCommands
-
+from ..helpers.cli_config import CLIConfig
 
 # FIXME: This should be imported from cli.py
 pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)

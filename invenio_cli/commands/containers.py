@@ -12,7 +12,7 @@ from os import listdir
 import click
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.process import run_cmd, ProcessResponse
+from ..helpers.process import ProcessResponse, run_cmd
 from ..helpers.services import wait_for_services
 from .commands import Commands
 
@@ -149,5 +149,3 @@ class ContainersCommands(Commands):
         self.docker_helper.start_containers(app_only=not services)
         # FIXME: Should control errors and return proper output
         return
-
-

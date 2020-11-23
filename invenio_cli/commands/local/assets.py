@@ -10,8 +10,8 @@
 
 from pathlib import Path
 
-from pynpm import NPMPackage
 import click
+from pynpm import NPMPackage
 
 from ...helpers import env
 from ...helpers.process import run_interactive

@@ -7,8 +7,9 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import click
 from subprocess import CalledProcessError
+
+import click
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.env import env

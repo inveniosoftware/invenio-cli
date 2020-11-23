@@ -9,7 +9,7 @@
 
 
 from distutils.dir_util import copy_tree
-from os import  listdir
+from os import listdir
 from pathlib import Path
 
 import click

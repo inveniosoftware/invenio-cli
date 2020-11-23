@@ -13,8 +13,7 @@ from pathlib import Path
 
 import click
 
-from ..commands import Commands, InstallCommands, \
-    LocalCommands
+from ..commands import Commands, InstallCommands, LocalCommands
 from ..errors import InvenioCLIConfigError
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
@@ -22,7 +21,6 @@ from .assets import assets
 from .containers import containers
 from .packages import packages
 from .services import services
-
 
 pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
 

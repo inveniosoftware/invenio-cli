@@ -10,7 +10,7 @@
 
 from .commands import Commands
 from .containers import ContainersCommands
-from .local import AssetsCommands, LocalCommands, InstallCommands, \
+from .local import AssetsCommands, InstallCommands, LocalCommands, \
     ServicesCommands
 
 __all__ = (

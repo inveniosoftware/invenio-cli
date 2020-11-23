@@ -9,9 +9,8 @@
 
 import click
 
-from ..helpers.cli_config import CLIConfig
 from ..commands import Commands, ContainersCommands
-
+from ..helpers.cli_config import CLIConfig
 
 # FIXME: This should be imported from cli.py
 pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
@@ -52,7 +51,7 @@ def setup(cli_config, force, no_demo_data, stop_services):
     demo_data = not no_demo_data
     commands = ContainersCommands(cli_config)
     click.secho(
-        f"Setting up services with force {force}, demo data {demo_data} "+
+        f"Setting up services with force {force}, demo data {demo_data} " +
         f"and stop after setup {stop_services}...",
         fg="green"
     )

@@ -10,9 +10,8 @@
 
 import click
 
-from ..helpers.cli_config import CLIConfig
 from ..commands import Commands, InstallCommands
-
+from ..helpers.cli_config import CLIConfig
 
 # FIXME: This should be imported from cli.py
 pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
@@ -34,7 +33,7 @@ def lock(cli_config, pre, dev):
     click.secho(
         f"Locking dependencies... Allow pre-releases: {pre}. " +
         f"Include dev-packages: {dev}.",
-         fg="green"
+        fg="green"
     )
     commands = Commands(cli_config)
     result = commands.lock(pre, dev)

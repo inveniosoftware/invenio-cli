@@ -8,8 +8,9 @@
 
 """Module commands/commands.py's tests."""
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from invenio_cli.commands import Commands
 

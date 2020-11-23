@@ -15,7 +15,6 @@ import docker
 
 from .process import ProcessResponse, run_cmd, run_interactive
 
-
 DOCKER_COMPOSE_VERSION_DASH = '1.21.0'
 
 
@@ -78,7 +77,7 @@ class DockerHelper(object):
         ]
 
         if app_only:
-            command.extend(['web-ui','web-api'])
+            command.extend(['web-ui', 'web-api'])
 
         return run_cmd(command)
 

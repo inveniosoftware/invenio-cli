@@ -20,7 +20,7 @@ from ..commands import Commands
 
 
 class LocalCommands(Commands):
-    """Local environment CLI commands."""
+    """Local CLI commands."""
 
     def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
@@ -86,7 +86,8 @@ class LocalCommands(Commands):
 
             click.secho("Starting celery worker...", fg="green")
             worker = popen([
-                'pipenv', 'run', 'celery', '--app', 'invenio_app.celery', 'worker'
+                'pipenv', 'run', 'celery', '--app',
+                'invenio_app.celery', 'worker'
             ])
 
         click.secho("Starting up local (development) server...", fg='green')

@@ -12,6 +12,7 @@ from .local import LocalCommands
 
 
 class ServicesCommands(LocalCommands):
+    """Service CLI commands."""
 
     def __init__(self, cli_config):
         """Constructor."""

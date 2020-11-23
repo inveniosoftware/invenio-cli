@@ -9,8 +9,9 @@
 
 """Invenio CLI Process helper module."""
 
-from subprocess import PIPE, run, CalledProcessError
+from subprocess import PIPE, CalledProcessError
 from subprocess import Popen as popen
+from subprocess import run
 
 
 class ProcessResponse():

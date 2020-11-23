@@ -8,13 +8,13 @@
 """Invenio module to ease the creation and management of applications."""
 
 from .assets import AssetsCommands
-from .local import LocalCommands
 from .install import InstallCommands
+from .local import LocalCommands
 from .services import ServicesCommands
 
-
 __all__ = (
-    "LocalCommands",
+    "AssetsCommands",
     "InstallCommands",
+    "LocalCommands",
     "ServicesCommands",
 )

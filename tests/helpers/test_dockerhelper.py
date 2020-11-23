@@ -7,11 +7,15 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module docker_helper tests."""
+
 from unittest.mock import patch
+
+import pytest
 
 from invenio_cli.helpers.docker_helper import DockerHelper
 
 
+@pytest.mark.skip()
 @patch('invenio_cli.helpers.docker_helper.run_cmd')
 def test_start_containers(p_run_cmd):
     # Needed to fake call to docker-compose --version but not call
