@@ -76,7 +76,8 @@ class RequirementsCommands(object):
         # Output comes in the form of 'Python 3.7.7\n'
         result = run_cmd(["python", "--version"])
         version = cls._version_from_string(result.output.strip())
-        return cls._check_version("Node", version, major, minor, patch, exact)
+        return cls._check_version(
+            "Python", version, major, minor, patch, exact)
 
     @classmethod
     def check_docker_version(cls, major, minor=-1, patch=-1, exact=False):
