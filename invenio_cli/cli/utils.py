@@ -10,6 +10,7 @@
 import click
 
 from ..helpers.cli_config import CLIConfig
+from ..helpers.process import run_cmd
 
 pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
 
@@ -31,3 +32,12 @@ def run_steps(steps, fail_message, success_message):
             click.secho(message=result.output, fg="green")
     else:
         click.secho(message=success_message, fg="green")
+
+
+def calculate_instance_path():
+    """Caclulates instance path based on current venv."""
+    result = run_cmd(
+            ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
+                '-c', '"print(app.instance_path, end=\'\')"']
+        )
+    return result.output.strip()

@@ -23,7 +23,7 @@ from .containers import containers
 from .install import install
 from .packages import packages
 from .services import services
-from .utils import pass_cli_config, run_steps
+from .utils import calculate_instance_path, pass_cli_config, run_steps
 
 
 @click.group()
@@ -94,7 +94,8 @@ def init(flavour, template, checkout):
 
         click.secho("Writing invenio-invenio_cli config file...", fg='green')
         saved_replay = cookiecutter_wrapper.get_replay()
-        CLIConfig.write(project_dir, flavour, saved_replay)
+        instance_path = calculate_instance_path()
+        CLIConfig.write(project_dir, flavour, saved_replay, instance_path)
 
         click.secho("Creating logs directory...", fg='green')
         os.mkdir(Path(project_dir) / "logs")
