@@ -105,6 +105,6 @@ class DockerHelper(object):
             stderr=True)
         # FIXME: What happens when exec_run fails? handle exception.
         return ProcessResponse(
-            output=status.output,
+            output=status.output.decode("utf-8").strip(),
             status_code=status.exit_code
         )
