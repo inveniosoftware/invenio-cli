@@ -13,6 +13,7 @@ from .containers import ContainersCommands
 from .install import InstallCommands
 from .local import LocalCommands
 from .packages import PackagesCommands
+from .requirements import RequirementsCommands
 from .services import ServicesCommands
 
 __all__ = (
@@ -22,5 +23,6 @@ __all__ = (
     "InstallCommands",
     "LocalCommands",
     "PackagesCommands",
+    "RequirementsCommands",
     "ServicesCommands",
 )

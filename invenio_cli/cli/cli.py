@@ -14,7 +14,7 @@ from pathlib import Path
 import click
 
 from ..commands import Commands, ContainersCommands, InstallCommands, \
-    LocalCommands
+    LocalCommands, RequirementsCommands
 from ..errors import InvenioCLIConfigError
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
@@ -47,9 +47,16 @@ invenio_cli.add_command(services)
 
 
 @invenio_cli.command('check-requirements')
-def check_requirements():
+@click.option('--development', '-d', default=False, is_flag=True,
+              help='Check development requirements.')
+def check_requirements(development):
     """Checks the system fulfills the pre-requirements."""
-    raise click.UsageError("Not supported yet.")
+    click.secho("Checking pre-requirements...", fg="green")
+    steps = RequirementsCommands.check(development)
+    on_fail = "Pre requisites not met."
+    on_success = "All requisites are fulfilled."
+
+    run_steps(steps, on_fail, on_success)
 
 
 @invenio_cli.command()
