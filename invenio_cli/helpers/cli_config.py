@@ -109,7 +109,7 @@ class CLIConfig(object):
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['database']
 
     @classmethod
-    def write(cls, project_dir, flavour, replay):
+    def write(cls, project_dir, flavour, replay, instance_path=None):
         """Write invenio-cli config file.
 
         :param project_dir: Folder to write the config file into
@@ -142,7 +142,7 @@ class CLIConfig(object):
         config_parser = ConfigParser()
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]['project_dir'] = str(project_dir)
-        config_parser[cls.CLI_SECTION]['instance_path'] = ''
+        config_parser[cls.CLI_SECTION]['instance_path'] = instance_path or ''
         config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
         private_config_path = project_dir / cls.PRIVATE_CONFIG_FILENAME
         with open(private_config_path, 'w') as configfile:
