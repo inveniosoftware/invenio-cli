@@ -27,5 +27,7 @@ def run_steps(steps, fail_message, success_message):
 
             click.secho(fail_message, fg="red")
             exit(1)
+        elif result.output:
+            click.secho(message=result.output, fg="green")
     else:
         click.secho(message=success_message, fg="green")
