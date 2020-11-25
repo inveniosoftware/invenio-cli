@@ -10,7 +10,7 @@
 
 import click
 
-from ..commands import PackagesCommands
+from ..commands import AssetsCommands, PackagesCommands
 from .utils import pass_cli_config, run_steps
 
 
@@ -41,17 +41,26 @@ def lock(cli_config, pre, dev):
 
 @packages.command()
 @click.argument("packages", nargs=-1, type=str)
+@click.option('-s', '--skip-build', default=False, is_flag=True,
+              help='Do not rebuild the assets.')
 @pass_cli_config
-def install(cli_config, packages):
+def install(cli_config, packages, skip_build):
     """Install one or a list of Python packages in the local environment."""
     if len(packages) < 1:
         raise click.UsageError("You must specify at least one package.")
 
     steps = PackagesCommands.install_packages(packages)
+
     on_fail = f"Failed to install packages {packages}."
     on_success = f"Packages {packages} installed successfully."
 
     run_steps(steps, on_fail, on_success)
+
+    # FIXME: Migrate assets to steps.
+    if not skip_build:
+        click.secho("Rebuilding assets...")
+        AssetsCommands(cli_config).update_statics_and_assets(
+            force=True, flask_env='development')
 
 
 @packages.command()

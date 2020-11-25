@@ -87,7 +87,7 @@ def status(cli_config, verbose):
 @pass_cli_config
 def stop(cli_config):
     """Stop local services."""
-    commands = Commands(cli_config)
+    commands = ServicesCommands(cli_config)
     steps = commands.stop()
     on_fail = "Failed to stop containers."
     on_success = "Stopped containers."

@@ -25,18 +25,18 @@ def assets():
 
 
 @assets.command()
-@click.option('--force', '-f', default=False, is_flag=True,
-              help='Force the full recreation the assets and statics.')
+@click.option('--no-wipe', '-n', default=False, is_flag=True,
+              help='Do not remove existing assets.')
 @click.option(
-    '--production/--development', '-p/-d', default=True, is_flag=True,
+    '--production/--development', '-p/-d', default=False, is_flag=True,
     help='Production mode copies files. Development mode symlinks files.'
 )
 @pass_cli_config
-def update(cli_config, force, production):
-    """Updates the static and assets files on the local installation."""
+def build(cli_config, no_wipe, production):
+    """Build the static and assets files on the local installation."""
     commands = AssetsCommands(cli_config)
     commands.update_statics_and_assets(
-        force=force,
+        force=not no_wipe,  # If no_wipe=True, it means force=False
         flask_env='production' if production else 'development'
     )
 

@@ -59,7 +59,7 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
         fg="green"
     )
 
-    steps = commands.setup(force, demo_data, stop_service, services)
+    steps = commands.setup(force, demo_data, stop_services, services)
     on_fail = "Failed to setup services."
     on_success = "Services setup successfully."
 
