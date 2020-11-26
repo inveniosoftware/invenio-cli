@@ -52,15 +52,7 @@ class InstallCommands(LocalCommands):
         target_path = self.cli_config.get_project_dir() / target
         link_path = self.cli_config.get_instance_path() / target
 
-        steps = [
-            FunctionStep(
-                func=filesystem.force_symlink,
-                args={"target": target_path, "link_name": link_path},
-                message=f"Symlinking {target}..."
-            )
-        ]
-
-        return steps
+        return filesystem.force_symlink(target_path, link_path)
 
     def install(self, pre, flask_env='production'):
         """Development installation steps."""
@@ -71,9 +63,27 @@ class InstallCommands(LocalCommands):
                 message="Updating instance path..."
             )
         )
-        steps.extend(self.symlink_project_file_or_folder('invenio.cfg'))
-        steps.extend(self.symlink_project_file_or_folder('templates'))
-        steps.extend(self.symlink_project_file_or_folder('app_data'))
+        steps.append(
+            FunctionStep(
+                func=self.symlink_project_file_or_folder,
+                args={"target": 'invenio.cfg'},
+                message=f"Symlinking 'invenio.cfg'..."
+            )
+            )
+        steps.append(
+            FunctionStep(
+                func=self.symlink_project_file_or_folder,
+                args={"target": 'templates'},
+                message=f"Symlinking 'templates'..."
+            )
+            )
+        steps.append(
+            FunctionStep(
+                func=self.symlink_project_file_or_folder,
+                args={"target": 'app_data'},
+                message=f"Symlinking 'app_data'..."
+            )
+            )
         steps.append(
             FunctionStep(
                 func=self.update_statics_and_assets,
