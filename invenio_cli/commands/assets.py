@@ -8,6 +8,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 
+from functools import partial
 from pathlib import Path
 
 import click
@@ -60,8 +61,7 @@ class AssetsCommands(LocalCommands):
 
         steps = [
             FunctionStep(  # Create link to global folder
-                func=module_pkg.run_script,
-                args={"command": "link-dist"},
+                func=partial(module_pkg.run_script, "link-dist"),
                 message="Linking module to global dist..."
             ),
             FunctionStep(  # Link the global folder to the assets folder.
@@ -71,6 +71,8 @@ class AssetsCommands(LocalCommands):
             )
         ]
 
+        return steps
+
     def watch_js_module(self, path, link=True):
         """High-level command to watch a JS module for changes."""
         steps = []
@@ -79,8 +81,7 @@ class AssetsCommands(LocalCommands):
 
         steps.append(
             FunctionStep(
-                func=self._module_pkg(path).run_script,
-                args={"command": "watch"},
+                func=partial(self._module_pkg(path).run_script, "watch"),
                 message="Starting watching module..."
             )
         )
