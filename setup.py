@@ -66,7 +66,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'invenio-cli = invenio_cli.cli:invenio_cli',
+            'invenio-cli = invenio_cli.cli.cli:invenio_cli',
         ]
     },
     extras_require=extras_require,
