@@ -56,15 +56,7 @@ def install(cli_config, path):
     run_steps(steps, on_fail, on_success)
 
 
-@click.group(cls=DefaultGroup, default='assets', default_if_no_args=True)
-def watch():
-    """Statics and assets watch commands.
-
-    NOTE: The assets watch commands are intended for development environments.
-    """
-
-
-@watch.command('assets')
+@assets.command('watch')
 @pass_cli_config
 def watch_assets(cli_config):
     """Watch assets files on the local installation.
@@ -75,7 +67,7 @@ def watch_assets(cli_config):
     commands.watch_assets()
 
 
-@watch.command('module')
+@assets.command('watch-module')
 @click.option('--link', '-l', default=False, is_flag=True,
               help='Link the module.')
 @click.argument('path', type=click.Path(exists=True))
@@ -89,8 +81,3 @@ def watch_module(cli_config, path, link):
     on_success = "Finished watching React module."
 
     run_steps(steps, on_fail, on_success)
-
-
-# NOTE: In order to obtain something like
-# invenio-cli assets watch [assets | module <path>]
-assets.add_command(watch)

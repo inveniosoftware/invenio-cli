@@ -18,7 +18,7 @@ from .utils import pass_cli_config, run_steps
 @click.option('--pre', default=False, is_flag=True,
               help='If specified, allows the installation of alpha releases')
 @click.option(
-    '--production/--development', '-p/-d', default=True, is_flag=True,
+    '--production/--development', '-p/-d', default=False, is_flag=True,
     help='Production mode copies statics/assets. Development mode symlinks'
          ' statics/assets.'
 )
