@@ -7,11 +7,7 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import click
 
-class InvenioCLIConfigError(Exception):
+class InvenioCLIConfigError(click.UsageError):
     """Exception when reading/writting from the configuration file."""
-
-    def __init__(self, message):
-        """Constructor."""
-        super().__init__()
-        self.message = message

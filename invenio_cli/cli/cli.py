@@ -31,12 +31,6 @@ from .utils import calculate_instance_path, pass_cli_config, run_steps
 @click.pass_context
 def invenio_cli(ctx):
     """Initialize CLI context."""
-    # Config loading is not needed when initializing
-    if ctx.invoked_subcommand != "init":
-        try:
-            ctx.cli_config = CLIConfig()
-        except InvenioCLIConfigError as e:
-            raise click.UsageError(e.message)
 
 
 invenio_cli.add_command(assets)
