@@ -9,5 +9,6 @@
 
 import click
 
+
 class InvenioCLIConfigError(click.UsageError):
     """Exception when reading/writting from the configuration file."""
