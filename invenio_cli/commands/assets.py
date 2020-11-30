@@ -15,7 +15,7 @@ import click
 from pynpm import NPMPackage
 
 from ..helpers import env
-from ..helpers.process import run_interactive
+from ..helpers.process import ProcessResponse, run_interactive
 from .local import LocalCommands
 from .steps import CommandStep, FunctionStep
 
@@ -28,12 +28,6 @@ class AssetsCommands(LocalCommands):
         super(AssetsCommands, self).__init__(cli_config)
 
     @staticmethod
-    def _watch_js_module(pkg):
-        """Watch the JS module for changes."""
-        click.secho('Starting watching module...', fg='green')
-        pkg.run_script('watch')
-
-    @staticmethod
     def _module_pkg(path):
         """NPM package for the given path."""
         return NPMPackage(Path(path) / 'package.json')
@@ -41,6 +35,60 @@ class AssetsCommands(LocalCommands):
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
         return self._module_pkg(self.cli_config.get_instance_path() / 'assets')
+
+    @staticmethod
+    def _watch_js_module(pkg):
+        """Watch the JS module for changes."""
+        click.secho('Starting watching module...', fg='green')
+        status_code = pkg.run_script('watch')
+        if status_code == 0:
+            return ProcessResponse(
+                output="Watched module successfully.",
+                status_code=0
+            )
+        else:
+            return ProcessResponse(
+                error=f"Unable to set watcher. Got status code {status_code}",
+                status_code=status_code
+            )
+
+    @staticmethod
+    def _run_script(module_pkg):
+        """Run script and return a ProcessResponse."""
+        status_code = module_pkg.run_script("link-dist")
+        if status_code == 0:
+            return ProcessResponse(
+                output="Module linked correctly to global",
+                status_code=0
+            )
+        else:
+            return ProcessResponse(
+                error=f"Unable to link-dis. Got error code {status_code}",
+                status_code=status_code
+            )
+
+    @staticmethod
+    def _assets_link(assets_pkg, module_pkg):
+        try:
+            module_name = module_pkg.package_json['name']
+        except FileNotFoundError as e:
+            return ProcessResponse(
+                error="No module found on the specified path. "
+                      f"File not found {e.filename}",
+                status_code=1
+            )
+
+        status_code = assets_pkg.link(module_name)
+        if status_code == 0:
+            return ProcessResponse(
+                output="Global module linked correctly to local folder",
+                status_code=0
+            )
+        else:
+            return ProcessResponse(
+                error=f"Unable to link module. Got error code {status_code}",
+                status_code=status_code
+            )
 
     def watch_assets(self):
         """High-level command to watch assets for changes."""
@@ -61,12 +109,16 @@ class AssetsCommands(LocalCommands):
 
         steps = [
             FunctionStep(  # Create link to global folder
-                func=partial(module_pkg.run_script, "link-dist"),
+                func=self._run_script,
+                args={"module_pkg": module_pkg},
                 message="Linking module to global dist..."
             ),
             FunctionStep(  # Link the global folder to the assets folder.
-                func=assets_pkg.link,
-                args={"package": module_pkg.package_json['name']},
+                func=self._assets_link,
+                args={
+                    "assets_pkg": assets_pkg,
+                    "module_pkg": module_pkg
+                },
                 message="Linking module to assets..."
             )
         ]
@@ -81,7 +133,8 @@ class AssetsCommands(LocalCommands):
 
         steps.append(
             FunctionStep(
-                func=partial(self._module_pkg(path).run_script, "watch"),
+                func=self._watch_js_module,
+                args={"pkg": self._module_pkg(path)},
                 message="Starting watching module..."
             )
         )
