@@ -13,7 +13,7 @@ from ..helpers.process import run_interactive
 class FunctionStep(object):
     """A step which execution is a function call.
 
-    Is composed of message (feedback), a funcion, and arguments.
+    Is composed of a function, arguments, and a message (feedback).
     """
 
     def __init__(self, func, args=None, message=None):
@@ -30,7 +30,7 @@ class FunctionStep(object):
 class CommandStep(object):
     """A step which execution is a command run.
 
-    Is composed of message (feedback) and a command.
+    Is composed of a command, an environment, and a message (feedback).
     """
 
     def __init__(self, cmd, env=None, message=None):

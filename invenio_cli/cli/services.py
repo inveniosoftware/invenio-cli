@@ -36,7 +36,7 @@ def start(cli_config):
 @services.command()
 @click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
-@click.option('-n', '--no-demo-data', default=False, is_flag=True,
+@click.option('-N', '--no-demo-data', default=False, is_flag=True,
               help='Disable the creation of demo data')
 @click.option('--stop-services', default=False, is_flag=True,
               help='Stop containers after setup.')

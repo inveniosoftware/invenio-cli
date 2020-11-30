@@ -44,7 +44,7 @@ class InstallCommands(LocalCommands):
         )
         self.cli_config.update_instance_path(result.output.strip())
 
-        result.output = "Instance path successfully."
+        result.output = "Instance path updated successfully."
         return result
 
     def symlink_project_file_or_folder(self, target):
@@ -83,12 +83,12 @@ class InstallCommands(LocalCommands):
                 args={"target": 'app_data'},
                 message=f"Symlinking 'app_data'..."
             )
-            )
+        )
         steps.append(
             FunctionStep(
                 func=self.update_statics_and_assets,
                 args={"force": True, "flask_env": flask_env},
-                message="Creating symbolic link for app_data folder..."
+                message="Updating statics and assets..."
             )
         )
 
