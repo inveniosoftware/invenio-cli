@@ -34,21 +34,21 @@ class ServicesCommands(Commands):
             project_shortname=project_shortname,
         )
         return ProcessResponse(
-                output="Containers start and checkup run.",
-                status_code=0,
+            output="Containers started and healthy.",
+            status_code=0,
         )
 
     def services_expected_status(self, expected):
-        """Checks if the services are on the expected setup status."""
+        """Checks if the services have the expected status."""
         if not self.cli_config.get_services_setup() == expected:
             return ProcessResponse(
-                error=f"Services status inconistent. Expected {expected}" +
+                error=f"Services setup status inconsistent. Expected {expected}" +
                       f" obtained {not expected}",
                 status_code=1
             )
 
         return ProcessResponse(
-                output=f"Services status conistent.",
+                output=f"Services setup status consistent.",
                 status_code=0
             )
 
@@ -97,7 +97,7 @@ class ServicesCommands(Commands):
             FunctionStep(
                 func=self.services_expected_status,
                 args={"expected": False},
-                message="Checking services are cleaned up..."
+                message="Checking services are not setup..."
             ),
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'db', 'init', 'create'],

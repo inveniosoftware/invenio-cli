@@ -21,9 +21,9 @@ def packages():
 
 @packages.command()
 @click.option('--pre', default=False, is_flag=True,
-              help='Allows the installation of alpha releases.')
+              help='Allows installation of alpha releases.')
 @click.option('--dev', default=False, is_flag=True,
-              help='Include development devepencies.')
+              help='Includes development dependencies.')
 @pass_cli_config
 def lock(cli_config, pre, dev):
     """Lock Python dependencies."""

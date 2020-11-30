@@ -135,6 +135,6 @@ class LocalCommands(Commands):
         ], env=run_env)
 
         click.secho(
-            'Instance running!\nVisit https://{}:{}'.format(host, port),
+            f'Instance running!\nVisit https://{host}:{port}',
             fg='green')
         server.wait()

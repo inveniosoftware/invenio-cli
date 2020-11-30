@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2020 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -41,7 +42,7 @@ def build(cli_config, pull, cache):
 @containers.command()
 @click.option('-f', '--force', default=False, is_flag=True,
               help='Force recreation of db tables, ES indices, queues...')
-@click.option('-n', '--no-demo-data', default=False, is_flag=True,
+@click.option('-N', '--no-demo-data', default=False, is_flag=True,
               help='Disable the creation of demo data')
 @click.option('--stop-services', default=False, is_flag=True,
               help='Stop containers after setup.')
