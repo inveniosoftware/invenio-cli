@@ -42,8 +42,8 @@ class ServicesCommands(Commands):
         """Checks if the services have the expected status."""
         if not self.cli_config.get_services_setup() == expected:
             return ProcessResponse(
-                error=f"Services setup status inconsistent. Expected {expected}" +
-                      f" obtained {not expected}",
+                error="Services status inconsistent." +
+                      f"Expected {expected} obtained {not expected}",
                 status_code=1
             )
 
