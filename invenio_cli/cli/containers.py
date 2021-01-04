@@ -10,7 +10,7 @@
 
 import click
 
-from ..commands import Commands, ContainersCommands
+from ..commands import ContainersCommands
 from .utils import pass_cli_config, run_steps
 
 
@@ -123,7 +123,7 @@ def start(cli_config, lock, build, setup, demo_data, services):
 @pass_cli_config
 def stop(cli_config):
     """Stop containerized services and application."""
-    commands = Commands(cli_config)
+    commands = ContainersCommands(cli_config)
     steps = commands.stop()
     on_fail = "Failed to stop containers."
     on_success = "Stopped containers."
