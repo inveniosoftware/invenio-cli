@@ -33,7 +33,7 @@ for reqs in extras_require.values():
 
 install_requires = [
     'cookiecutter>=1.7.1,<1.8.0',
-    'click>=7.0,<8.0',
+    'click>=7.1.1,<8.0',
     'click-default-group>=1.2.2,<2.0.0',
     'docker>=4.1.0,<5.0.0',
     'pipenv>=2020.6.2',
