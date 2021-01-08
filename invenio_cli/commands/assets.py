@@ -63,7 +63,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error=f"Unable to link-dis. Got error code {status_code}",
+                error=f"Unable to link-dist. Got error code {status_code}",
                 status_code=status_code
             )
 
