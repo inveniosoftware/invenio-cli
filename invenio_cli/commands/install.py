@@ -21,14 +21,14 @@ class InstallCommands(LocalCommands):
         """Constructor."""
         super(InstallCommands, self).__init__(cli_config)
 
-    def install_py_dependencies(self, pre):
+    def install_py_dependencies(self, pre, dev=False):
         """Install Python dependencies."""
-        steps = [
-            FunctionStep(
-                func=PackagesCommands.is_locked,
-                message="Checking if dependencies are locked."
-            )
-        ]
+        # If not locked, lock. Then install.
+        steps = []
+
+        if PackagesCommands.is_locked().status_code > 0:
+            steps.extend(PackagesCommands.lock(pre, dev))
+
         steps.extend(PackagesCommands.install_locked_dependencies(pre))
 
         return steps
@@ -54,9 +54,9 @@ class InstallCommands(LocalCommands):
 
         return filesystem.force_symlink(target_path, link_path)
 
-    def install(self, pre, flask_env='production'):
+    def install(self, pre, dev=False, flask_env='production'):
         """Development installation steps."""
-        steps = self.install_py_dependencies(pre=pre)
+        steps = self.install_py_dependencies(pre=pre, dev=dev)
         steps.append(
             FunctionStep(
                 func=self.update_instance_path,
