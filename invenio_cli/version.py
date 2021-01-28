@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019-2020 CERN.
-# Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2019-2021 CERN.
+# Copyright (C) 2019-2021 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,4 +12,4 @@ This file is imported by ``invenio_cli.__init__``,
 and parsed by ``setup.py``.
 """
 
-__version__ = '0.20.0'
+__version__ = '0.21.0'
