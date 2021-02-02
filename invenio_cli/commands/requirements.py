@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2021 TU Wien.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -8,6 +9,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 import re
+import sys
 from os import listdir
 
 from ..helpers.process import ProcessResponse, run_cmd, run_interactive
@@ -72,10 +74,17 @@ class RequirementsCommands(object):
 
     @classmethod
     def check_python_version(cls, major, minor=-1, patch=-1, exact=False):
-        """Check the node version."""
-        # Output comes in the form of 'Python 3.7.7\n'
-        result = run_cmd(["python", "--version"])
-        version = cls._version_from_string(result.output.strip())
+        """Check the python version."""
+        # check the version of the currently executed Python, as
+        # 'invenio-cli' will create a virtualenv with the stated Python
+        # version (via pipenv) anyway
+        version_info = sys.version_info
+        version = "{}.{}.{}".format(
+            version_info.major,
+            version_info.minor,
+            version_info.micro,
+        )
+
         return cls._check_version(
             "Python", version, major, minor, patch, exact)
 
