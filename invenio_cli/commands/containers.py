@@ -159,6 +159,21 @@ class ContainersCommands(ServicesCommands):
 
         return steps
 
+    def vocabularies(self, project_shortname):
+        """Steps to set up the required vocabularies for the instance."""
+        steps = [
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": "invenio rdm-records vocabularies"
+                },
+                message="Creating vocabularies..."
+            )
+        ]
+
+        return steps
+
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Return the steps to setup containerize services.
 
@@ -182,6 +197,7 @@ class ContainersCommands(ServicesCommands):
             steps.extend(self._cleanup(project_shortname))
 
         steps.extend(self._setup(project_shortname))
+        steps.extend(self.vocabularies(project_shortname))
 
         if demo_data:
             steps.extend(self.demo(project_shortname))
