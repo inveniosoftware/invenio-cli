@@ -7,6 +7,10 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import secrets
+import string
+
+from ..helpers.cli_config import CLIConfig
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse
 from .commands import Commands
@@ -22,6 +26,20 @@ class ServicesCommands(Commands):
         super(ServicesCommands, self).__init__(cli_config)
         self.docker_helper = docker_helper or \
             DockerHelper(cli_config.get_project_shortname(), local=True)
+
+        # allow letters, digits and some punctuation marks
+        # (which shouldn't cause issues with shells)
+        alphabet = string.ascii_letters + string.digits + "+,-_."
+        self.admin_password = "".join(
+            secrets.choice(alphabet) for i in range(20)
+        )
+
+        cc_section = cli_config.config[CLIConfig.COOKIECUTTER_SECTION]
+        self.admin_user = cc_section["author_email"]
+        if not self.admin_user:
+            self.admin_user = "admin@{}".format(
+                cc_section["project_site"]
+            )
 
     def ensure_containers_running(self):
         """Ensures containers are running."""
@@ -121,6 +139,27 @@ class ServicesCommands(Commands):
                      'superuser-access', 'role', 'admin'],
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Allowing superuser access to admin role..."
+            ),
+            CommandStep(
+                cmd=['pipenv', 'run', 'invenio', 'users', 'create',
+                     '--password', '{}'.format(self.admin_password),
+                     '{}'.format(self.admin_user)],
+                env={'PIPENV_VERBOSITY': "-1"},
+                message=("Creating (inactive) admin user...\n"
+                         "Enable login with 'invenio users activate {0}'\n"
+                         "DO NOT FORGET to update the password!\n"
+                         "Email: {0}, password: {1}").format(
+                             self.admin_user,
+                             self.admin_password
+                         )
+            ),
+            CommandStep(
+                cmd=['pipenv', 'run', 'invenio', 'roles', 'add',
+                     '{}'.format(self.admin_user), 'admin'],
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Giving {} admin permissions...".format(
+                    self.admin_user
+                )
             ),
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'index', 'init'],

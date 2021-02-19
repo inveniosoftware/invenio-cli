@@ -131,6 +131,36 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
+                    "command": ("invenio users create --password "
+                                "'{}' '{}'").format(
+                        self.admin_password,
+                        self.admin_user
+                    ),
+                },
+                message=("Creating (inactive) admin user...\n"
+                         "Enable login with 'invenio users activate {0}'\n"
+                         "DO NOT FORGET to update the password!\n"
+                         "Email: {0}, password: {1}").format(
+                             self.admin_user,
+                             self.admin_password
+                         )
+            ),
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": "invenio roles add '{}' admin".format(
+                        self.admin_user
+                    ),
+                },
+                message="Giving {} admin permissions...".format(
+                    self.admin_user
+                )
+            ),
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
                     "command": "invenio index init"
                 },
                 message="Creating indices..."
