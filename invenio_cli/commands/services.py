@@ -148,14 +148,14 @@ class ServicesCommands(Commands):
 
         return steps
 
-    def vocabularies(self):
-        """Steps to set up the required vocabularies for the instance."""
-        command = ['pipenv', 'run', 'invenio', 'rdm-records', 'vocabularies']
+    def fixtures(self):
+        """Steps to set up the required fixtures for the instance."""
+        command = ['pipenv', 'run', 'invenio', 'rdm-records', 'fixtures']
         steps = [
             CommandStep(
                 cmd=command,
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating vocabularies..."
+                message="Creating fixtures..."
             )
         ]
 
@@ -178,7 +178,7 @@ class ServicesCommands(Commands):
             steps.extend(self._cleanup())
 
         steps.extend(self._setup())
-        steps.extend(self.vocabularies())
+        steps.extend(self.fixtures())
 
         if demo_data:
             steps.extend(self.demo())
