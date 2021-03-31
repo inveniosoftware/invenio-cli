@@ -93,25 +93,35 @@ class RequirementsCommands(object):
         """Check the docker version."""
         # Output comes in the form of
         # 'Docker version 19.03.13, build 4484c46d9d\n'
-        result = run_cmd(["docker", "--version"])
-        version = cls._version_from_string(result.output.strip())
-        return cls._check_version(
-            "Docker", version, major, minor, patch, exact)
+        try:
+            result = run_cmd(["docker", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "Docker", version, major, minor, patch, exact)
+        except Exception as err:
+            return ProcessResponse(
+                error=f"Docker not found. Got {err}.", status_code=1)
 
     @classmethod
     def check_docker_compose_version(cls, major, minor=-1, patch=-1,
                                      exact=False):
-        """Check the docker version."""
+        """Check the docker compose version."""
         # Output comes in the form of
         # 'docker-compose version 1.27.4, build 4484c46d9d\n'
-        result = run_cmd(["docker-compose", "--version"])
-        version = cls._version_from_string(result.output.strip())
-        return cls._check_version(
-            "Docker Compose", version, major, minor, patch, exact)
+        try:
+            result = run_cmd(["docker-compose", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "Docker Compose", version, major, minor, patch, exact
+            )
+        except Exception as err:
+            return ProcessResponse(
+                error=f"Docker Compose not found. Got {err}.", status_code=1
+            )
 
     @classmethod
     def check_pipenv_installed(cls):
-        """Check the node version."""
+        """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
         result = run_cmd(["pipenv", "--version"])
 
@@ -163,7 +173,7 @@ class RequirementsCommands(object):
             FunctionStep(
                 func=cls.check_docker_compose_version,
                 args={"major": 1, "minor": 17},
-                message="Checking Docker version..."
+                message="Checking Docker Compose version..."
             )
         ]
 
