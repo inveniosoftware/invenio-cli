@@ -2,7 +2,7 @@ Contributing
 ============
 
 Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
+little bit helps, and credit will always be given. Additional documentation can be found in the Invenio `maintainers guide <https://inveniordm.docs.cern.ch/maintenance/newcomers/#tools>`_.
 
 Types of Contributions
 ----------------------
