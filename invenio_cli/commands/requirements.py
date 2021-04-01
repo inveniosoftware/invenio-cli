@@ -46,13 +46,13 @@ class RequirementsCommands(object):
                       f"Got {parts[0]} expected {major}",
                 status_code=1
             )
-        if (exact and parts[1] != minor) or parts[1] < minor:
+        if (exact and parts[1] != minor and minor != -1) or parts[1] < minor:
             return ProcessResponse(
                 error=f"{binary} minor version missmatch. "
                       f"Got {parts[1]} expected {minor}",
                 status_code=1
             )
-        if (exact and parts[2] != patch) or parts[2] < patch:
+        if (exact and parts[2] != patch and patch != -1) or parts[2] < patch:
             return ProcessResponse(
                 error=f"{binary} patch version missmatch. "
                       f"Got {parts[2]} expected {patch}",
@@ -145,7 +145,7 @@ class RequirementsCommands(object):
         steps = [
             FunctionStep(
                 func=cls.check_node_version,
-                args={"major": 14},
+                args={"major": 14, "exact": True},
                 message="Checking Node version..."
             )
         ]
