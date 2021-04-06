@@ -126,7 +126,6 @@ HEALTHCHECKS = {
     "es": ServicesHealthCommands.es_healthcheck,
     "postgresql": ServicesHealthCommands.postgresql_healthcheck,
     "mysql": ServicesHealthCommands.mysql_healthcheck,
-    "redis": ServicesHealthCommands.redis_healthcheck,
-    "sqlite": (lambda *args, **kwargs: True)
+    "redis": ServicesHealthCommands.redis_healthcheck
 }
 """Health check functions module path, as string."""

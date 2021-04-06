@@ -37,7 +37,7 @@ def mock_cli_config():
             return 'project-shortname'
 
         def get_db_type(self):
-            return 'sqlite'
+            return 'postgresql'
 
     return MockCLIConfig()
 
