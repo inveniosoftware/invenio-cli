@@ -105,7 +105,7 @@ class CLIConfig(object):
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['project_shortname']
 
     def get_db_type(self):
-        """Returns the database type (mysql, postgresql, sqlite)."""
+        """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['database']
 
     @classmethod
