@@ -79,7 +79,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error=f"Dependent packages unable to install. "
+                error=f"Unable to install dependent packages. "
                       "Got error code {status_code}",
                 status_code=status_code
             )
@@ -95,7 +95,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error=f"Unable to built. Got error code {status_code}",
+                error=f"Unable to build. Got error code {status_code}",
                 status_code=status_code
             )
 
