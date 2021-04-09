@@ -17,9 +17,9 @@ pass_cli_config = click.make_pass_decorator(CLIConfig, ensure=True)
 
 def run_steps(steps, fail_message, success_message):
     """Run a series of steps."""
-    for test in steps:
-        click.secho(message=test.message, fg="green")
-        result = test.execute()
+    for step in steps:
+        click.secho(message=step.message, fg="green")
+        result = step.execute()
         if result.status_code > 0:
             if result.error:
                 fail_message = fail_message + f"\nErrors: {result.error}"
