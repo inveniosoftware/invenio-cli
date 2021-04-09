@@ -28,6 +28,13 @@ def run_steps(steps, fail_message, success_message):
 
             click.secho(fail_message, fg="red")
             exit(1)
+        elif result.warning:
+            if result.error:
+                fail_message = fail_message + f"\nErrors: {result.error}"
+            if result.output:
+                fail_message = fail_message + f"\nOutput: {result.output}"
+
+            click.secho(fail_message, fg="yellow")
         elif result.output:
             click.secho(message=result.output, fg="green")
     else:

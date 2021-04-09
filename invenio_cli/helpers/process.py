@@ -18,7 +18,7 @@ from subprocess import run
 class ProcessResponse():
     """Process response class."""
 
-    def __init__(self, output=None, error=None, status_code=0):
+    def __init__(self, output=None, error=None, status_code=0, warning=False):
         """Constructor.
 
         By default it is a successful response (0) wiht no error nor ouput.
@@ -26,6 +26,7 @@ class ProcessResponse():
         self.output = output
         self.error = error
         self.status_code = status_code
+        self.warning = warning
 
 
 def run_cmd(command):
@@ -38,7 +39,7 @@ def run_cmd(command):
     return ProcessResponse(output, error, p.returncode)
 
 
-def run_interactive(command, env=None):
+def run_interactive(command, env=None, skippable=False):
     """Runs a given command without blocking, allows interactive shells.
 
     Stdout and stderr are not piped and therefore allows interaction.
@@ -55,5 +56,9 @@ def run_interactive(command, env=None):
         return ProcessResponse(
             output=None, error=None, status_code=0)
     except CalledProcessError as e:
-        return ProcessResponse(
-            output=e.stdout, error=e.stderr, status_code=e.returncode)
+        if skippable:
+            return ProcessResponse(
+                output=e.stdout, error=e.stderr, status_code=0, warning=True)
+        else:
+            return ProcessResponse(
+                output=e.stdout, error=e.stderr, status_code=e.returncode)

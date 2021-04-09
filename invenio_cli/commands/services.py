@@ -55,33 +55,33 @@ class ServicesCommands(Commands):
     def _cleanup(self):
         """Services cleanup steps."""
         steps = [
-            FunctionStep(func=self.services_expected_status,
-                args={"expected": True},
-                message="Checking services are setup..."
-            ),
             CommandStep(cmd=[
                 'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
                 "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"],  # noqa
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Flushing Redis..."
+                message="Flushing Redis...",
+                skippable=True
             ),
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'db', 'destroy',
                      '--yes-i-know'],
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Destroying database..."
+                message="Destroying database...",
+                skippable=True
             ),
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'index', 'destroy',
                      '--force', '--yes-i-know'],
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Destroying indices..."
+                message="Destroying indices...",
+                skippable=True
             ),
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'index', 'queue',
                      'init', 'purge'],
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Purging queues..."
+                message="Purging queues...",
+                skippable=True
             ),
             FunctionStep(func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
