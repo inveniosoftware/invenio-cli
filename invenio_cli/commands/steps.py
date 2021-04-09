@@ -33,12 +33,13 @@ class CommandStep(object):
     Is composed of a command, an environment, and a message (feedback).
     """
 
-    def __init__(self, cmd, env=None, message=None):
+    def __init__(self, cmd, env=None, message=None, skippable=False):
         """Constructor."""
         self.cmd = cmd
         self.env = env
         self.message = message
+        self.skippable = skippable
 
     def execute(self):
         """Execute the function with the given arguments."""
-        return run_interactive(self.cmd, self.env)
+        return run_interactive(self.cmd, self.env, self.skippable)
