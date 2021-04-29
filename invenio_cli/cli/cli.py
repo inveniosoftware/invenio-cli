@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019 CERN.
+# Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@ from pathlib import Path
 import click
 
 from ..commands import Commands, ContainersCommands, InstallCommands, \
-    LocalCommands, RequirementsCommands
+    LocalCommands, RequirementsCommands, UpgradeCommands
 from ..errors import InvenioCLIConfigError
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
@@ -140,5 +140,9 @@ def destroy(cli_config):
 
 @invenio_cli.command()
 def upgrade():
-    """Upgrades the current application to the specified newer version."""
-    raise click.UsageError("Not supported yet.")
+    """Upgrades the current instance to a newer version."""
+    steps = UpgradeCommands.upgrade()
+    on_fail = "Upgrade failed."
+    on_success = "Upgrade sucessfull."
+
+    run_steps(steps, on_fail, on_success)
