@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020 CERN.
+# Copyright (C) 2020-2021 CERN.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -9,7 +9,7 @@
 
 from os import listdir
 
-from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.process import ProcessResponse
 from .steps import CommandStep
 
 

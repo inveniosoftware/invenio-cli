@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020 CERN.
+# Copyright (C) 2020-2021 CERN.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -15,6 +15,7 @@ from .local import LocalCommands
 from .packages import PackagesCommands
 from .requirements import RequirementsCommands
 from .services import ServicesCommands
+from .upgrade import UpgradeCommands
 
 __all__ = (
     "AssetsCommands",
@@ -25,4 +26,5 @@ __all__ = (
     "PackagesCommands",
     "RequirementsCommands",
     "ServicesCommands",
+    "UpgradeCommands"
 )
