@@ -143,6 +143,11 @@ class ServicesCommands(Commands):
                 cmd=['pipenv', 'run', 'invenio', 'rdm-records', 'demo'],
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Creating demo records..."
+            ),
+            CommandStep(
+                cmd=['pipenv', 'run', 'invenio', 'communities', 'demo'],
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Creating demo communities..."
             )
         ]
 

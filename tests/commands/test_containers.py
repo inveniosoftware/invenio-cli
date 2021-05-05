@@ -228,5 +228,8 @@ def test_demo(
 
     assert (
         commands.docker_helper.execute_cli_command.mock_calls ==
-        [call('project-shortname', 'invenio rdm-records demo')]
+        [
+            call('project-shortname', 'invenio rdm-records demo'),
+            call('project-shortname', 'invenio communities demo')
+        ]
     )
