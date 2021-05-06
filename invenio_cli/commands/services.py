@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2021 Esteban J. G. Gabancho.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -91,6 +92,15 @@ class ServicesCommands(Commands):
 
         return steps
 
+    def _default_location_path(self):
+        """Build default location path based on file storage selection."""
+        file_storage = self.cli_config.get_file_storage()
+        if file_storage == 'local':
+            return '{}/data'.format(self.cli_config.get_instance_path())
+        return '{}://default'.format(
+            self.cli_config.get_file_storage().lower()
+        )
+
     def _setup(self):
         """Services initialization steps."""
         steps = [
@@ -107,7 +117,7 @@ class ServicesCommands(Commands):
             CommandStep(
                 cmd=['pipenv', 'run', 'invenio', 'files', 'location',
                      'create', '--default', 'default-location',
-                     "{}/data".format(self.cli_config.get_instance_path())],
+                     self._default_location_path()],
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Creating files location..."
             ),

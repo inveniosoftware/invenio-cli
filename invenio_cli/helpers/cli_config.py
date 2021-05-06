@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2021 Esteban J. G. Gabancho.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -111,6 +112,10 @@ class CLIConfig(object):
     def get_es_version(self):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['elasticsearch']
+
+    def get_file_storage(self):
+        """Returns the file storage (local, s3, etc.)."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]['file_storage']
 
     @classmethod
     def write(cls, project_dir, flavour, replay, instance_path=None):

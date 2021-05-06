@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2021 Esteban J. G. Gabancho.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -38,6 +39,9 @@ def mock_cli_config():
 
         def get_db_type(self):
             return 'postgresql'
+
+        def get_file_storage(self):
+            return 'local'
 
     return MockCLIConfig()
 
