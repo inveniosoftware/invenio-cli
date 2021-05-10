@@ -120,6 +120,24 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_imagemagick_version(cls, major, minor=-1, patch=-1,
+                                  exact=False):
+        """Check the ImageMagick version."""
+        # Output comes in the form of 'ImageMagick, version 7.0.11-13\n'
+        try:
+            result = run_cmd(["magick", "-version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "ImageMagick", version, major, minor, patch, exact
+            )
+        except Exception as err:
+            return ProcessResponse(
+                error=f"ImageMagick not found. Got {err}.",
+                status_code=1,
+                warning=True
+            )
+
+    @classmethod
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
@@ -174,6 +192,11 @@ class RequirementsCommands(object):
                 func=cls.check_docker_compose_version,
                 args={"major": 1, "minor": 17},
                 message="Checking Docker Compose version..."
+            ),
+            FunctionStep(
+                func=cls.check_imagemagick_version,
+                args={"major": 0, "minor": 0},
+                message="Checking ImageMagick version..."
             )
         ]
 
