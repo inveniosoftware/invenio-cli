@@ -108,6 +108,10 @@ class CLIConfig(object):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['database']
 
+    def get_es_version(self):
+        """Returns the database type (mysql, postgresql)."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]['elasticsearch']
+
     @classmethod
     def write(cls, project_dir, flavour, replay, instance_path=None):
         """Write invenio-cli config file.

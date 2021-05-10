@@ -76,16 +76,19 @@ def outdated(cli_config):
 
 
 @packages.command()
-@click.argument("packages", nargs=-1, type=str)
+@click.argument("version", required=False, type=str)
 @pass_cli_config
-def update(cli_config, packages=None):
+def update(cli_config, version=None):
     """Update all or some Python python packages."""
-    steps = PackagesCommands.update_packages(packages)
-
-    if packages:
-        on_fail = f"Failed to update packages {packages}."
-        on_success = f"Packages {packages} installed successfully."
+    if version:
+        db = cli_config.get_db_type()
+        es = f"elasticsearch{cli_config.get_es_version()}"
+        package = f"invenio-app-rdm[{db},{es}]~="
+        steps = PackagesCommands.update_package_new_version(package, version)
+        on_fail = f"Failed to update version {version}"
+        on_success = f"Version {version} installed successfully."
     else:
+        steps = PackagesCommands.update_packages()
         on_fail = "Failed to update packages."
         on_success = "Packages installed successfully."
 

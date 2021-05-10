@@ -56,20 +56,37 @@ class PackagesCommands(object):
         return steps
 
     @staticmethod
-    def update_packages(packages):
-        """Steps to update all or some Python packages.
+    def update_packages():
+        """Steps to update all Python packages.
 
         It is a class method since it does not require any configuration.
         """
         cmd = ['pipenv', 'update']
-        if packages:
-            cmd.extend(packages)
 
         steps = [
             CommandStep(
                 cmd=cmd,
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Updating package(s)..."
+            )
+        ]
+
+        return steps
+
+    @staticmethod
+    def update_package_new_version(package, version):
+        """Update invenio-app-rdm version.
+
+        It is a class method since it does not require any configuration.
+        """
+        prefix = ['pipenv']
+        app = prefix + ['install', package + version]
+
+        steps = [
+            CommandStep(
+                cmd=app,
+                env={'PIPENV_VERBOSITY': "-1"},
+                message=f"Updating {package} to version {version}..."
             )
         ]
 
