@@ -38,6 +38,44 @@ class PackagesCommands(object):
         return steps
 
     @staticmethod
+    def outdated_packages():
+        """Steps to show outdated packages.
+
+        It is a class method since it does not require any configuration.
+        """
+        cmd = ['pipenv', 'update', '--outdated']
+
+        steps = [
+            CommandStep(
+                cmd=cmd,
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Checking outdated packages..."
+            )
+        ]
+
+        return steps
+
+    @staticmethod
+    def update_packages(packages):
+        """Steps to update all or some Python packages.
+
+        It is a class method since it does not require any configuration.
+        """
+        cmd = ['pipenv', 'update']
+        if packages:
+            cmd.extend(packages)
+
+        steps = [
+            CommandStep(
+                cmd=cmd,
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Updating package(s)..."
+            )
+        ]
+
+        return steps
+
+    @staticmethod
     def install_locked_dependencies(pre):
         """Installed dependencies from Pipfile.lock using sync."""
         # NOTE: sync has not interactive process feedback
