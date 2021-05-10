@@ -125,7 +125,7 @@ class RequirementsCommands(object):
         """Check the ImageMagick version."""
         # Output comes in the form of 'ImageMagick, version 7.0.11-13\n'
         try:
-            result = run_cmd(["magick", "-version"])
+            result = run_cmd(["convert", "--version"])
             version = cls._version_from_string(result.output.strip())
             return cls._check_version(
                 "ImageMagick", version, major, minor, patch, exact
@@ -134,7 +134,6 @@ class RequirementsCommands(object):
             return ProcessResponse(
                 error=f"ImageMagick not found. Got {err}.",
                 status_code=1,
-                warning=True
             )
 
     @classmethod
