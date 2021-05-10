@@ -67,11 +67,26 @@ def install(cli_config, packages, skip_build):
 @pass_cli_config
 def outdated(cli_config):
     """Show outdated Python dependencies."""
-    raise click.UsageError("Not supported yet.")
+    steps = PackagesCommands.outdated_packages()
+
+    on_fail = "Some of the packages need to be updated."
+    on_success = "All packages are up to date."
+
+    run_steps(steps, on_fail, on_success)
 
 
 @packages.command()
+@click.argument("packages", nargs=-1, type=str)
 @pass_cli_config
-def update(cli_config):
-    """Update a single Python python package."""
-    raise click.UsageError("Not supported yet.")
+def update(cli_config, packages=None):
+    """Update all or some Python python packages."""
+    steps = PackagesCommands.update_packages(packages)
+
+    if packages:
+        on_fail = f"Failed to update packages {packages}."
+        on_success = f"Packages {packages} installed successfully."
+    else:
+        on_fail = "Failed to update packages."
+        on_success = "Packages installed successfully."
+
+    run_steps(steps, on_fail, on_success)
