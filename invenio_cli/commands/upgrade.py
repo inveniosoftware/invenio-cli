@@ -14,12 +14,13 @@ class UpgradeCommands(object):
     """Local installation commands."""
 
     @staticmethod
-    def upgrade():
+    def upgrade(script_path):
         """Steps to perform an upgrade of the invenio instance.
 
         First, and alembic upgrade is launched to allow alembic to migrate the
         database using SQLAlchemy.
-        Then, the Elasticsearch indexes are destroyed, initialized and rebuilt.
+        Then, the custom script is executed.
+        Last, the Elasticsearch indexes are destroyed, initialized and rebuilt.
         It is a class method since it does not require any configuration.
         """
         prefix = ['pipenv', 'run', 'invenio']
@@ -27,12 +28,18 @@ class UpgradeCommands(object):
         destroy_index_cmd = prefix + ['index', 'destroy', '--yes-i-know']
         init_index_cmd = prefix + ['index', 'init']
         rebuild_index_cmd = prefix + ['rdm-records', 'rebuild-index']
+        script_cmd = prefix + ['shell', script_path]
 
         steps = [
             CommandStep(
                 cmd=alembic_cmd,
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Performing an alembic upgrade..."
+            ),
+            CommandStep(
+                cmd=script_cmd,
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Executing data upgrade script..."
             ),
             CommandStep(
                 cmd=destroy_index_cmd,
