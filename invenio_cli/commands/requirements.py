@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020 CERN.
+# Copyright (C) 2020-2021 CERN.
 # Copyright (C) 2021 TU Wien.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
@@ -195,7 +195,8 @@ class RequirementsCommands(object):
             FunctionStep(
                 func=cls.check_imagemagick_version,
                 args={"major": 0, "minor": 0},
-                message="Checking ImageMagick version..."
+                message="Checking ImageMagick version...",
+                skippable=True,
             )
         ]
 
