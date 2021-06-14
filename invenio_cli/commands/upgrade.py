@@ -27,7 +27,8 @@ class UpgradeCommands(object):
         alembic_cmd = prefix + ['alembic', 'upgrade']
         destroy_index_cmd = prefix + ['index', 'destroy', '--yes-i-know']
         init_index_cmd = prefix + ['index', 'init']
-        rebuild_index_cmd = prefix + ['rdm-records', 'rebuild-index']
+        rec_rebuild_index_cmd = prefix + ['rdm-records', 'rebuild-index']
+        comm_rebuild_index_cmd = prefix + ['communities', 'rebuild-index']
         script_cmd = prefix + ['shell', script_path]
 
         steps = [
@@ -52,9 +53,14 @@ class UpgradeCommands(object):
                 message="Creating new indexes..."
             ),
             CommandStep(
-                cmd=rebuild_index_cmd,
+                cmd=rec_rebuild_index_cmd,
                 env={'PIPENV_VERBOSITY': "-1"},
-                message="Rebuilding indexes..."
+                message="Rebuilding records and vocabularies indeces..."
+            ),
+            CommandStep(
+                cmd=comm_rebuild_index_cmd,
+                env={'PIPENV_VERBOSITY': "-1"},
+                message="Rebuilding communities indeces..."
             )
         ]
 
