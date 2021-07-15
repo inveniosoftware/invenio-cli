@@ -42,9 +42,9 @@ class InstallCommands(LocalCommands):
             ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
                 '-c', '"print(app.instance_path, end=\'\')"']
         )
-        self.cli_config.update_instance_path(result.output.strip())
-
-        result.output = "Instance path updated successfully."
+        if result.status_code == 0:
+            self.cli_config.update_instance_path(result.output.strip())
+            result.output = "Instance path updated successfully."
         return result
 
     def symlink_project_file_or_folder(self, target):
