@@ -127,7 +127,8 @@ class LocalCommands(Commands):
         click.secho("Starting up local (development) server...", fg='green')
         run_env = environ.copy()
         run_env['FLASK_ENV'] = 'development' if debug else 'production'
-        run_env['INVENIO_SITE_HOSTNAME'] = f"{host}:{port}"
+        run_env['INVENIO_SITE_UI_URL'] = f"https://{host}:{port}"
+        run_env['INVENIO_SITE_API_URL'] = f"https://{host}:{port}/api"
         server = popen([
             'pipenv', 'run', 'invenio', 'run', '--cert',
             'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
