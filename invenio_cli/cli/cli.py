@@ -88,7 +88,7 @@ def init(flavour, template, checkout):
 
         click.secho("Writing invenio-invenio_cli config file...", fg='green')
         saved_replay = cookiecutter_wrapper.get_replay()
-        instance_path = calculate_instance_path()
+        instance_path = calculate_instance_path(project_dir)
         CLIConfig.write(project_dir, flavour, saved_replay, instance_path)
 
         click.secho("Creating logs directory...", fg='green')
