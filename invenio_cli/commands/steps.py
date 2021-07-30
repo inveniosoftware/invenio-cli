@@ -38,7 +38,8 @@ class FunctionStep(Step):
     def execute(self):
         """Execute the function with the given arguments."""
         response = self.func(**self.args)
-        if self.skippable:
+
+        if response.status_code > 0 and self.skippable:
             response.warning = True
             response.status_code = 0
 
