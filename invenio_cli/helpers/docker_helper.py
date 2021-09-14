@@ -35,7 +35,7 @@ class DockerHelper(object):
         version 1.21.0.
         """
         dc_version_string = run_cmd(['docker-compose', '--version'])
-        groups = re.search(r'1.[0-9]*.[0-9]*', dc_version_string.output)
+        groups = re.search(r'[0-9].[0-9]*.[0-9]*', dc_version_string.output)
         dc_version = groups.group(0)
 
         if dc_version < DOCKER_COMPOSE_VERSION_DASH:
