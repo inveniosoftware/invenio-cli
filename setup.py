@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2021      TU Wien.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -35,7 +36,7 @@ install_requires = [
     'cookiecutter>=1.7.1,<1.8.0',
     'click>=7.1.1,<8.0',
     'click-default-group>=1.2.2,<2.0.0',
-    'docker>=4.1.0,<5.0.0',
+    'docker>=4.1.0,<6.0.0',
     'pipenv>=2020.6.2',
     'PyYAML>=5.1.2',
     'pynpm>=0.1.2',
