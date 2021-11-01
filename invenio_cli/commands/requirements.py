@@ -40,29 +40,37 @@ class RequirementsCommands(object):
 
         parts = [int(num) for num in parts]
 
-        if (exact and parts[0] != major) or parts[0] < major:
-            return ProcessResponse(
-                error=f"{binary} major version missmatch. "
-                      f"Got {parts[0]} expected {major}",
-                status_code=1
-            )
-        if (exact and parts[1] != minor and minor != -1) or parts[1] < minor:
-            return ProcessResponse(
-                error=f"{binary} minor version missmatch. "
-                      f"Got {parts[1]} expected {minor}",
-                status_code=1
-            )
-        if (exact and parts[2] != patch and patch != -1) or parts[2] < patch:
-            return ProcessResponse(
-                error=f"{binary} patch version missmatch. "
-                      f"Got {parts[2]} expected {patch}",
-                status_code=1
-            )
+        version_ok = False
+        if exact:
+            major_match = parts[0] == major
+            minor_match = minor == -1 or parts[1] == minor
+            patch_match = patch == -1 or parts[2] == patch
+            version_ok = major_match and minor_match and patch_match
+        else:
+            major_higher = parts[0] > major
+            major_ok = parts[0] >= major
+            minor_higher = major_ok and parts[1] > minor
+            minor_ok = major_ok and parts[1] >= minor
+            patch_ok = minor_ok and parts[2] >= patch
+            version_ok = major_higher or minor_higher or patch_ok
 
-        return ProcessResponse(
+        if version_ok:
+            return ProcessResponse(
                 output=f"{binary} version OK. Got {version}.",
                 status_code=0
             )
+
+        expected_version = major
+        if minor > -1:
+            expected_version = f"{major}.{minor}"
+            if patch > -1:
+                expected_version = f"{major}.{minor}.{patch}"
+
+        return ProcessResponse(
+            error=f"{binary} wrong version."
+                  f"Got {parts} expected {expected_version}",
+            status_code=1
+        )
 
     @classmethod
     def check_node_version(cls, major, minor=-1, patch=-1, exact=False):
