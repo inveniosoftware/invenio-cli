@@ -10,7 +10,6 @@
 import click
 
 from ..commands import InstallCommands
-from ..helpers.cli_config import CLIConfig
 from .utils import pass_cli_config, run_steps
 
 
