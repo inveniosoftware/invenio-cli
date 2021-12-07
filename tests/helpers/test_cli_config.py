@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019-2020 CERN.
-# Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2019-2021 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module config_file tests."""
-import os
 import tempfile
-from configparser import ConfigParser
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from invenio_cli.errors import InvenioCLIConfigError
 from invenio_cli.helpers.cli_config import CLIConfig
 
 
 def test_cli_config_write():
     """Check config file is generated: preliminary superficial test."""
-
     tmp_dir = tempfile.TemporaryDirectory()
     project_dir = tmp_dir.name
     flavour = 'RDM'
@@ -43,13 +41,13 @@ def test_cli_config_write():
     private_config_path = Path(project_dir) / CLIConfig.PRIVATE_CONFIG_FILENAME
 
     # No configuration files
-    assert not os.path.isfile(config_path)
-    assert not os.path.isfile(private_config_path)
+    assert not config_path.is_file()
+    assert not private_config_path.is_file()
 
     CLIConfig.write(project_dir, flavour, replay)
 
-    assert os.path.isfile(config_path)
-    assert os.path.isfile(private_config_path)
+    assert config_path.is_file()
+    assert private_config_path.is_file()
 
 
 @pytest.fixture
@@ -96,12 +94,12 @@ def test_cli_config_get_project_dir(config_dir):
 def test_cli_config_instance_path(config_dir):
     cli_config = CLIConfig(config_dir)
 
-    assert cli_config.get_instance_path() == Path('')
+    with pytest.raises(InvenioCLIConfigError):
+        cli_config.get_instance_path()
 
     # Update instance path to now see if we retrieve it
-    instance_path = os.path.join(config_dir, '.venv/')
+    instance_path = config_dir / '.venv/'
     cli_config.update_instance_path(instance_path)
-
     assert cli_config.get_instance_path() == Path(instance_path)
 
 

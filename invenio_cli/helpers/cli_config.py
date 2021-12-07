@@ -33,11 +33,10 @@ class CLIConfig(object):
     COOKIECUTTER_SECTION = 'cookiecutter'
     FILES_SECTION = 'files'
 
-    def __init__(self, project_dir='./', verbose=False):
+    def __init__(self, project_dir='./'):
         """Constructor.
 
         :param config_dir: Path to general cli config file.
-        :param config_path: Absolute path to per machine cli config file.
         """
         self.config_path = Path(project_dir) / self.CONFIG_FILENAME
         self.config = ConfigParser()
@@ -49,25 +48,34 @@ class CLIConfig(object):
         try:
             with open(self.config_path) as cfg_file:
                 self.config.read_file(cfg_file)
-
-            with open(self.private_config_path) as cfg_file:
-                self.private_config.read_file(cfg_file)
-
         except FileNotFoundError as e:
             raise InvenioCLIConfigError(
                 "Missing '{0}' file in current directory. "
                 "Are you in the project folder?".format(e.filename),
             )
 
+        try:
+            with open(self.private_config_path) as cfg_file:
+                self.private_config.read_file(cfg_file)
+        except FileNotFoundError as e:
+            CLIConfig._write_private_config(Path(project_dir))
+            with open(self.private_config_path) as cfg_file:
+                self.private_config.read_file(cfg_file)
+
     def get_project_dir(self):
         """Returns path to project directory."""
-        return Path(self.private_config[CLIConfig.CLI_SECTION]['project_dir'])
+        return self.config_path.parent
 
     def get_instance_path(self):
-        """Returns path to application instance directory."""
-        return Path(
-            self.private_config[CLIConfig.CLI_SECTION]['instance_path']
-        )
+        """Returns path to application instance directory.
+
+        If not set yet, raises an InvenioCLIConfigError.
+        """
+        path = self.private_config[CLIConfig.CLI_SECTION].get('instance_path')
+        if path:
+            return Path(path)
+        else:
+            raise InvenioCLIConfigError("Accessing unset 'instance_path'")
 
     def update_instance_path(self, new_instance_path):
         """Updates path to application instance directory."""
@@ -118,7 +126,17 @@ class CLIConfig(object):
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['file_storage']
 
     @classmethod
-    def write(cls, project_dir, flavour, replay, instance_path=None):
+    def _write_private_config(cls, project_dir):
+        """Write per-instance config file."""
+        config_parser = ConfigParser()
+        config_parser[cls.CLI_SECTION] = {}
+        config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
+        private_config_path = project_dir / cls.PRIVATE_CONFIG_FILENAME
+        with open(private_config_path, 'w') as configfile:
+            config_parser.write(configfile)
+
+    @classmethod
+    def write(cls, project_dir, flavour, replay):
         """Write invenio-cli config file.
 
         :param project_dir: Folder to write the config file into
@@ -147,14 +165,7 @@ class CLIConfig(object):
         with open(config_path, 'w') as configfile:
             config_parser.write(configfile)
 
-        # Internal to machine (not version controlled)
-        config_parser = ConfigParser()
-        config_parser[cls.CLI_SECTION] = {}
-        config_parser[cls.CLI_SECTION]['project_dir'] = str(project_dir)
-        config_parser[cls.CLI_SECTION]['instance_path'] = instance_path or ''
-        config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
-        private_config_path = project_dir / cls.PRIVATE_CONFIG_FILENAME
-        with open(private_config_path, 'w') as configfile:
-            config_parser.write(configfile)
+        # Custom to machine (not version controlled)
+        cls._write_private_config(project_dir)
 
         return project_dir

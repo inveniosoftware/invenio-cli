@@ -11,7 +11,6 @@
 import click
 
 from ..commands import Commands, ServicesCommands
-from ..helpers.cli_config import CLIConfig
 from .utils import pass_cli_config, run_steps
 
 
