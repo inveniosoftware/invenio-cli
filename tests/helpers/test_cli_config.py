@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module config_file tests."""
+import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -75,19 +76,21 @@ def config_dir():
     yield CLIConfig.write(project_dir, flavour, replay)
 
 
-@pytest.mark.skip()
-@patch("invenio_cli.helpers.cli_config.exit")
-def test_cli_config_config_files_not_found(patched_exit, config_dir):
-    wrong_path = tempfile.TemporaryDirectory()
-
-    cli_config = CLIConfig(wrong_path.name)
-
-    patched_exit.assert_called_with(1)
+def test_cli_config_dot_invenio_not_found():
+    with pytest.raises(InvenioCLIConfigError):
+        CLIConfig()
 
 
 def test_cli_config_get_project_dir(config_dir):
-    cli_config = CLIConfig(config_dir)
+    # implicit project directory
+    test_dir = Path.cwd()
+    os.chdir(config_dir)
+    cli_config = CLIConfig()
+    assert cli_config.get_project_dir() == Path.cwd().resolve()
+    os.chdir(test_dir)
 
+    # explicit project directory
+    cli_config = CLIConfig(config_dir)
     assert cli_config.get_project_dir() == config_dir
 
 

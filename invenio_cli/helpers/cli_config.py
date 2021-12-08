@@ -64,7 +64,7 @@ class CLIConfig(object):
 
     def get_project_dir(self):
         """Returns path to project directory."""
-        return self.config_path.parent
+        return self.config_path.parent.resolve()
 
     def get_instance_path(self):
         """Returns path to application instance directory.
@@ -137,7 +137,7 @@ class CLIConfig(object):
 
     @classmethod
     def write(cls, project_dir, flavour, replay):
-        """Write invenio-cli config file.
+        """Write invenio-cli config files.
 
         :param project_dir: Folder to write the config file into
         :param flavour: 'RDM' or 'ILS'
