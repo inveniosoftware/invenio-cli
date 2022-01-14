@@ -29,7 +29,7 @@ class InstallCommands(LocalCommands):
         if PackagesCommands.is_locked().status_code > 0:
             steps.extend(PackagesCommands.lock(pre, dev))
 
-        steps.extend(PackagesCommands.install_locked_dependencies(pre))
+        steps.extend(PackagesCommands.install_locked_dependencies(pre, dev))
 
         return steps
 
