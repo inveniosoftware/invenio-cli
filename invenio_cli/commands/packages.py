@@ -93,12 +93,14 @@ class PackagesCommands(object):
         return steps
 
     @staticmethod
-    def install_locked_dependencies(pre):
-        """Installed dependencies from Pipfile.lock using sync."""
-        # NOTE: sync has not interactive process feedback
+    def install_locked_dependencies(pre, dev):
+        """Install dependencies from Pipfile.lock using sync."""
+        # NOTE: sync has no interactive process feedback
         cmd = ['pipenv', 'sync']
         if pre:
             cmd += ['--pre']
+        if dev:
+            cmd += ['--dev']
 
         steps = [
             CommandStep(
@@ -113,7 +115,7 @@ class PackagesCommands(object):
 
     @staticmethod
     def lock(pre, dev):
-        """Steps lock Python dependencies."""
+        """Steps to lock Python dependencies."""
         cmd = ['pipenv', 'lock']
         if pre:
             cmd += ['--pre']
