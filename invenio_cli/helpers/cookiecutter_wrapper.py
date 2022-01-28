@@ -3,21 +3,22 @@
 # This file is part of Invenio.
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019-2021 Northwestern University.
+# Copyright (C) 2022 Forschungszentrum Jülich GmbH.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Invenio Cookiecutter Config class."""
 
-import json
 import tempfile
-from pathlib import Path
 
 import yaml
+from configparser import ConfigParser
 from cookiecutter import replay
 from cookiecutter.config import DEFAULT_CONFIG
-from cookiecutter.exceptions import OutputDirExistsException
 from cookiecutter.main import cookiecutter
+
+from .cli_config import CLIConfig
 
 
 class CookiecutterWrapper(object):
@@ -32,39 +33,59 @@ class CookiecutterWrapper(object):
             name = name[:-len(git)]
         return name
 
-    def __init__(self, flavour, template_checkout):
+    def __init__(self, flavour, **kwargs):
         """Constructor.
 
         :param flavour: "RDM" or something else: String
-        :param cookiecutter: tuple of (template: URL, checkout: String)
+
+        :Keyword Arguments:
+          * template: URL
+          * checkout: String,
+          * user_input: Boolean
+          * config: String
         """
         self.tmp_file = None
-        self.template_name = None
+
         self.flavour = flavour
+        self.template_name = kwargs.get("template", None)
+        self.checkout = kwargs.get("checkout", None)
+
+        self.config = kwargs.get("config", None)
+        self.no_input = kwargs.get("no_input", False)
+        self.replay = {}
+        if self.config:
+            self.no_input = True
+            config = ConfigParser()
+            config.read(self.config)
+            # load values to be passed to cookiecutter from an .invenio file
+            self.replay = dict(config[CLIConfig.COOKIECUTTER_SECTION].items())
 
         if self.flavour.upper() == 'RDM':
             self.template = (
-                template_checkout[0] or
+                self.template_name or
                 'https://github.com/inveniosoftware/'
                 'cookiecutter-invenio-rdm.git'
             )
             self.template_name = self.extract_template_name(self.template)
-            self.checkout = template_checkout[1] or 'v6.0'
+            self.checkout = self.checkout or 'v6.0'
 
     def cookiecutter(self):
         """Wrap cookiecutter call."""
-        return cookiecutter(
-            config_file=self.create_and_dump_config_file(),
-            **self.repository()
-        )
-
-    def repository(self):
-        """Get the cookiecutter repository options."""
-        return {
+        # build actual kwargs
+        cookiecutter_kwargs = {
             'template': self.template,
             # NOTE: if template is not a git url, then checkout is ignored
-            'checkout': self.checkout
+            'checkout': self.checkout,
         }
+        if self.config or self.no_input:
+            cookiecutter_kwargs['no_input'] = self.no_input
+            cookiecutter_kwargs['extra_context'] = self.replay
+
+        # run cookiecutter
+        return cookiecutter(
+            config_file=self.create_and_dump_config_file(),
+            **cookiecutter_kwargs
+        )
 
     def create_and_dump_config_file(self):
         """Create a tmp file to store used configuration."""
