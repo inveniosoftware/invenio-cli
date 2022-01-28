@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019 Northwestern University.
+# Copyright (C) 2022 Forschungszentrum Jülich GmbH.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -13,9 +14,8 @@ from pathlib import Path
 
 import click
 
-from ..commands import Commands, ContainersCommands, InstallCommands, \
+from ..commands import Commands, ContainersCommands, \
     LocalCommands, RequirementsCommands, UpgradeCommands
-from ..errors import InvenioCLIConfigError
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
 from .assets import assets
@@ -74,13 +74,23 @@ def pyshell(debug):
               help='Cookiecutter path or git url to template')
 @click.option('-c', '--checkout', required=False,
               help='Branch, tag or commit to checkout if --template is a git url')  # noqa
-def init(flavour, template, checkout):
+@click.option('--user-input/--no-input', default=True,
+              help='If input is disabled, uses the defaults (if --config is'
+                   ' also passed, uses values from an .invenio config file).')
+@click.option('--config', required=False,
+              help='The .invenio configuration file to use.')
+def init(flavour, template, checkout, user_input, config):
     """Initializes the application according to the chosen flavour."""
     click.secho('Initializing {flavour} application...'.format(
         flavour=flavour), fg='green')
 
-    template_checkout = (template, checkout)
-    cookiecutter_wrapper = CookiecutterWrapper(flavour, template_checkout)
+    cookiecutter_kwargs = {
+        "template": template,
+        "checkout": checkout,
+        "no_input": not user_input,
+        "config": config
+    }
+    cookiecutter_wrapper = CookiecutterWrapper(flavour, **cookiecutter_kwargs)
 
     try:
         click.secho("Running cookiecutter...", fg='green')
