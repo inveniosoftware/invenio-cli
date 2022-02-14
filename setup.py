@@ -40,6 +40,16 @@ install_requires = [
     'pipenv>=2020.6.2',
     'PyYAML>=5.1.2',
     'pynpm>=0.1.2',
+    # virtualenv v20.13.1 ships with embedded setuptools 60.x, which means
+    # that "invenio-cli install" will by default create a new virtual
+    # environment with setuptools 60.x installed. celery v5.2.3 ships with a
+    # dependency on setuptools>=59.1.1,<59.7.0 due to breaking changes
+    # introduced in setuptools 60.x. pipenv or pip resolver does not properly
+    # respect the dependency from celery and thus does not install a
+    # compatible setuptools version leading to a ContextualVersionConflict
+    # once running any command.
+    # Once celery v5.2.4 is out, we can remove the pin again.
+    'virtualenv>=20.0.35,<=20.13.0',
 ]
 
 packages = find_packages()
