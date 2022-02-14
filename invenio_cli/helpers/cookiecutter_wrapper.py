@@ -11,9 +11,9 @@
 """Invenio Cookiecutter Config class."""
 
 import tempfile
+from configparser import ConfigParser
 
 import yaml
-from configparser import ConfigParser
 from cookiecutter import replay
 from cookiecutter.config import DEFAULT_CONFIG
 from cookiecutter.main import cookiecutter

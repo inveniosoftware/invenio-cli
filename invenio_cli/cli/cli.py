@@ -14,8 +14,8 @@ from pathlib import Path
 
 import click
 
-from ..commands import Commands, ContainersCommands, \
-    LocalCommands, RequirementsCommands, UpgradeCommands
+from ..commands import Commands, ContainersCommands, LocalCommands, \
+    RequirementsCommands, UpgradeCommands
 from ..helpers.cli_config import CLIConfig
 from ..helpers.cookiecutter_wrapper import CookiecutterWrapper
 from .assets import assets
