@@ -12,7 +12,7 @@ from invenio_cli.helpers.cookiecutter_wrapper import CookiecutterWrapper
 
 
 def test_constructor():
-    cookiecutter = CookiecutterWrapper('RDM', ('', 'master'))
+    cookiecutter = CookiecutterWrapper('RDM', checkout='master')
 
     assert cookiecutter.tmp_file is None
     assert cookiecutter.flavour == 'RDM'
