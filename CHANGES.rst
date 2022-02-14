@@ -8,6 +8,12 @@
 Changes
 =======
 
+Version 1.0.4 (released 2022-02-14)
+
+- Fixes an issue with virtualenv 20.13.1+ brining in setuptools 60.x which is
+  incompatible with Celery v5.2.3. Once Celery v5.2.4 has been released, this
+  fix is no longer needed.
+
 Version 1.0.3 (released 2022-02-04)
 
 - Added ``--no-input`` and ``--config=`` options to ``init`` to support running
