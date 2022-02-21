@@ -32,9 +32,9 @@ def test_cli_config_write():
             "description": "Invenio RDM My Site Instance",
             "author_name": "CERN",
             "author_email": "info@my-site.com",
-            "year": "2020",
+            "year": "2022",
             "database": "postgresql",
-            "elasticsearch": "7",
+            "search": "opensearch1",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -65,9 +65,9 @@ def config_dir():
             "description": "Invenio RDM My Site Instance",
             "author_name": "CERN",
             "author_email": "info@my-site.com",
-            "year": "2020",
+            "year": "2022",
             "database": "postgresql",
-            "elasticsearch": "7",
+            "search": "opensearch1",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }

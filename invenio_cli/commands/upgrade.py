@@ -20,7 +20,7 @@ class UpgradeCommands(object):
         First, and alembic upgrade is launched to allow alembic to migrate the
         database using SQLAlchemy.
         Then, the custom script is executed.
-        Last, the Elasticsearch indexes are destroyed, initialized and rebuilt.
+        Last, the search indices are destroyed, initialized and rebuilt.
         It is a class method since it does not require any configuration.
         """
         prefix = ["pipenv", "run", "invenio"]
@@ -55,12 +55,12 @@ class UpgradeCommands(object):
             CommandStep(
                 cmd=rec_rebuild_index_cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message="Rebuilding records and vocabularies indeces...",
+                message="Rebuilding records and vocabularies indices...",
             ),
             CommandStep(
                 cmd=comm_rebuild_index_cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message="Rebuilding communities indeces...",
+                message="Rebuilding communities indices...",
             ),
         ]
 

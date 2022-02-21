@@ -38,7 +38,7 @@ def start(cli_config):
     "--force",
     default=False,
     is_flag=True,
-    help="Force recreation of db tables, ES indices, queues...",
+    help="Force recreation of db tables, search indices, queues...",
 )
 @click.option(
     "-N",
@@ -84,10 +84,10 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
 def status(cli_config, verbose):
     """Checks if the services are up and running.
 
-    NOTE: currently only ES, DB (postgresql/mysql) and redis are supported.
+    NOTE: currently only search (OS/ES), DB (postgresql/mysql) and redis are supported.
     """
     commands = ServicesCommands(cli_config)
-    services = ["redis", cli_config.get_db_type(), "es"]
+    services = ["redis", cli_config.get_db_type(), "search"]
     statuses = commands.status(services=services, verbose=verbose)
 
     messages = [
