@@ -32,7 +32,7 @@ class ServicesCommands(Commands):
         self.docker_helper.start_containers()
 
         ServicesHealthCommands.wait_for_services(
-            services=["redis", self.cli_config.get_db_type(), "es"],
+            services=["redis", self.cli_config.get_db_type(), "search"],
             project_shortname=project_shortname,
         )
         return ProcessResponse(

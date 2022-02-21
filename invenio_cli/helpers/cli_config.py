@@ -113,9 +113,9 @@ class CLIConfig(object):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]
 
-    def get_es_version(self):
-        """Returns the database type (mysql, postgresql)."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION]["elasticsearch"]
+    def get_search_type(self):
+        """Returns the search type (opensearch1, elasticsearch7)."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["search"]
 
     def get_file_storage(self):
         """Returns the file storage (local, s3, etc.)."""

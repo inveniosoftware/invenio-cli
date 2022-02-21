@@ -86,8 +86,8 @@ def update(cli_config, version=None):
     """Update all or some Python python packages."""
     if version:
         db = cli_config.get_db_type()
-        es = f"elasticsearch{cli_config.get_es_version()}"
-        package = f"invenio-app-rdm[{db},{es}]~="
+        search = cli_config.get_search_type()
+        package = f"invenio-app-rdm[{db},{search}]~="
         steps = PackagesCommands.update_package_new_version(package, version)
         on_fail = f"Failed to update version {version}"
         on_success = f"Version {version} installed successfully."

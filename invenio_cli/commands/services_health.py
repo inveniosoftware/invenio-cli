@@ -27,8 +27,8 @@ class ServicesHealthCommands(object):
     """Services status commands."""
 
     @classmethod
-    def es_healthcheck(cls, *args, **kwargs):
-        """Elasticsearch healthcheck."""
+    def search_healthcheck(cls, *args, **kwargs):
+        """Open/Elasticsearch healthcheck."""
         verbose = kwargs["verbose"]
 
         return run_cmd(
@@ -153,7 +153,7 @@ class ServicesHealthCommands(object):
 
 
 HEALTHCHECKS = {
-    "es": ServicesHealthCommands.es_healthcheck,
+    "search": ServicesHealthCommands.search_healthcheck,
     "postgresql": ServicesHealthCommands.postgresql_healthcheck,
     "mysql": ServicesHealthCommands.mysql_healthcheck,
     "redis": ServicesHealthCommands.redis_healthcheck,

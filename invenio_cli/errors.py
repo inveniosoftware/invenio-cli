@@ -11,4 +11,4 @@ import click
 
 
 class InvenioCLIConfigError(click.UsageError):
-    """Exception when reading/writting from the configuration file."""
+    """Exception when reading/writing from the configuration file."""
