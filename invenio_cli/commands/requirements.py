@@ -12,11 +12,13 @@ import re
 import sys
 from os import listdir
 
+from ..commands import Commands
+from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import ProcessResponse, run_cmd, run_interactive
 from .steps import FunctionStep
 
 
-class RequirementsCommands(object):
+class RequirementsCommands(Commands):
     """Pre-requirements check."""
 
     @classmethod
@@ -145,6 +147,25 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_poetry_installed(cls):
+        """Check the poetry version."""
+        # Output in the form of 'Poetry (version 1.2.0b1)', or
+        # 'Poetry version 1.1.13'
+        result = run_cmd(["poetry", "--version"])
+        pattern = r"[Pp]oetry \(?version ([A-Za-z0-9\.]+)\)?"
+        match = re.search(pattern, result.output)
+        if not match:
+            return ProcessResponse(
+                f"Poetry not found. Got {result.error}.",
+                status_code=1,
+            )
+
+        return ProcessResponse(
+            output=f"Poetry OK. Got version {match.group(1)}.",
+            status_code=0,
+        )
+
+    @classmethod
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
@@ -177,31 +198,40 @@ class RequirementsCommands(object):
 
         return steps
 
-    @classmethod
-    def check(cls, development=False):
+    def check(self, development=False):
         """Steps to check the pre-requisites."""
+        # check if the configured packaging backend is available
+        pkg_backend = get_packaging_backend(self.cli_config)
+        if pkg_backend.bin_name == "poetry":
+            packaging_tool_check = FunctionStep(
+                func=self.check_poetry_installed,
+                message="Checking if Poetry is installed..."
+            )
+        else:
+            packaging_tool_check = FunctionStep(
+                func=self.check_pipenv_installed,
+                message="Checking if Pipenv is installed..."
+            )
+
         steps = [
             FunctionStep(
-                func=cls.check_python_version,
+                func=self.check_python_version,
                 args={"major": 3, "minor": 6},
                 message="Checking Python version..."
             ),
+            packaging_tool_check,
             FunctionStep(
-                func=cls.check_pipenv_installed,
-                message="Checking Pipenv is installed..."
-            ),
-            FunctionStep(
-                func=cls.check_docker_version,
+                func=self.check_docker_version,
                 args={"major": 0, "minor": 0},
                 message="Checking Docker version..."
             ),
             FunctionStep(
-                func=cls.check_docker_compose_version,
+                func=self.check_docker_compose_version,
                 args={"major": 1, "minor": 17},
                 message="Checking Docker Compose version..."
             ),
             FunctionStep(
-                func=cls.check_imagemagick_version,
+                func=self.check_imagemagick_version,
                 args={"major": 0, "minor": 0},
                 message="Checking ImageMagick version...",
                 skippable=True,
@@ -209,6 +239,6 @@ class RequirementsCommands(object):
         ]
 
         if development:
-            steps.extend(cls.check_dev())
+            steps.extend(self.check_dev())
 
         return steps

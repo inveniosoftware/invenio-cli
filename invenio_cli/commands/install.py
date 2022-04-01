@@ -8,6 +8,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers import env, filesystem
+from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import run_cmd
 from .local import LocalCommands
 from .packages import PackagesCommands
@@ -20,16 +21,17 @@ class InstallCommands(LocalCommands):
     def __init__(self, cli_config):
         """Constructor."""
         super(InstallCommands, self).__init__(cli_config)
+        self.pkg_commands = PackagesCommands(cli_config)
 
     def install_py_dependencies(self, pre, dev=False):
         """Install Python dependencies."""
         # If not locked, lock. Then install.
         steps = []
 
-        if PackagesCommands.is_locked().status_code > 0:
-            steps.extend(PackagesCommands.lock(pre, dev))
+        if self.pkg_commands.is_locked().status_code > 0:
+            steps.extend(self.pkg_commands.lock(pre, dev))
 
-        steps.extend(PackagesCommands.install_locked_dependencies(pre, dev))
+        steps.extend(self.pkg_commands.install_locked_dependencies(pre, dev))
 
         return steps
 
@@ -38,10 +40,11 @@ class InstallCommands(LocalCommands):
         # FIXME: Transform into steps.
         # Currently not possible because the second step (update instance
         # path) requires the ouptut of the previous step
-        result = run_cmd(
-            ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
-                '-c', '"print(app.instance_path, end=\'\')"']
+        command = get_packaging_backend(self.cli_config).run_command(
+            'invenio', 'shell', '--no-term-title', '-c',
+            '"print(app.instance_path, end=\'\')"',
         )
+        result = run_cmd(command)
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
             result.output = "Instance path updated successfully."

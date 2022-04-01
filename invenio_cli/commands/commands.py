@@ -8,6 +8,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers.env import env
+from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import run_interactive
 from .steps import CommandStep
 
@@ -22,17 +23,17 @@ class Commands(object):
         """
         self.cli_config = cli_config
 
-    @classmethod
-    def shell(cls):
+    def shell(self):
         """Start a shell in the virtual environment."""
-        command = ['pipenv', 'shell', ]
+        command = get_packaging_backend(self.cli_config).shell_command()
         return run_interactive(command, env={'PIPENV_VERBOSITY': "-1"})
 
-    @classmethod
-    def pyshell(cls, debug=False):
+    def pyshell(self, debug=False):
         """Start a Python shell."""
         with env(FLASK_ENV='development' if debug else 'production'):
-            command = ['pipenv', 'run', 'invenio', 'shell']
+            command = get_packaging_backend(self.cli_config).run_command(
+                "invenio", "shell"
+            )
             return run_interactive(command, env={'PIPENV_VERBOSITY': "-1"})
 
     def destroy(self):
@@ -41,9 +42,10 @@ class Commands(object):
         NOTE: This function has no knowledge of the existence of services.
               Refer to services.py to destroy services' containers.
         """
+        command = get_packaging_backend(self.cli_config).remove_venv_command()
         steps = [
             CommandStep(
-                cmd=['pipenv', '--rm'],
+                cmd=command,
                 env={'PIPENV_VERBOSITY': "-1"},
                 message="Destroying virtual environment"
             )

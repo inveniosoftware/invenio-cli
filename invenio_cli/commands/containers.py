@@ -23,6 +23,7 @@ class ContainersCommands(ServicesCommands):
             DockerHelper(cli_config.get_project_shortname(), local=False)
 
         super(ContainersCommands, self).__init__(cli_config, docker_helper)
+        self.pkg_commands = PackagesCommands(cli_config)
 
     def build(self, pull=True, cache=True):
         """Return the steps to build images.
@@ -32,7 +33,7 @@ class ContainersCommands(ServicesCommands):
         """
         steps = [
             FunctionStep(
-                func=PackagesCommands.is_locked,
+                func=self.pkg_commands.is_locked,
                 message="Checking if dependencies are locked."
             ),
             FunctionStep(
@@ -227,7 +228,7 @@ class ContainersCommands(ServicesCommands):
 
         if lock:
             # FIXME: Should this params be accepted? sensible defaults?
-            steps.extend(PackagesCommands.lock(pre=True, dev=True))
+            steps.extend(self.pkg_commands.lock(pre=True, dev=True))
 
         if build:
             steps.extend(self.build())

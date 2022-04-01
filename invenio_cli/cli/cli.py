@@ -45,8 +45,15 @@ invenio_cli.add_command(services)
               help='Check development requirements.')
 def check_requirements(development):
     """Checks the system fulfills the pre-requirements."""
+    try:
+        # the 'check-requirements' command should probably be available
+        # from outside the project directory as well
+        cli_config = CLIConfig()
+    except FileNotFoundError:
+        cli_config = None
+
     click.secho("Checking pre-requirements...", fg="green")
-    steps = RequirementsCommands.check(development)
+    steps = RequirementsCommands(cli_config).check(development)
     on_fail = "Pre requisites not met."
     on_success = "All requisites are fulfilled."
 
@@ -54,17 +61,19 @@ def check_requirements(development):
 
 
 @invenio_cli.command()
-def shell():
+@pass_cli_config
+def shell(cli_config):
     """Shell command."""
-    Commands.shell()
+    Commands(cli_config).shell()
 
 
 @invenio_cli.command()
+@pass_cli_config
 @click.option('--debug/--no-debug', '-d/', default=False, is_flag=True,
               help='Enable Flask development mode (default: disabled).')
-def pyshell(debug):
+def pyshell(cli_config, debug):
     """Python shell command."""
-    Commands.pyshell(debug=debug)
+    Commands(cli_config).pyshell(debug=debug)
 
 
 @invenio_cli.command()
@@ -151,9 +160,10 @@ def destroy(cli_config):
 @click.option('--script', required=True,
               help='The path of custom migration script.'
               )
-def upgrade(script):
+@pass_cli_config
+def upgrade(cli_config, script):
     """Upgrades the current instance to a newer version."""
-    steps = UpgradeCommands.upgrade(script)
+    steps = UpgradeCommands(cli_config).upgrade(script)
     on_fail = "Upgrade failed."
     on_success = "Upgrade sucessfull."
 

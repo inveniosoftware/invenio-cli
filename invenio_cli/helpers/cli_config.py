@@ -125,6 +125,12 @@ class CLIConfig(object):
         """Returns the file storage (local, s3, etc.)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]['file_storage']
 
+    def get_packaging_backend(self):
+        """Return the configured packaging backend (poetry/pipenv)."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get(
+            'packaging_backend', 'pipenv'
+        )
+
     @classmethod
     def _write_private_config(cls, project_dir):
         """Write per-instance config file."""

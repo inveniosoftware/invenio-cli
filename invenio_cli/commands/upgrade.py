@@ -7,14 +7,15 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+from ..helpers.packaging import get_packaging_backend
+from .commands import Commands
 from .steps import CommandStep
 
 
-class UpgradeCommands(object):
+class UpgradeCommands(Commands):
     """Local installation commands."""
 
-    @staticmethod
-    def upgrade(script_path):
+    def upgrade(self, script_path):
         """Steps to perform an upgrade of the invenio instance.
 
         First, and alembic upgrade is launched to allow alembic to migrate the
@@ -23,7 +24,7 @@ class UpgradeCommands(object):
         Last, the Elasticsearch indexes are destroyed, initialized and rebuilt.
         It is a class method since it does not require any configuration.
         """
-        prefix = ['pipenv', 'run', 'invenio']
+        prefix = get_packaging_backend(self.cli_command).run_command("invenio")
         alembic_cmd = prefix + ['alembic', 'upgrade']
         destroy_index_cmd = prefix + ['index', 'destroy', '--yes-i-know']
         init_index_cmd = prefix + ['index', 'init']

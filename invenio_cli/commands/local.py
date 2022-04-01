@@ -16,6 +16,7 @@ from subprocess import Popen as popen
 import click
 
 from ..helpers import env, filesystem
+from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import ProcessResponse, run_interactive
 from .commands import Commands
 from .services import ServicesCommands
@@ -68,7 +69,7 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        prefix = ['pipenv', 'run']
+        prefix = get_packaging_backend(self.cli_config).run_command()
         collect_cmd = prefix + ['invenio', 'collect', '--verbose']
         clean_create_cmd = prefix + ['invenio', 'webpack', 'clean', 'create']
         create_cmd = prefix + ['invenio', 'webpack', 'create']
@@ -119,22 +120,26 @@ class LocalCommands(Commands):
             ServicesCommands(self.cli_config).ensure_containers_running()
 
             click.secho("Starting celery worker...", fg="green")
-            worker = popen([
-                'pipenv', 'run', 'celery', '--app',
-                'invenio_app.celery', 'worker', '--beat', '--events',
-                '--loglevel', 'INFO'
-            ])
+            command = get_packaging_backend(self.cli_config).run_command(
+                'celery', '--app', 'invenio_app.celery', 'worker',
+                '--beat', '--events', '--loglevel', 'INFO',
+            )
+            worker = popen(command)
 
         click.secho("Starting up local (development) server...", fg='green')
         run_env = environ.copy()
         run_env['FLASK_ENV'] = 'development' if debug else 'production'
         run_env['INVENIO_SITE_UI_URL'] = f"https://{host}:{port}"
         run_env['INVENIO_SITE_API_URL'] = f"https://{host}:{port}/api"
-        server = popen([
-            'pipenv', 'run', 'invenio', 'run', '--cert',
-            'docker/nginx/test.crt', '--key', 'docker/nginx/test.key',
-            '--host', host, '--port', port
-        ], env=run_env)
+
+        command = get_packaging_backend(self.cli_config).run_command(
+            'invenio', 'run',
+            '--cert', 'docker/nginx/test.crt',
+            '--key', 'docker/nginx/test.key',
+            '--host', host,
+            '--port', port
+        )
+        server = popen(command, env=run_env)
 
         click.secho(
             f'Instance running!\nVisit https://{host}:{port}',

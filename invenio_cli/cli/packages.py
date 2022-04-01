@@ -32,7 +32,7 @@ def lock(cli_config, pre, dev):
         f"Include dev-packages: {dev}.",
         fg="green"
     )
-    steps = PackagesCommands.lock(pre, dev)
+    steps = PackagesCommands(cli_config).lock(pre, dev)
     on_fail = "Failed to lock dependencies."
     on_success = "Dependencies locked successfully."
 
@@ -49,7 +49,7 @@ def install(cli_config, packages, skip_build):
     if len(packages) < 1:
         raise click.UsageError("You must specify at least one package.")
 
-    steps = PackagesCommands.install_packages(packages)
+    steps = PackagesCommands(cli_config).install_packages(packages)
 
     on_fail = f"Failed to install packages {packages}."
     on_success = f"Packages {packages} installed successfully."
@@ -67,8 +67,9 @@ def install(cli_config, packages, skip_build):
 @pass_cli_config
 def outdated(cli_config):
     """Show outdated Python dependencies."""
-    steps = PackagesCommands.outdated_packages()
+    steps = PackagesCommands(cli_config).outdated_packages()
 
+    # TODO poetry still exits with 0, even if there's outdated packages
     on_fail = "Some of the packages need to be updated."
     on_success = "All packages are up to date."
 
@@ -80,15 +81,16 @@ def outdated(cli_config):
 @pass_cli_config
 def update(cli_config, version=None):
     """Update all or some Python python packages."""
+    pkg_commands = PackagesCommands(cli_config)
     if version:
         db = cli_config.get_db_type()
         es = f"elasticsearch{cli_config.get_es_version()}"
         package = f"invenio-app-rdm[{db},{es}]~="
-        steps = PackagesCommands.update_package_new_version(package, version)
+        steps = pkg_commands.update_package_new_version(package, version)
         on_fail = f"Failed to update version {version}"
         on_success = f"Version {version} installed successfully."
     else:
-        steps = PackagesCommands.update_packages()
+        steps = pkg_commands.update_packages()
         on_fail = "Failed to update packages."
         on_success = "Packages installed successfully."
 
