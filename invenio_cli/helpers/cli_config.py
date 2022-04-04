@@ -57,7 +57,7 @@ class CLIConfig(object):
         try:
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             CLIConfig._write_private_config(Path(project_dir))
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)

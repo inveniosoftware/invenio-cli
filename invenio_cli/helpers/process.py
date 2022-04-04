@@ -10,9 +10,7 @@
 """Invenio CLI Process helper module."""
 
 from os import environ
-from subprocess import PIPE, CalledProcessError
-from subprocess import Popen as popen
-from subprocess import run
+from subprocess import PIPE, CalledProcessError, Popen, run
 
 
 class ProcessResponse():
@@ -31,7 +29,7 @@ class ProcessResponse():
 
 def run_cmd(command):
     """Runs a given command and returns a ProcessResponse."""
-    p = popen(command, stdout=PIPE, stderr=PIPE)
+    p = Popen(command, stdout=PIPE, stderr=PIPE)
     output, error = p.communicate()
     output = output.decode("utf-8")
     error = error.decode("utf-8")
@@ -52,9 +50,10 @@ def run_interactive(command, env=None, skippable=False):
             full_env[var] = val
 
     try:
-        response = run(command, check=True, env=full_env)
+        run(command, check=True, env=full_env)
         return ProcessResponse(
-            output=None, error=None, status_code=0)
+            output=None, error=None, status_code=0
+        )
     except CalledProcessError as e:
         if skippable:
             return ProcessResponse(

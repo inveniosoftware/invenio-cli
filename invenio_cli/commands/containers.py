@@ -10,7 +10,6 @@
 from ..helpers.docker_helper import DockerHelper
 from .packages import PackagesCommands
 from .services import ServicesCommands
-from .services_health import HEALTHCHECKS
 from .steps import FunctionStep
 
 
@@ -82,7 +81,8 @@ class ContainersCommands(ServicesCommands):
                 },
                 message="Purging queues..."
             ),
-            FunctionStep(func=self.cli_config.update_services_setup,
+            FunctionStep(
+                func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
                 message="Updating service setup status (False)..."
             )

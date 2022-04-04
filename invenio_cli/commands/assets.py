@@ -9,7 +9,6 @@
 
 
 import subprocess
-from functools import partial
 from pathlib import Path
 
 import click
@@ -19,7 +18,7 @@ from ..helpers import env
 from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import ProcessResponse, run_interactive
 from .local import LocalCommands
-from .steps import CommandStep, FunctionStep
+from .steps import FunctionStep
 
 
 class AssetsCommands(LocalCommands):
@@ -80,7 +79,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error=f"Unable to install dependent packages. "
+                error="Unable to install dependent packages. "
                       "Got error code {status_code}",
                 status_code=status_code
             )

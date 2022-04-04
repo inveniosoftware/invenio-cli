@@ -7,12 +7,12 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-from ..helpers import env, filesystem
+from ..helpers import filesystem
 from ..helpers.packaging import get_packaging_backend
 from ..helpers.process import run_cmd
 from .local import LocalCommands
 from .packages import PackagesCommands
-from .steps import CommandStep, FunctionStep
+from .steps import FunctionStep
 
 
 class InstallCommands(LocalCommands):
@@ -70,21 +70,21 @@ class InstallCommands(LocalCommands):
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
                 args={"target": 'invenio.cfg'},
-                message=f"Symlinking 'invenio.cfg'..."
+                message="Symlinking 'invenio.cfg'..."
             )
             )
         steps.append(
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
                 args={"target": 'templates'},
-                message=f"Symlinking 'templates'..."
+                message="Symlinking 'templates'..."
             )
             )
         steps.append(
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
                 args={"target": 'app_data'},
-                message=f"Symlinking 'app_data'..."
+                message="Symlinking 'app_data'..."
             )
         )
         steps.append(

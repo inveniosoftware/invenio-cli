@@ -10,7 +10,7 @@
 
 import click
 
-from ..commands import Commands, ServicesCommands
+from ..commands import ServicesCommands
 from .utils import pass_cli_config, run_steps
 
 

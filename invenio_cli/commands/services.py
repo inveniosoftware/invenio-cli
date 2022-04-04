@@ -50,7 +50,7 @@ class ServicesCommands(Commands):
             )
 
         return ProcessResponse(
-                output=f"Services setup status consistent.",
+                output="Services setup status consistent.",
                 status_code=0
             )
 
@@ -85,7 +85,8 @@ class ServicesCommands(Commands):
                 message="Purging queues...",
                 skippable=True
             ),
-            FunctionStep(func=self.cli_config.update_services_setup,
+            FunctionStep(
+                func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
                 message="Updating service setup status (False)..."
             )

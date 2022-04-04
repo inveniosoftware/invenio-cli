@@ -10,11 +10,10 @@
 
 import re
 import sys
-from os import listdir
 
 from ..commands import Commands
 from ..helpers.packaging import get_packaging_backend
-from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.process import ProcessResponse, run_cmd
 from .steps import FunctionStep
 
 

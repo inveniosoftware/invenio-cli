@@ -27,33 +27,24 @@ class ServicesHealthCommands(object):
     """Services status commands."""
 
     @classmethod
-    def es_healthcheck(cls, *args, **kwargs):
+    def es_healthcheck(cls, *args, verbose, **kwargs):
         """Elasticsearch healthcheck."""
-        verbose = kwargs['verbose']
-
         return run_cmd([
             "curl", "-f",
             "localhost:9200/_cluster/health?wait_for_status=yellow"
         ])
 
     @classmethod
-    def postgresql_healthcheck(cls, *args, **kwargs):
+    def postgresql_healthcheck(cls, *args, verbose, filepath, **kwargs):
         """Postgresql healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
-
         return run_cmd([
             "docker-compose", "--file", filepath,
             "exec", "-T", "db", "bash", "-c", "pg_isready",
         ])
 
     @classmethod
-    def mysql_healthcheck(cls, *args, **kwargs):
+    def mysql_healthcheck(cls, *args, verbose, filepath, password, **kwargs):
         """Mysql healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
-        password = kwargs['project_shortname']
-
         return run_cmd([
             "docker-compose", "--file", filepath,
             "exec", "-T", "db", "bash", "-c",
@@ -61,11 +52,8 @@ class ServicesHealthCommands(object):
         ])
 
     @classmethod
-    def redis_healthcheck(cls, *args, **kwargs):
+    def redis_healthcheck(cls, *args, verbose, filepath, **kwargs):
         """Redis healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
-
         return run_cmd([
             "docker-compose", "--file", filepath,
             "exec", "-T", "cache", "bash", "-c",

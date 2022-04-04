@@ -11,7 +11,7 @@ import signal
 from distutils.dir_util import copy_tree
 from os import environ
 from pathlib import Path
-from subprocess import Popen as popen
+from subprocess import Popen
 
 import click
 
@@ -124,7 +124,7 @@ class LocalCommands(Commands):
                 'celery', '--app', 'invenio_app.celery', 'worker',
                 '--beat', '--events', '--loglevel', 'INFO',
             )
-            worker = popen(command)
+            worker = Popen(command)
 
         click.secho("Starting up local (development) server...", fg='green')
         run_env = environ.copy()
@@ -139,7 +139,7 @@ class LocalCommands(Commands):
             '--host', host,
             '--port', port
         )
-        server = popen(command, env=run_env)
+        server = Popen(command, env=run_env)
 
         click.secho(
             f'Instance running!\nVisit https://{host}:{port}',
