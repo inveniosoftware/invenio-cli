@@ -76,9 +76,16 @@ class RequirementsCommands(object):
     def check_node_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the node version."""
         # Output comes in the form of 'v14.4.0\n'
-        result = run_cmd(["node", "--version"])
-        version = cls._version_from_string(result.output.strip())
-        return cls._check_version("Node", version, major, minor, patch, exact)
+        try:
+            result = run_cmd(["node", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "Node", version, major, minor, patch, exact
+            )
+        except Exception as err:
+            return ProcessResponse(
+                error=f"Node not found. Got {err}.", status_code=1
+            )
 
     @classmethod
     def check_python_version(cls, major, minor=-1, patch=-1, exact=False):
@@ -148,20 +155,26 @@ class RequirementsCommands(object):
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
-        result = run_cmd(["pipenv", "--version"])
+        try:
+            result = run_cmd(["pipenv", "--version"])
 
-        parts = result.output.strip().split(',')
-        if parts[0] != 'pipenv':
+            parts = result.output.strip().split(',')
+            if parts[0] != 'pipenv':
+                # this might happen if 'pipenv' points to a different binary
+                return ProcessResponse(
+                    error=f"Pipenv not found. Got {parts[0]}.", status_code=1
+                )
+
+            version = cls._version_from_string(parts[1])
+
+            return ProcessResponse(
+                    output=f"Pipenv OK. Got version {version}.",
+                    status_code=0
+                )
+        except Exception as err:
             return ProcessResponse(
                 error=f"Pipenv not found. Got {result.error}.",
                 status_code=1
-            )
-
-        version = cls._version_from_string(parts[1])
-
-        return ProcessResponse(
-                output=f"Pipenv OK. Got version {version}.",
-                status_code=0
             )
 
     @classmethod
