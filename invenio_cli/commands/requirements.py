@@ -88,6 +88,21 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_npm_version(cls, major, minor=-1, patch=-1, exact=False):
+        """Check the npm version."""
+        # Output comes in the form of '6.14.13\n'
+        try:
+            result = run_cmd(["npm", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "NPM", version, major, minor, patch, exact
+            )
+        except Exception as err:
+            return ProcessResponse(
+                error=f"NPM not found. Got {err}.", status_code=1
+            )
+
+    @classmethod
     def check_python_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the python version."""
         # check the version of the currently executed Python, as
@@ -185,6 +200,11 @@ class RequirementsCommands(object):
                 func=cls.check_node_version,
                 args={"major": 14, "exact": True},
                 message="Checking Node version..."
+            ),
+            FunctionStep(
+                func=cls.check_npm_version,
+                args={"major": 6, "exact": True},
+                message="Checking NPM version..."
             )
         ]
 
