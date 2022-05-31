@@ -205,7 +205,12 @@ class RequirementsCommands(object):
                 func=cls.check_npm_version,
                 args={"major": 6, "exact": True},
                 message="Checking NPM version..."
-            )
+            ),
+            FunctionStep(
+                func=cls.check_imagemagick_version,
+                args={"major": 0, "minor": 0},
+                message="Checking ImageMagick version...",
+            ),
         ]
 
         return steps
@@ -233,12 +238,6 @@ class RequirementsCommands(object):
                 args={"major": 1, "minor": 17},
                 message="Checking Docker Compose version..."
             ),
-            FunctionStep(
-                func=cls.check_imagemagick_version,
-                args={"major": 0, "minor": 0},
-                message="Checking ImageMagick version...",
-                skippable=True,
-            )
         ]
 
         if development:
