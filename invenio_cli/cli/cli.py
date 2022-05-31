@@ -42,7 +42,7 @@ invenio_cli.add_command(services)
 
 @invenio_cli.command('check-requirements')
 @click.option('--development', '-d', default=False, is_flag=True,
-              help='Check development requirements.')
+              help='Check requirements for a local development installation.')
 def check_requirements(development):
     """Checks the system fulfills the pre-requirements."""
     click.secho("Checking pre-requirements...", fg="green")
