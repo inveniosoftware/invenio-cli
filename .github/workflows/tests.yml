@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of Invenio.
+# Copyright (C) 2020 CERN.
+# Copyright (C) 2022 Graz University of Technology.
+#
+# Invenio is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+
 name: CI
 
 on:
@@ -20,25 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-          python-version: [3.6, 3.7, 3.8]
-          # You can add more combinations e.g. dev requirements or MySQL by adding
-          # a new item to this list. Add its corresponding definition below.
-          services: [release, lowest, devel]
-          include:
-          - services: release
-            REQUIREMENTS: "release"
-            REQUIREMENTS_LEVEL: "pypi"
-          - services: lowest
-            REQUIREMENTS: "lowest"
-            REQUIREMENTS_LEVEL: "min"
-          - services: devel
-            REQUIREMENTS: "devel"
-            REQUIREMENTS_LEVEL: "dev"
+          python-version: [3.7, 3.8, 3.9]
+          requirements-level: [min, pypi]
 
     env:
-      SQLALCHEMY_DATABASE_URI: ${{matrix.SQLALCHEMY_DATABASE_URI}}
-      POSTGRESQL_VERSION: ${{matrix.POSTGRESQL_VERSION}}
-      ES_VERSION: ${{matrix.ES_VERSION}}
+      EXTRAS: tests
 
     steps:
       - name: Checkout
@@ -48,24 +43,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Generate dependencies
-        if: ${{ matrix.REQUIREMENTS != 'devel' }}
         run: |
           pip install wheel requirements-builder
-          requirements-builder -e tests --level=${{ matrix.REQUIREMENTS_LEVEL }} setup.py > .${{ matrix.REQUIREMENTS }}-${{ matrix.python-version }}-requirements.txt
-      - name: Generate dependencies devel
-        if: ${{ matrix.REQUIREMENTS == 'devel' }}
-        run: |
-          pip install wheel requirements-builder
-          requirements-builder -e tests --level=${{ matrix.REQUIREMENTS_LEVEL }} --req requirements-devel.txt setup.py > .${{ matrix.REQUIREMENTS }}-${{ matrix.python-version }}-requirements.txt
+          requirements-builder -e "$EXTRAS" --level=${{ matrix.requirements-level }} setup.py > .${{ matrix.requirements-level }}-${{ matrix.python-version }}-requirements.txt
       - name: Cache pip
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('.${{ matrix.REQUIREMENTS }}-${{ matrix.python-version }}-requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('.${{ matrix.requirements-level }}-${{ matrix.python-version }}-requirements.txt') }}
       - name: Install dependencies
         run: |
-          pip install -r .${{matrix.REQUIREMENTS}}-${{ matrix.python-version }}-requirements.txt
-          pip install -e .[all]
+          pip install -r .${{ matrix.requirements-level }}-${{ matrix.python-version }}-requirements.txt
+          pip install -e .[$EXTRAS]
           pip freeze
       - name: Run tests
         run: |
