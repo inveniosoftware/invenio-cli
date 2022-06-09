@@ -20,17 +20,19 @@ def packages():
 
 
 @packages.command()
-@click.option('--pre', default=False, is_flag=True,
-              help='Allows installation of alpha releases.')
-@click.option('--dev', default=False, is_flag=True,
-              help='Includes development dependencies.')
+@click.option(
+    "--pre", default=False, is_flag=True, help="Allows installation of alpha releases."
+)
+@click.option(
+    "--dev", default=False, is_flag=True, help="Includes development dependencies."
+)
 @pass_cli_config
 def lock(cli_config, pre, dev):
     """Lock Python dependencies."""
     click.secho(
-        f"Locking dependencies... Allow pre-releases: {pre}. " +
-        f"Include dev-packages: {dev}.",
-        fg="green"
+        f"Locking dependencies... Allow pre-releases: {pre}. "
+        + f"Include dev-packages: {dev}.",
+        fg="green",
     )
     steps = PackagesCommands.lock(pre, dev)
     on_fail = "Failed to lock dependencies."
@@ -41,8 +43,9 @@ def lock(cli_config, pre, dev):
 
 @packages.command()
 @click.argument("packages", nargs=-1, type=str)
-@click.option('-s', '--skip-build', default=False, is_flag=True,
-              help='Do not rebuild the assets.')
+@click.option(
+    "-s", "--skip-build", default=False, is_flag=True, help="Do not rebuild the assets."
+)
 @pass_cli_config
 def install(cli_config, packages, skip_build):
     """Install one or a list of Python packages in the local environment."""
@@ -60,7 +63,8 @@ def install(cli_config, packages, skip_build):
     if not skip_build:
         click.secho("Rebuilding assets...")
         AssetsCommands(cli_config).update_statics_and_assets(
-            force=True, flask_env='development')
+            force=True, flask_env="development"
+        )
 
 
 @packages.command()

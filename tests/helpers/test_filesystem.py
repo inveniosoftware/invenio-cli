@@ -16,16 +16,16 @@ from invenio_cli.helpers.filesystem import get_created_files
 def test_get_created_files():
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = Path(tmp_dir.name)
-    (tmp_dir_path / 'foo').touch()
-    (tmp_dir_path / 'bar').mkdir()
-    (tmp_dir_path / 'bar' / 'baz').touch()
+    (tmp_dir_path / "foo").touch()
+    (tmp_dir_path / "bar").mkdir()
+    (tmp_dir_path / "bar" / "baz").touch()
 
     files_tree = get_created_files(tmp_dir.name)
 
     expected_files_tree = {
-        'foo': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',  # noqa
-        'bar': {
-            'baz': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'  # noqa
-        }
+        "foo": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  # noqa
+        "bar": {
+            "baz": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"  # noqa
+        },
     }
     assert files_tree == expected_files_tree

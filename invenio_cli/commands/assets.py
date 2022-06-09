@@ -31,26 +31,23 @@ class AssetsCommands(LocalCommands):
     @staticmethod
     def _module_pkg(path):
         """NPM package for the given path."""
-        return NPMPackage(Path(path) / 'package.json')
+        return NPMPackage(Path(path) / "package.json")
 
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
-        return self._module_pkg(self.cli_config.get_instance_path() / 'assets')
+        return self._module_pkg(self.cli_config.get_instance_path() / "assets")
 
     @staticmethod
     def _watch_js_module(pkg):
         """Watch the JS module for changes."""
-        click.secho('Starting watching module...', fg='green')
-        status_code = pkg.run_script('watch')
+        click.secho("Starting watching module...", fg="green")
+        status_code = pkg.run_script("watch")
         if status_code == 0:
-            return ProcessResponse(
-                output="Watched module successfully.",
-                status_code=0
-            )
+            return ProcessResponse(output="Watched module successfully.", status_code=0)
         else:
             return ProcessResponse(
                 error=f"Unable to set watcher. Got status code {status_code}",
-                status_code=status_code
+                status_code=status_code,
             )
 
     @staticmethod
@@ -59,13 +56,12 @@ class AssetsCommands(LocalCommands):
         status_code = module_pkg.run_script("link-dist")
         if status_code == 0:
             return ProcessResponse(
-                output="Module linked correctly to global",
-                status_code=0
+                output="Module linked correctly to global", status_code=0
             )
         else:
             return ProcessResponse(
                 error=f"Unable to link-dist. Got error code {status_code}",
-                status_code=status_code
+                status_code=status_code,
             )
 
     @staticmethod
@@ -74,14 +70,13 @@ class AssetsCommands(LocalCommands):
         status_code = subprocess.call(["npm", "install", "--prefix", path])
         if status_code == 0:
             return ProcessResponse(
-                output="Dependent packages installed correctly",
-                status_code=0
+                output="Dependent packages installed correctly", status_code=0
             )
         else:
             return ProcessResponse(
                 error=f"Unable to install dependent packages. "
-                      "Got error code {status_code}",
-                status_code=status_code
+                "Got error code {status_code}",
+                status_code=status_code,
             )
 
     @staticmethod
@@ -89,50 +84,47 @@ class AssetsCommands(LocalCommands):
         """Run script and return a ProcessResponse."""
         status_code = module_pkg.run_script("build")
         if status_code == 0:
-            return ProcessResponse(
-                output="Built correctly",
-                status_code=0
-            )
+            return ProcessResponse(output="Built correctly", status_code=0)
         else:
             return ProcessResponse(
                 error=f"Unable to build. Got error code {status_code}",
-                status_code=status_code
+                status_code=status_code,
             )
 
     @staticmethod
     def _assets_link(assets_pkg, module_pkg):
         try:
-            module_name = module_pkg.package_json['name']
+            module_name = module_pkg.package_json["name"]
         except FileNotFoundError as e:
             return ProcessResponse(
                 error="No module found on the specified path. "
-                      f"File not found {e.filename}",
-                status_code=1
+                f"File not found {e.filename}",
+                status_code=1,
             )
 
         status_code = assets_pkg.link(module_name)
         if status_code == 0:
             return ProcessResponse(
-                output="Global module linked correctly to local folder",
-                status_code=0
+                output="Global module linked correctly to local folder", status_code=0
             )
         else:
             return ProcessResponse(
                 error=f"Unable to link module. Got error code {status_code}",
-                status_code=status_code
+                status_code=status_code,
             )
 
     def watch_assets(self):
         """High-level command to watch assets for changes."""
         # Commands
-        prefix = ['pipenv', 'run']
-        watch_cmd = prefix + ['invenio', 'webpack', 'run', 'start']
+        prefix = ["pipenv", "run"]
+        watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
 
-        with env(FLASK_ENV='development'):
+        with env(FLASK_ENV="development"):
             # Collect into statics/ and assets/ folder
-            click.secho('Starting assets watching (press CTRL+C to stop)...',
-                        fg='green')
-            run_interactive(watch_cmd, env={'PIPENV_VERBOSITY': "-1"})
+            click.secho(
+                "Starting assets watching (press CTRL+C to stop)...", fg="green"
+            )
+            run_interactive(watch_cmd, env={"PIPENV_VERBOSITY": "-1"})
 
     def link_js_module(self, path):
         """High-level command to install and build a JS module."""
@@ -143,26 +135,23 @@ class AssetsCommands(LocalCommands):
             FunctionStep(  # Install dependent packages
                 func=self._npm_install_command,
                 args={"path": path},
-                message="Installing dependent packages..."
+                message="Installing dependent packages...",
             ),
             FunctionStep(  # Run build script
                 func=self._build_script,
                 args={"module_pkg": module_pkg},
-                message="Building..."
+                message="Building...",
             ),
             FunctionStep(  # Create link to global folder
                 func=self._run_script,
                 args={"module_pkg": module_pkg},
-                message="Linking module to global dist..."
+                message="Linking module to global dist...",
             ),
             FunctionStep(  # Link the global folder to the assets folder.
                 func=self._assets_link,
-                args={
-                    "assets_pkg": assets_pkg,
-                    "module_pkg": module_pkg
-                },
-                message="Linking module to assets..."
-            )
+                args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
+                message="Linking module to assets...",
+            ),
         ]
 
         return steps
@@ -177,7 +166,7 @@ class AssetsCommands(LocalCommands):
             FunctionStep(
                 func=self._watch_js_module,
                 args={"pkg": self._module_pkg(path)},
-                message="Starting watching module..."
+                message="Starting watching module...",
             )
         )
 

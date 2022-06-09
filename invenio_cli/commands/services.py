@@ -21,8 +21,9 @@ class ServicesCommands(Commands):
     def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
         super(ServicesCommands, self).__init__(cli_config)
-        self.docker_helper = docker_helper or \
-            DockerHelper(cli_config.get_project_shortname(), local=True)
+        self.docker_helper = docker_helper or DockerHelper(
+            cli_config.get_project_shortname(), local=True
+        )
 
     def ensure_containers_running(self):
         """Ensures containers are running."""
@@ -43,51 +44,63 @@ class ServicesCommands(Commands):
         """Checks if the services have the expected status."""
         if not self.cli_config.get_services_setup() == expected:
             return ProcessResponse(
-                error="Services status inconsistent." +
-                      f"Expected {expected} obtained {not expected}",
-                status_code=1
+                error="Services status inconsistent."
+                + f"Expected {expected} obtained {not expected}",
+                status_code=1,
             )
 
         return ProcessResponse(
-                output=f"Services setup status consistent.",
-                status_code=0
-            )
+            output=f"Services setup status consistent.", status_code=0
+        )
 
     def _cleanup(self):
         """Services cleanup steps."""
         steps = [
-            CommandStep(cmd=[
-                'pipenv', 'run', 'invenio', 'shell', '--no-term-title', '-c',
-                "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')"],  # noqa
-                env={'PIPENV_VERBOSITY': "-1"},
+            CommandStep(
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "shell",
+                    "--no-term-title",
+                    "-c",
+                    "import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')",
+                ],  # noqa
+                env={"PIPENV_VERBOSITY": "-1"},
                 message="Flushing Redis...",
-                skippable=True
+                skippable=True,
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'db', 'destroy',
-                     '--yes-i-know'],
-                env={'PIPENV_VERBOSITY': "-1"},
+                cmd=["pipenv", "run", "invenio", "db", "destroy", "--yes-i-know"],
+                env={"PIPENV_VERBOSITY": "-1"},
                 message="Destroying database...",
-                skippable=True
+                skippable=True,
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'index', 'destroy',
-                     '--force', '--yes-i-know'],
-                env={'PIPENV_VERBOSITY': "-1"},
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "index",
+                    "destroy",
+                    "--force",
+                    "--yes-i-know",
+                ],
+                env={"PIPENV_VERBOSITY": "-1"},
                 message="Destroying indices...",
-                skippable=True
+                skippable=True,
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'index', 'queue',
-                     'init', 'purge'],
-                env={'PIPENV_VERBOSITY': "-1"},
+                cmd=["pipenv", "run", "invenio", "index", "queue", "init", "purge"],
+                env={"PIPENV_VERBOSITY": "-1"},
                 message="Purging queues...",
-                skippable=True
+                skippable=True,
             ),
-            FunctionStep(func=self.cli_config.update_services_setup,
+            FunctionStep(
+                func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
-                message="Updating service setup status (False)..."
-            )
+                message="Updating service setup status (False)...",
+            ),
         ]
 
         return steps
@@ -95,11 +108,9 @@ class ServicesCommands(Commands):
     def _default_location_path(self):
         """Build default location path based on file storage selection."""
         file_storage = self.cli_config.get_file_storage()
-        if file_storage == 'local':
-            return '{}/data'.format(self.cli_config.get_instance_path())
-        return '{}://default'.format(
-            self.cli_config.get_file_storage().lower()
-        )
+        if file_storage == "local":
+            return "{}/data".format(self.cli_config.get_instance_path())
+        return "{}://default".format(self.cli_config.get_file_storage().lower())
 
     def _setup(self):
         """Services initialization steps."""
@@ -107,41 +118,57 @@ class ServicesCommands(Commands):
             FunctionStep(
                 func=self.services_expected_status,
                 args={"expected": False},
-                message="Checking services are not setup..."
+                message="Checking services are not setup...",
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'db', 'init', 'create'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating database..."
+                cmd=["pipenv", "run", "invenio", "db", "init", "create"],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating database...",
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'files', 'location',
-                     'create', '--default', 'default-location',
-                     self._default_location_path()],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating files location..."
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "files",
+                    "location",
+                    "create",
+                    "--default",
+                    "default-location",
+                    self._default_location_path(),
+                ],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating files location...",
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'roles', 'create', 'admin'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating admin role..."
+                cmd=["pipenv", "run", "invenio", "roles", "create", "admin"],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating admin role...",
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'access', 'allow',
-                     'superuser-access', 'role', 'admin'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Allowing superuser access to admin role..."
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "access",
+                    "allow",
+                    "superuser-access",
+                    "role",
+                    "admin",
+                ],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Allowing superuser access to admin role...",
             ),
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'index', 'init'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating indices..."
+                cmd=["pipenv", "run", "invenio", "index", "init"],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating indices...",
             ),
             FunctionStep(
                 func=self.cli_config.update_services_setup,
                 args={"is_setup": True},
-                message="Updating service setup status (True)..."
-            )
+                message="Updating service setup status (True)...",
+            ),
         ]
 
         return steps
@@ -150,9 +177,9 @@ class ServicesCommands(Commands):
         """Steps to add demo records into the instance."""
         steps = [
             CommandStep(
-                cmd=['pipenv', 'run', 'invenio', 'rdm-records', 'demo'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating demo records..."
+                cmd=["pipenv", "run", "invenio", "rdm-records", "demo"],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating demo records...",
             )
         ]
 
@@ -160,12 +187,12 @@ class ServicesCommands(Commands):
 
     def fixtures(self):
         """Steps to set up the required fixtures for the instance."""
-        command = ['pipenv', 'run', 'invenio', 'rdm-records', 'fixtures']
+        command = ["pipenv", "run", "invenio", "rdm-records", "fixtures"]
         steps = [
             CommandStep(
                 cmd=command,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Creating fixtures..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating fixtures...",
             )
         ]
 
@@ -181,8 +208,10 @@ class ServicesCommands(Commands):
 
         if services:
             steps.append(
-                FunctionStep(func=self.ensure_containers_running,
-                             message="Making sure containers are up...")
+                FunctionStep(
+                    func=self.ensure_containers_running,
+                    message="Making sure containers are up...",
+                )
             )
         if force:
             steps.extend(self._cleanup())
@@ -197,7 +226,7 @@ class ServicesCommands(Commands):
             steps.append(
                 FunctionStep(
                     func=self.docker_helper.stop_containers,
-                    message="Stopping containers...."
+                    message="Stopping containers....",
                 )
             )
         return steps
@@ -205,8 +234,10 @@ class ServicesCommands(Commands):
     def start(self):
         """Steps to start services' containers."""
         steps = [
-            FunctionStep(func=self.ensure_containers_running,
-                         message="Making sure containers are up...")
+            FunctionStep(
+                func=self.ensure_containers_running,
+                message="Making sure containers are up...",
+            )
         ]
 
         return steps
@@ -216,7 +247,7 @@ class ServicesCommands(Commands):
         steps = [
             FunctionStep(
                 func=self.docker_helper.stop_containers,
-                message="Stopping containers..."
+                message="Stopping containers...",
             )
         ]
 
@@ -227,13 +258,13 @@ class ServicesCommands(Commands):
         steps = [
             FunctionStep(
                 func=self.docker_helper.destroy_containers,
-                message="Destroying containers..."
+                message="Destroying containers...",
             ),
             FunctionStep(
                 func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
-                message="Updating service setup status (False)..."
-            )
+                message="Updating service setup status (False)...",
+            ),
         ]
 
         return steps

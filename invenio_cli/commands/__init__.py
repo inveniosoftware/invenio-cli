@@ -26,5 +26,5 @@ __all__ = (
     "PackagesCommands",
     "RequirementsCommands",
     "ServicesCommands",
-    "UpgradeCommands"
+    "UpgradeCommands",
 )

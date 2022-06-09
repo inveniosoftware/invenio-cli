@@ -22,20 +22,20 @@ def test_cli_config_write():
     """Check config file is generated: preliminary superficial test."""
     tmp_dir = tempfile.TemporaryDirectory()
     project_dir = tmp_dir.name
-    flavour = 'RDM'
+    flavour = "RDM"
     replay = {
-        'cookiecutter': {
-            'project_name': 'My Site',
-            'project_shortname': 'my-site',
-            'project_site': 'my-site.com',
-            'github_repo': 'my-site/my-site',
-            'description': 'Invenio RDM My Site Instance',
-            'author_name': 'CERN',
-            'author_email': 'info@my-site.com',
-            'year': '2020',
-            'database': 'postgresql',
-            'elasticsearch': '7',
-            '_template': 'https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git'  # noqa
+        "cookiecutter": {
+            "project_name": "My Site",
+            "project_shortname": "my-site",
+            "project_site": "my-site.com",
+            "github_repo": "my-site/my-site",
+            "description": "Invenio RDM My Site Instance",
+            "author_name": "CERN",
+            "author_email": "info@my-site.com",
+            "year": "2020",
+            "database": "postgresql",
+            "elasticsearch": "7",
+            "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
     config_path = Path(project_dir) / CLIConfig.CONFIG_FILENAME
@@ -55,20 +55,20 @@ def test_cli_config_write():
 def config_dir():
     tmp_dir = tempfile.TemporaryDirectory()
     project_dir = tmp_dir.name
-    flavour = 'RDM'
+    flavour = "RDM"
     replay = {
-        'cookiecutter': {
-            'project_name': 'My Site',
-            'project_shortname': 'my-site',
-            'project_site': 'my-site.com',
-            'github_repo': 'my-site/my-site',
-            'description': 'Invenio RDM My Site Instance',
-            'author_name': 'CERN',
-            'author_email': 'info@my-site.com',
-            'year': '2020',
-            'database': 'postgresql',
-            'elasticsearch': '7',
-            '_template': 'https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git'  # noqa
+        "cookiecutter": {
+            "project_name": "My Site",
+            "project_shortname": "my-site",
+            "project_site": "my-site.com",
+            "github_repo": "my-site/my-site",
+            "description": "Invenio RDM My Site Instance",
+            "author_name": "CERN",
+            "author_email": "info@my-site.com",
+            "year": "2020",
+            "database": "postgresql",
+            "elasticsearch": "7",
+            "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
     # Need to yield in order for tmp_dir to not be gc'ed and therefore the
@@ -101,7 +101,7 @@ def test_cli_config_instance_path(config_dir):
         cli_config.get_instance_path()
 
     # Update instance path to now see if we retrieve it
-    instance_path = config_dir / '.venv/'
+    instance_path = config_dir / ".venv/"
     cli_config.update_instance_path(instance_path)
     assert cli_config.get_instance_path() == Path(instance_path)
 
@@ -119,4 +119,4 @@ def test_cli_config_services_setup(config_dir):
 def test_cli_config_get_project_shortname(config_dir):
     cli_config = CLIConfig(config_dir)
 
-    assert cli_config.get_project_shortname() == 'my-site'
+    assert cli_config.get_project_shortname() == "my-site"

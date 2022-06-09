@@ -39,8 +39,15 @@ class InstallCommands(LocalCommands):
         # Currently not possible because the second step (update instance
         # path) requires the ouptut of the previous step
         result = run_cmd(
-            ['pipenv', 'run', 'invenio', 'shell', '--no-term-title',
-                '-c', '"print(app.instance_path, end=\'\')"']
+            [
+                "pipenv",
+                "run",
+                "invenio",
+                "shell",
+                "--no-term-title",
+                "-c",
+                "\"print(app.instance_path, end='')\"",
+            ]
         )
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
@@ -54,41 +61,40 @@ class InstallCommands(LocalCommands):
 
         return filesystem.force_symlink(target_path, link_path)
 
-    def install(self, pre, dev=False, flask_env='production'):
+    def install(self, pre, dev=False, flask_env="production"):
         """Development installation steps."""
         steps = self.install_py_dependencies(pre=pre, dev=dev)
         steps.append(
             FunctionStep(
-                func=self.update_instance_path,
-                message="Updating instance path..."
+                func=self.update_instance_path, message="Updating instance path..."
             )
         )
         steps.append(
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
-                args={"target": 'invenio.cfg'},
-                message=f"Symlinking 'invenio.cfg'..."
+                args={"target": "invenio.cfg"},
+                message=f"Symlinking 'invenio.cfg'...",
             )
-            )
+        )
         steps.append(
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
-                args={"target": 'templates'},
-                message=f"Symlinking 'templates'..."
+                args={"target": "templates"},
+                message=f"Symlinking 'templates'...",
             )
-            )
+        )
         steps.append(
             FunctionStep(
                 func=self.symlink_project_file_or_folder,
-                args={"target": 'app_data'},
-                message=f"Symlinking 'app_data'..."
+                args={"target": "app_data"},
+                message=f"Symlinking 'app_data'...",
             )
         )
         steps.append(
             FunctionStep(
                 func=self.update_statics_and_assets,
                 args={"force": True, "flask_env": flask_env},
-                message="Updating statics and assets..."
+                message="Updating statics and assets...",
             )
         )
 

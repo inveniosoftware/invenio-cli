@@ -9,6 +9,4 @@
 
 from .cli import invenio_cli
 
-__all__ = (
-    "invenio_cli",
-)
+__all__ = ("invenio_cli",)

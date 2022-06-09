@@ -15,7 +15,7 @@ from subprocess import Popen as popen
 from subprocess import run
 
 
-class ProcessResponse():
+class ProcessResponse:
     """Process response class."""
 
     def __init__(self, output=None, error=None, status_code=0, warning=False):
@@ -53,12 +53,13 @@ def run_interactive(command, env=None, skippable=False):
 
     try:
         response = run(command, check=True, env=full_env)
-        return ProcessResponse(
-            output=None, error=None, status_code=0)
+        return ProcessResponse(output=None, error=None, status_code=0)
     except CalledProcessError as e:
         if skippable:
             return ProcessResponse(
-                output=e.stdout, error=e.stderr, status_code=0, warning=True)
+                output=e.stdout, error=e.stderr, status_code=0, warning=True
+            )
         else:
             return ProcessResponse(
-                output=e.stdout, error=e.stderr, status_code=e.returncode)
+                output=e.stdout, error=e.stderr, status_code=e.returncode
+            )

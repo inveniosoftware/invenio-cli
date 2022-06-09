@@ -25,15 +25,18 @@ class Commands(object):
     @classmethod
     def shell(cls):
         """Start a shell in the virtual environment."""
-        command = ['pipenv', 'shell', ]
-        return run_interactive(command, env={'PIPENV_VERBOSITY': "-1"})
+        command = [
+            "pipenv",
+            "shell",
+        ]
+        return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 
     @classmethod
     def pyshell(cls, debug=False):
         """Start a Python shell."""
-        with env(FLASK_ENV='development' if debug else 'production'):
-            command = ['pipenv', 'run', 'invenio', 'shell']
-            return run_interactive(command, env={'PIPENV_VERBOSITY': "-1"})
+        with env(FLASK_ENV="development" if debug else "production"):
+            command = ["pipenv", "run", "invenio", "shell"]
+            return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 
     def destroy(self):
         """Destroys the instance's virtualenv.
@@ -43,9 +46,9 @@ class Commands(object):
         """
         steps = [
             CommandStep(
-                cmd=['pipenv', '--rm'],
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Destroying virtual environment"
+                cmd=["pipenv", "--rm"],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Destroying virtual environment",
             )
         ]
 

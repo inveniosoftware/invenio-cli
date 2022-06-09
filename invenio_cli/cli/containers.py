@@ -20,17 +20,24 @@ def containers():
 
 
 @containers.command()
-@click.option('--pull/--no-pull', default=True, is_flag=True,
-              help='Download newer versions of the images (default: True).')
-@click.option('--cache/--no-cache', default=True, is_flag=True,
-              help='Disable cache (default=False).')
+@click.option(
+    "--pull/--no-pull",
+    default=True,
+    is_flag=True,
+    help="Download newer versions of the images (default: True).",
+)
+@click.option(
+    "--cache/--no-cache",
+    default=True,
+    is_flag=True,
+    help="Disable cache (default=False).",
+)
 @pass_cli_config
 def build(cli_config, pull, cache):
     """Build application and service images."""
     commands = ContainersCommands(cli_config)
     click.secho(
-        f"Building images... Pull newer versions {pull}, use cache {cache}",
-        fg="green"
+        f"Building images... Pull newer versions {pull}, use cache {cache}", fg="green"
     )
     steps = commands.build(pull, cache)
     on_fail = "Failed to build images."
@@ -40,14 +47,30 @@ def build(cli_config, pull, cache):
 
 
 @containers.command()
-@click.option('-f', '--force', default=False, is_flag=True,
-              help='Force recreation of db tables, ES indices, queues...')
-@click.option('-N', '--no-demo-data', default=False, is_flag=True,
-              help='Disable the creation of demo data')
-@click.option('--stop-services', default=False, is_flag=True,
-              help='Stop containers after setup.')
-@click.option('--services/--no-services', '-s/-n',  default=True, is_flag=True,
-              help='Enable/disable dockerized services (default: enabled).')
+@click.option(
+    "-f",
+    "--force",
+    default=False,
+    is_flag=True,
+    help="Force recreation of db tables, ES indices, queues...",
+)
+@click.option(
+    "-N",
+    "--no-demo-data",
+    default=False,
+    is_flag=True,
+    help="Disable the creation of demo data",
+)
+@click.option(
+    "--stop-services", default=False, is_flag=True, help="Stop containers after setup."
+)
+@click.option(
+    "--services/--no-services",
+    "-s/-n",
+    default=True,
+    is_flag=True,
+    help="Enable/disable dockerized services (default: enabled).",
+)
 @pass_cli_config
 def setup(cli_config, force, no_demo_data, stop_services, services):
     """Setup containerized services."""
@@ -55,9 +78,9 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
     demo_data = not no_demo_data
     commands = ContainersCommands(cli_config)
     click.secho(
-        f"Setting up services with force {force}, demo data {demo_data} " +
-        f"and stop after setup {stop_services}...",
-        fg="green"
+        f"Setting up services with force {force}, demo data {demo_data} "
+        + f"and stop after setup {stop_services}...",
+        fg="green",
     )
 
     steps = commands.setup(force, demo_data, stop_services, services)
@@ -69,8 +92,14 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
 
 # FIXME: Duplicated code from services.py
 @containers.command()
-@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
+@click.option(
+    "-v",
+    "--verbose",
+    default=False,
+    is_flag=True,
+    required=False,
+    help="Verbose mode will show all logs in the console.",
+)
 @pass_cli_config
 def status(cli_config, verbose):
     """Checks if the services are up and running.
@@ -84,29 +113,48 @@ def status(cli_config, verbose):
     messages = [
         {"message": "{}: up and running.", "fg": "green"},
         {"message": "{}: unable to connect or bad response.", "fg": "red"},
-        {"message": "{}: no healthcheck function defined.", "fg": "yellow"}
+        {"message": "{}: no healthcheck function defined.", "fg": "yellow"},
     ]
 
     for idx, status in enumerate(statuses):
         message = messages[status]
         click.secho(
-            message=message.get("message").format(services[idx]),
-            fg=message.get("fg")
+            message=message.get("message").format(services[idx]), fg=message.get("fg")
         )
 
 
 @containers.command()
-@click.option('--lock/--skip-lock', default=False, is_flag=True,
-              help='Lock Python dependencies (default=False).')
-@click.option('--build/--no-build', default=False, is_flag=True,
-              help='Build images (default=False).')
-@click.option('--setup/--no-setup', default=False, is_flag=True,
-              help='Setup services (default=False). ' +
-                   'It will run with force=True.')
-@click.option('--demo-data/--no-demo-data', default=True, is_flag=True,
-              help='Include demo records (default=True), requires --setup.')
-@click.option('--services/--no-services', '-s/-n',  default=True, is_flag=True,
-              help='Enable/disable dockerized services (default: enabled).')
+@click.option(
+    "--lock/--skip-lock",
+    default=False,
+    is_flag=True,
+    help="Lock Python dependencies (default=False).",
+)
+@click.option(
+    "--build/--no-build",
+    default=False,
+    is_flag=True,
+    help="Build images (default=False).",
+)
+@click.option(
+    "--setup/--no-setup",
+    default=False,
+    is_flag=True,
+    help="Setup services (default=False). " + "It will run with force=True.",
+)
+@click.option(
+    "--demo-data/--no-demo-data",
+    default=True,
+    is_flag=True,
+    help="Include demo records (default=True), requires --setup.",
+)
+@click.option(
+    "--services/--no-services",
+    "-s/-n",
+    default=True,
+    is_flag=True,
+    help="Enable/disable dockerized services (default: enabled).",
+)
 @pass_cli_config
 def start(cli_config, lock, build, setup, demo_data, services):
     """Start containerized services and application."""
@@ -136,8 +184,7 @@ def stop(cli_config):
 def destroy(cli_config):
     """Destroy containerized services and application."""
     commands = ContainersCommands(cli_config)
-    click.secho(
-        "Destroying containers, volumes, virtual environment...", fg="green")
+    click.secho("Destroying containers, volumes, virtual environment...", fg="green")
     steps = commands.destroy()
     on_fail = "Failed to destroy instance's containers."
     on_success = "Instance' containers destroyed."

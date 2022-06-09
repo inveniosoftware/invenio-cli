@@ -12,12 +12,7 @@ from invenio_cli.helpers.process import ProcessResponse
 
 
 def func():
-    return ProcessResponse(
-        error="test",
-        output="test",
-        status_code=1,
-        warning=False
-    )
+    return ProcessResponse(error="test", output="test", status_code=1, warning=False)
 
 
 def test_func_step():

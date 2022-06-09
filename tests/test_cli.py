@@ -27,16 +27,16 @@ def runner():
 @pytest.mark.skip()
 def test_init(runner):
     """Test init command."""
-    result = runner.invoke(cli, ['init'])
+    result = runner.invoke(cli, ["init"])
     assert result.exit_code == 0
-    assert exists('my-site')
-    assert exists('my-site/.invenio')
+    assert exists("my-site")
+    assert exists("my-site/.invenio")
 
 
 @pytest.mark.skip()
 def test_init_with_arg(runner):
     """Test init command."""
-    result = runner.invoke(cli, ['init', 'rdm'])
+    result = runner.invoke(cli, ["init", "rdm"])
     assert result.exit_code == 0
-    assert exists('my-site')
-    assert exists('my-site/.invenio')
+    assert exists("my-site")
+    assert exists("my-site/.invenio")
