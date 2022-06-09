@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2019 CERN.
 # Copyright (C) 2019-2021 Northwestern University.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -16,7 +17,7 @@ for arg in $@; do
 done
 
 
-python -m check_manifest --ignore ".*-requirements.txt" && \
+python -m check_manifest && \
 python -m sphinx.cmd.build -qnNW docs docs/_build/html && \
 # Note: expansion of pytest_args looks like below to not cause an unbound
 # variable error when 1) "nounset" and 2) the array is empty.
