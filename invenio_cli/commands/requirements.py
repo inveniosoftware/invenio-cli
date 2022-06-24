@@ -151,6 +151,20 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_git_version(cls, major, minor=-1, patch=-1, exact=False):
+        """Check the git version."""
+        # Output comes in the form of 'git version 2.36.1\n'
+        try:
+            result = run_cmd(["git", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version("git", version, major, minor, patch, exact)
+        except Exception as err:
+            return ProcessResponse(
+                error=f"git not found. Got {err}.",
+                status_code=1,
+            )
+
+    @classmethod
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
@@ -192,6 +206,11 @@ class RequirementsCommands(object):
                 func=cls.check_imagemagick_version,
                 args={"major": 0, "minor": 0},
                 message="Checking ImageMagick version...",
+            ),
+            FunctionStep(
+                func=cls.check_git_version,
+                args={"major": 0, "minor": 0},
+                message="Checking git version...",
             ),
         ]
 
