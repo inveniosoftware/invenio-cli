@@ -1,5 +1,5 @@
 ..
-    Copyright (C) 2019-2021 CERN.
+    Copyright (C) 2019-2022 CERN.
     Copyright (C) 2019-2021 Northwestern University.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
@@ -7,6 +7,13 @@
 
 Changes
 =======
+
+Version 1.0.6 (released 2022-07-01)
+
+- Move from setup.py to setup.cfg for purely declarative package definitions.
+- Enforce black as code formmater, and format the codebase. The commit is
+  ignored by the revision history.
+- Deprecate support for Python 3.6.
 
 Version 1.0.5 (released 2022-05-31)
 
