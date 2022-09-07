@@ -164,6 +164,30 @@ class ServicesCommands(Commands):
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating indices...",
             ),
+            CommandStep(
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "rdm-records",
+                    "custom-fields",
+                    "init",
+                ],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating custom fields for records...",
+            ),
+            CommandStep(
+                cmd=[
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "communities",
+                    "custom-fields",
+                    "init",
+                ],
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating custom fields for communities...",
+            ),
             FunctionStep(
                 func=self.cli_config.update_services_setup,
                 args={"is_setup": True},
