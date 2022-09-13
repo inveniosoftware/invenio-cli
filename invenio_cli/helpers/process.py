@@ -3,6 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2019 CERN.
 # Copyright (C) 2019 Northwestern University.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -39,7 +40,7 @@ def run_cmd(command):
     return ProcessResponse(output, error, p.returncode)
 
 
-def run_interactive(command, env=None, skippable=False):
+def run_interactive(command, env=None, skippable=False, log_file=None):
     """Runs a given command without blocking, allows interactive shells.
 
     Stdout and stderr are not piped and therefore allows interaction.
@@ -52,7 +53,10 @@ def run_interactive(command, env=None, skippable=False):
             full_env[var] = val
 
     try:
-        response = run(command, check=True, env=full_env)
+        stdout = open(log_file, "w+") if log_file else None
+        response = run(command, check=True, env=full_env, stdout=stdout)
+        if stdout:
+            stdout.close()
         return ProcessResponse(output=None, error=None, status_code=0)
     except CalledProcessError as e:
         if skippable:

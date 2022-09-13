@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020-2021 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -46,13 +47,16 @@ def lock(cli_config, pre, dev):
 @click.option(
     "-s", "--skip-build", default=False, is_flag=True, help="Do not rebuild the assets."
 )
+@click.option(
+    "--pip-log-file", default=None, help="Specify pip log file (default: None)"
+)
 @pass_cli_config
-def install(cli_config, packages, skip_build):
+def install(cli_config, packages, skip_build, pip_log_file):
     """Install one or a list of Python packages in the local environment."""
     if len(packages) < 1:
         raise click.UsageError("You must specify at least one package.")
 
-    steps = PackagesCommands.install_packages(packages)
+    steps = PackagesCommands.install_packages(packages, pip_log_file)
 
     on_fail = f"Failed to install packages {packages}."
     on_success = f"Packages {packages} installed successfully."
