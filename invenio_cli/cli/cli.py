@@ -156,14 +156,25 @@ def init(flavour, template, checkout, user_input, config):
     is_flag=True,
     help="Enable/disable dockerized services (default: enabled).",
 )
+@click.option(
+    "--celery-log-file",
+    default=None,
+    help="Celery log file (default: None, this means logging to stderr)",
+)
 @pass_cli_config
-def run(cli_config, host, port, debug, services):
+def run(cli_config, host, port, debug, services, celery_log_file):
     """Starts the local development server.
 
     NOTE: this only makes sense locally so no --local option
     """
     commands = LocalCommands(cli_config)
-    commands.run(host=host, port=str(port), debug=debug, services=services)
+    commands.run(
+        host=host,
+        port=str(port),
+        debug=debug,
+        services=services,
+        celery_log_file=celery_log_file,
+    )
 
 
 @invenio_cli.command()
