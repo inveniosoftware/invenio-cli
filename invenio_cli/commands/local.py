@@ -63,7 +63,7 @@ class LocalCommands(Commands):
         copied_files = copy_tree(src_dir, dst_dir)
         return copied_files
 
-    def update_statics_and_assets(self, force, flask_env="production"):
+    def update_statics_and_assets(self, force, flask_env="production", log_file=None):
         """High-level command to update less/js/images/... files.
 
         Needed here (parent) because is used by Assets and Install commands.
@@ -79,15 +79,23 @@ class LocalCommands(Commands):
         with env(FLASK_ENV=flask_env):
             # Collect into statics/ and assets/ folder
             click.secho("Collecting statics and assets...", fg="green")
-            run_interactive(collect_cmd, env={"PIPENV_VERBOSITY": "-1"})
+            run_interactive(
+                collect_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+            )
             if force:
-                run_interactive(clean_create_cmd, env={"PIPENV_VERBOSITY": "-1"})
+                run_interactive(
+                    clean_create_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+                )
 
                 # Installs in assets/node_modules/
                 click.secho("Installing JS dependencies...", fg="green")
-                run_interactive(install_cmd, env={"PIPENV_VERBOSITY": "-1"})
+                run_interactive(
+                    install_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+                )
             else:
-                run_interactive(create_cmd, env={"PIPENV_VERBOSITY": "-1"})
+                run_interactive(
+                    create_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+                )
 
             # Symlink the instance's statics and assets
             copied_files = self._copy_statics_and_assets()
@@ -95,7 +103,9 @@ class LocalCommands(Commands):
 
             # Build project
             click.secho("Building assets...", fg="green")
-            run_interactive(build_cmd, env={"PIPENV_VERBOSITY": "-1"})
+            run_interactive(
+                build_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+            )
 
         # FIXME: Refactor above to make use of proper error handling.
         return ProcessResponse(

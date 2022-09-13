@@ -53,8 +53,8 @@ def run_interactive(command, env=None, skippable=False, log_file=None):
             full_env[var] = val
 
     try:
-        stdout = open(log_file, "w+") if log_file else None
-        response = run(command, check=True, env=full_env, stdout=stdout)
+        stdout = open(log_file, "a") if log_file else None
+        response = run(command, check=True, env=full_env, stdout=stdout, stderr=stdout)
         if stdout:
             stdout.close()
         return ProcessResponse(output=None, error=None, status_code=0)
