@@ -50,8 +50,11 @@ def lock(cli_config, pre, dev):
 @click.option(
     "--pip-log-file", default=None, help="Specify pip log file (default: None)"
 )
+@click.option(
+    "--node-log-file", default=None, help="Specify node log file (default: None)"
+)
 @pass_cli_config
-def install(cli_config, packages, skip_build, pip_log_file):
+def install(cli_config, packages, skip_build, pip_log_file, node_log_file):
     """Install one or a list of Python packages in the local environment."""
     if len(packages) < 1:
         raise click.UsageError("You must specify at least one package.")
@@ -67,7 +70,7 @@ def install(cli_config, packages, skip_build, pip_log_file):
     if not skip_build:
         click.secho("Rebuilding assets...")
         AssetsCommands(cli_config).update_statics_and_assets(
-            force=True, flask_env="development"
+            force=True, flask_env="development", log_file=node_log_file
         )
 
 
