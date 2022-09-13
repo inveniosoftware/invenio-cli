@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020-2021 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -17,7 +18,7 @@ class PackagesCommands(object):
     """Local installation commands."""
 
     @staticmethod
-    def install_packages(packages):
+    def install_packages(packages, log_file=None):
         """Steps to install Python packages.
 
         It is a class method since it does not require any configuration.
@@ -32,6 +33,7 @@ class PackagesCommands(object):
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Installing python dependencies...",
+                log_file=log_file,
             )
         ]
 
