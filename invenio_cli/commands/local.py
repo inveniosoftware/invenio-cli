@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -102,7 +103,7 @@ class LocalCommands(Commands):
             status_code=0,
         )
 
-    def run(self, host, port, debug=True, services=True):
+    def run(self, host, port, debug=True, services=True, celery_log_file=None):
         """Run development server and celery queue."""
 
         def signal_handler(sig, frame):
@@ -118,20 +119,27 @@ class LocalCommands(Commands):
             ServicesCommands(self.cli_config).ensure_containers_running()
 
             click.secho("Starting celery worker...", fg="green")
-            worker = popen(
-                [
-                    "pipenv",
-                    "run",
-                    "celery",
-                    "--app",
-                    "invenio_app.celery",
-                    "worker",
-                    "--beat",
-                    "--events",
-                    "--loglevel",
-                    "INFO",
+
+            celery_command = [
+                "pipenv",
+                "run",
+                "celery",
+                "--app",
+                "invenio_app.celery",
+                "worker",
+                "--beat",
+                "--events",
+                "--loglevel",
+                "INFO",
+            ]
+
+            if celery_log_file:
+                celery_command += [
+                    "--logfile",
+                    celery_log_file,
                 ]
-            )
+
+            worker = popen(celery_command)
 
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
