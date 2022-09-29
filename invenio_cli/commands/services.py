@@ -10,6 +10,7 @@
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse
+from ..helpers.rdm import rdm_version
 from .commands import Commands
 from .services_health import HEALTHCHECKS, ServicesHealthCommands
 from .steps import CommandStep, FunctionStep
@@ -164,36 +165,45 @@ class ServicesCommands(Commands):
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating indices...",
             ),
-            CommandStep(
-                cmd=[
-                    "pipenv",
-                    "run",
-                    "invenio",
-                    "rdm-records",
-                    "custom-fields",
-                    "init",
-                ],
-                env={"PIPENV_VERBOSITY": "-1"},
-                message="Creating custom fields for records...",
-            ),
-            CommandStep(
-                cmd=[
-                    "pipenv",
-                    "run",
-                    "invenio",
-                    "communities",
-                    "custom-fields",
-                    "init",
-                ],
-                env={"PIPENV_VERBOSITY": "-1"},
-                message="Creating custom fields for communities...",
-            ),
+        ]
+
+        if rdm_version()[0] >= 10:
+            steps.extend(
+                [
+                    CommandStep(
+                        cmd=[
+                            "pipenv",
+                            "run",
+                            "invenio",
+                            "rdm-records",
+                            "custom-fields",
+                            "init",
+                        ],
+                        env={"PIPENV_VERBOSITY": "-1"},
+                        message="Creating custom fields for records...",
+                    ),
+                    CommandStep(
+                        cmd=[
+                            "pipenv",
+                            "run",
+                            "invenio",
+                            "communities",
+                            "custom-fields",
+                            "init",
+                        ],
+                        env={"PIPENV_VERBOSITY": "-1"},
+                        message="Creating custom fields for communities...",
+                    ),
+                ]
+            )
+
+        steps.append(
             FunctionStep(
                 func=self.cli_config.update_services_setup,
                 args={"is_setup": True},
                 message="Updating service setup status (True)...",
             ),
-        ]
+        )
 
         return steps
 
