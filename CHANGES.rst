@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.7 (released 2022-10-10)
+
+- Fix compat issue with RDM versions < v10
+
 Version 1.0.6 (released 2022-10-10)
 
 - Bump default RDM version.
