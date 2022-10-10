@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.6 (released 2022-10-10)
+
+- Bump default RDM version.
+
 Version 1.0.5 (released 2022-05-31)
 
 - Bump click version.
