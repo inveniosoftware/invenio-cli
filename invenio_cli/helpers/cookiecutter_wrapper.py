@@ -66,7 +66,7 @@ class CookiecutterWrapper(object):
                 or "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git"
             )
             self.template_name = self.extract_template_name(self.template)
-            self.checkout = self.checkout or "v9.1"
+            self.checkout = self.checkout or "v10"
 
     def cookiecutter(self):
         """Wrap cookiecutter call."""
