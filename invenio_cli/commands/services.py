@@ -8,6 +8,8 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import click
+
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse
 from ..helpers.rdm import rdm_version
@@ -21,7 +23,7 @@ class ServicesCommands(Commands):
 
     def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
-        super(ServicesCommands, self).__init__(cli_config)
+        super().__init__(cli_config)
         self.docker_helper = docker_helper or DockerHelper(
             cli_config.get_project_shortname(), local=True
         )
@@ -32,10 +34,25 @@ class ServicesCommands(Commands):
 
         self.docker_helper.start_containers()
 
-        ServicesHealthCommands.wait_for_services(
-            services=["redis", self.cli_config.get_db_type(), "search"],
-            project_shortname=project_shortname,
-        )
+        services = ["redis", self.cli_config.get_db_type(), "search"]
+        for service in services:
+            ready = ServicesHealthCommands.wait_for_service(
+                service,
+                project_shortname=project_shortname,
+                print_func=lambda msg: click.secho(msg, fg="yellow"),
+            )
+
+            if not ready:
+                return ProcessResponse(
+                    error=f"Unable to boot up {service}",
+                    status_code=1,
+                )
+            else:
+                # We should not use `click` outside the `cli` context, but
+                # the return signature of this method does not support a list
+                # of `ProcessResponse` objs, so it is printed directly here.
+                click.secho(f"{service} up and running!", fg="green")
+
         return ProcessResponse(
             output="Containers started and healthy.",
             status_code=0,
@@ -315,16 +332,17 @@ class ServicesCommands(Commands):
         for service in services:
             check = HEALTHCHECKS.get(service)
             if check:
-                result = check(
+                check_func = check["func"]
+                response = check_func(
                     filepath="docker-services.yml",
                     verbose=verbose,
                     project_shortname=project_shortname,
                 )
                 # Append 0 if OK, else 1
                 # FIXME: Deal with codes higher than 1. Needed?
-                code = 0 if result.status_code == 0 else 1
-                statuses.append(code)
+                code = 0 if response.status_code == 0 else 1
+                statuses.append((service, code))
             else:
-                statuses.append(2)
+                statuses.append((service, None))
 
         return statuses

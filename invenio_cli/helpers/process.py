@@ -22,7 +22,7 @@ class ProcessResponse:
     def __init__(self, output=None, error=None, status_code=0, warning=False):
         """Constructor.
 
-        By default it is a successful response (0) wiht no error nor ouput.
+        By default, it is a successful response (0) with no error nor output.
         """
         self.output = output
         self.error = error

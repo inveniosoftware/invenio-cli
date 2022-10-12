@@ -19,7 +19,7 @@ class InstallCommands(LocalCommands):
 
     def __init__(self, cli_config):
         """Constructor."""
-        super(InstallCommands, self).__init__(cli_config)
+        super().__init__(cli_config)
 
     def install_py_dependencies(self, pre, dev=False):
         """Install Python dependencies."""
