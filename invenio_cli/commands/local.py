@@ -19,7 +19,6 @@ import click
 from ..helpers import env, filesystem
 from ..helpers.process import ProcessResponse, run_interactive
 from .commands import Commands
-from .services import ServicesCommands
 
 
 class LocalCommands(Commands):
@@ -27,7 +26,7 @@ class LocalCommands(Commands):
 
     def __init__(self, cli_config):
         """Constructor."""
-        super(LocalCommands, self).__init__(cli_config)
+        super().__init__(cli_config)
 
     def _symlink_assets_templates(self, files_to_link):
         """Symlink the assets folder."""
@@ -126,8 +125,6 @@ class LocalCommands(Commands):
         signal.signal(signal.SIGINT, signal_handler)
 
         if services:
-            ServicesCommands(self.cli_config).ensure_containers_running()
-
             click.secho("Starting celery worker...", fg="green")
 
             celery_command = [

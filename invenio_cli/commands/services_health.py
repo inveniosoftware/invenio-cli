@@ -18,8 +18,6 @@
 
 import time
 
-import click
-
 from ..helpers.process import run_cmd
 
 
@@ -100,62 +98,70 @@ class ServicesHealthCommands(object):
         )
 
     @classmethod
-    def wait_for_services(
+    def wait_for_service(
         cls,
-        services,
+        service,
         project_shortname,
+        print_func,
         filepath="docker-services.yml",
         max_retries=6,
         verbose=False,
     ):
-        """Wait for services to be up.
+        """Wait for the given service to be up."""
+        if service not in HEALTHCHECKS:
+            raise RuntimeError(
+                f"{service} not recognized. Available services: {HEALTHCHECKS.keys()}"
+            )
 
-        It performs configured healthchecks in a serial fashion, following the
-        order given in the ``up`` command. If the services is an empty list,
-        to be compliant with `docker-compose` it will perform the healthchecks
-        of all the services.
-        """
-        if len(services) == 0:
-            services = HEALTHCHECKS.keys()
+        exp_backoff_time = 2
+        try_ = 1
+        check = HEALTHCHECKS[service]
+        check_func = check["func"]
+        initial_delay = check.get("initial_delay", 0)
+        ready = False
 
-        for service in services:
-            exp_backoff_time = 2
-            try_ = 1
-            check = HEALTHCHECKS[service]
-            ready = check(
+        # some services might particularly slow to start up
+        if initial_delay > 0:
+            print_func(
+                f"{service} starting up, checking in {initial_delay}s...",
+            )
+            time.sleep(initial_delay)
+
+        while not ready and try_ < max_retries:
+            response = check_func(
                 filepath=filepath,
                 verbose=verbose,
                 project_shortname=project_shortname,
             )
-            while not ready and try_ < max_retries:
-                click.secho(
+            ready = response.status_code == 0
+            if not ready:
+                print_func(
                     f"{service} not ready at {try_} retries, waiting "
-                    + f"{exp_backoff_time}s",
-                    fg="yellow",
+                    + f"{exp_backoff_time}s...",
                 )
                 try_ += 1
                 time.sleep(exp_backoff_time)
                 exp_backoff_time *= 2
-                ready = (
-                    check(
-                        filepath=filepath,
-                        verbose=verbose,
-                        project_shortname=project_shortname,
-                    ).status_code
-                    == 0
-                )
 
-            if not ready:
-                click.secho(f"Unable to boot up {service}", fg="red")
-                exit(1)
-            else:
-                click.secho(f"{service} up and running!", fg="green")
+        return ready
 
 
 HEALTHCHECKS = {
-    "search": ServicesHealthCommands.search_healthcheck,
-    "postgresql": ServicesHealthCommands.postgresql_healthcheck,
-    "mysql": ServicesHealthCommands.mysql_healthcheck,
-    "redis": ServicesHealthCommands.redis_healthcheck,
+    "search": {
+        "func": ServicesHealthCommands.search_healthcheck,
+        "initial_delay": 15,  # search cluster can be particularly slow to start
+    },
+    "postgresql": {
+        "func": ServicesHealthCommands.postgresql_healthcheck,
+        "initial_delay": 0,
+    },
+    "mysql": {
+        "func": ServicesHealthCommands.mysql_healthcheck,
+        "initial_delay": 0,
+    },
+    "redis": {
+        "func": ServicesHealthCommands.redis_healthcheck,
+        "initial_delay": 0,
+    },
 }
 """Health check functions module path, as string."""

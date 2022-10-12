@@ -23,7 +23,7 @@ class DockerHelper(object):
 
     def __init__(self, project_shortname, local=True, log_config=None):
         """Constructor."""
-        super(DockerHelper, self).__init__()
+        super().__init__()
         self.container_prefix = self._normalize_name(project_shortname)
         self.local = local
         self.docker_client = docker.from_env()

@@ -10,7 +10,7 @@
 
 import click
 
-from ..commands import Commands, ServicesCommands
+from ..commands import ServicesCommands
 from .utils import pass_cli_config, run_steps
 
 
@@ -70,7 +70,6 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
     run_steps(steps, on_fail, on_success)
 
 
-# FIXME: Duplicated code from containers.py
 @services.command()
 @click.option(
     "-v",
@@ -90,16 +89,19 @@ def status(cli_config, verbose):
     services = ["redis", cli_config.get_db_type(), "search"]
     statuses = commands.status(services=services, verbose=verbose)
 
-    messages = [
-        {"message": "{}: up and running.", "fg": "green"},
-        {"message": "{}: unable to connect or bad response.", "fg": "red"},
-        {"message": "{}: no healthcheck function defined.", "fg": "yellow"},
-    ]
+    messages = {
+        0: {"message": "{}: up and running.", "fg": "green"},
+        1: {"message": "{}: unable to connect or bad response.", "fg": "red"},
+        None: {
+            "message": "{}: no healthcheck function defined or unknown service.",
+            "fg": "yellow",
+        },
+    }
 
-    for idx, status in enumerate(statuses):
-        message = messages[status]
+    for service, status_code in statuses:
+        message = messages[status_code]
         click.secho(
-            message=message.get("message").format(services[idx]), fg=message.get("fg")
+            message=message.get("message").format(service), fg=message.get("fg")
         )
 
 

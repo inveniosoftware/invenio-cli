@@ -9,7 +9,6 @@
 
 
 import subprocess
-from functools import partial
 from pathlib import Path
 
 import click
@@ -18,7 +17,7 @@ from pynpm import NPMPackage
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
 from .local import LocalCommands
-from .steps import CommandStep, FunctionStep
+from .steps import FunctionStep
 
 
 class AssetsCommands(LocalCommands):
@@ -26,7 +25,7 @@ class AssetsCommands(LocalCommands):
 
     def __init__(self, cli_config):
         """Constructor."""
-        super(AssetsCommands, self).__init__(cli_config)
+        super().__init__(cli_config)
 
     @staticmethod
     def _module_pkg(path):

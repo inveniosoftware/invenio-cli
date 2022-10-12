@@ -19,6 +19,7 @@ from ..commands import (
     ContainersCommands,
     LocalCommands,
     RequirementsCommands,
+    ServicesCommands,
     UpgradeCommands,
 )
 from ..helpers.cli_config import CLIConfig
@@ -28,7 +29,7 @@ from .containers import containers
 from .install import install
 from .packages import packages
 from .services import services
-from .utils import pass_cli_config, run_steps
+from .utils import handle_process_response, pass_cli_config, run_steps
 
 
 @click.group()
@@ -167,6 +168,12 @@ def run(cli_config, host, port, debug, services, celery_log_file):
 
     NOTE: this only makes sense locally so no --local option
     """
+    if services:
+        cmds = ServicesCommands(cli_config)
+        response = cmds.ensure_containers_running()
+        # fail and exit if containers are not running
+        handle_process_response(response)
+
     commands = LocalCommands(cli_config)
     commands.run(
         host=host,

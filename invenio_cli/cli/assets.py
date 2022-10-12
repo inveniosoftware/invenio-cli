@@ -9,7 +9,6 @@
 """Invenio module to ease the creation and management of applications."""
 
 import click
-from click_default_group import DefaultGroup
 
 from ..commands import AssetsCommands
 from .utils import pass_cli_config, run_steps

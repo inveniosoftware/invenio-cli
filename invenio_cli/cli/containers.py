@@ -11,6 +11,7 @@
 import click
 
 from ..commands import ContainersCommands
+from .services import status as services_status_cmd
 from .utils import pass_cli_config, run_steps
 
 
@@ -90,7 +91,6 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
     run_steps(steps, on_fail, on_success)
 
 
-# FIXME: Duplicated code from services.py
 @containers.command()
 @click.option(
     "-v",
@@ -100,27 +100,13 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
     required=False,
     help="Verbose mode will show all logs in the console.",
 )
-@pass_cli_config
-def status(cli_config, verbose):
+@click.pass_context
+def status(ctx, verbose):
     """Checks if the services are up and running.
 
     NOTE: currently only search, DB (postgresql/mysql) and redis are supported.
     """
-    commands = ContainersCommands(cli_config)
-    services = ["redis", cli_config.get_db_type(), "search"]
-    statuses = commands.status(services=services, verbose=verbose)
-
-    messages = [
-        {"message": "{}: up and running.", "fg": "green"},
-        {"message": "{}: unable to connect or bad response.", "fg": "red"},
-        {"message": "{}: no healthcheck function defined.", "fg": "yellow"},
-    ]
-
-    for idx, status in enumerate(statuses):
-        message = messages[status]
-        click.secho(
-            message=message.get("message").format(services[idx]), fg=message.get("fg")
-        )
+    ctx.invoke(services_status_cmd, verbose=verbose)
 
 
 @containers.command()

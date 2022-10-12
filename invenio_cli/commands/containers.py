@@ -10,7 +10,6 @@
 from ..helpers.docker_helper import DockerHelper
 from .packages import PackagesCommands
 from .services import ServicesCommands
-from .services_health import HEALTHCHECKS
 from .steps import FunctionStep
 
 
@@ -23,7 +22,7 @@ class ContainersCommands(ServicesCommands):
             cli_config.get_project_shortname(), local=False
         )
 
-        super(ContainersCommands, self).__init__(cli_config, docker_helper)
+        super().__init__(cli_config, docker_helper)
 
     def build(self, pull=True, cache=True):
         """Return the steps to build images.
