@@ -14,14 +14,25 @@ from .utils import pass_cli_config, run_steps
 
 
 @click.command()
-@click.option('--pre', default=False, is_flag=True,
-              help='If specified, allows the installation of alpha releases')
-@click.option('--dev/--no-dev', default=True, is_flag=True,
-              help='Includes development dependencies.')
 @click.option(
-    '--production/--development', '-p/-d', default=False, is_flag=True,
-    help='Production mode copies statics/assets. Development mode symlinks'
-         ' statics/assets.'
+    "--pre",
+    default=False,
+    is_flag=True,
+    help="If specified, allows the installation of alpha releases",
+)
+@click.option(
+    "--dev/--no-dev",
+    default=True,
+    is_flag=True,
+    help="Includes development dependencies.",
+)
+@click.option(
+    "--production/--development",
+    "-p/-d",
+    default=False,
+    is_flag=True,
+    help="Production mode copies statics/assets. Development mode symlinks"
+    " statics/assets.",
 )
 @pass_cli_config
 def install(cli_config, pre, dev, production):
@@ -32,7 +43,7 @@ def install(cli_config, pre, dev, production):
     builds front-end assets.
     """
     commands = InstallCommands(cli_config)
-    flask_env = 'production' if production else 'development'
+    flask_env = "production" if production else "development"
     steps = commands.install(pre=pre, dev=dev, flask_env=flask_env)
     on_fail = "Failed to install dependencies."
     on_success = "Dependencies installed successfully."

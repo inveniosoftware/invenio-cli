@@ -3,6 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2019 CERN.
 # Copyright (C) 2019 Northwestern University.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -15,7 +16,7 @@ from subprocess import Popen as popen
 from subprocess import run
 
 
-class ProcessResponse():
+class ProcessResponse:
     """Process response class."""
 
     def __init__(self, output=None, error=None, status_code=0, warning=False):
@@ -39,7 +40,7 @@ def run_cmd(command):
     return ProcessResponse(output, error, p.returncode)
 
 
-def run_interactive(command, env=None, skippable=False):
+def run_interactive(command, env=None, skippable=False, log_file=None):
     """Runs a given command without blocking, allows interactive shells.
 
     Stdout and stderr are not piped and therefore allows interaction.
@@ -52,13 +53,18 @@ def run_interactive(command, env=None, skippable=False):
             full_env[var] = val
 
     try:
-        response = run(command, check=True, env=full_env)
-        return ProcessResponse(
-            output=None, error=None, status_code=0)
+        stdout = open(log_file, "a") if log_file else None
+        response = run(command, check=True, env=full_env, stdout=stdout, stderr=stdout)
+        return ProcessResponse(output=None, error=None, status_code=0)
     except CalledProcessError as e:
         if skippable:
             return ProcessResponse(
-                output=e.stdout, error=e.stderr, status_code=0, warning=True)
+                output=e.stdout, error=e.stderr, status_code=0, warning=True
+            )
         else:
             return ProcessResponse(
-                output=e.stdout, error=e.stderr, status_code=e.returncode)
+                output=e.stdout, error=e.stderr, status_code=e.returncode
+            )
+    finally:
+        if stdout:
+            stdout.close()

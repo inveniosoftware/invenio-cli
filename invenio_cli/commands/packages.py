@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020-2021 CERN.
+# Copyright (C) 2022 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -17,21 +18,22 @@ class PackagesCommands(object):
     """Local installation commands."""
 
     @staticmethod
-    def install_packages(packages):
+    def install_packages(packages, log_file=None):
         """Steps to install Python packages.
 
         It is a class method since it does not require any configuration.
         """
-        prefix = ['pipenv', 'run']
-        cmd = prefix + ['pip', 'install']
+        prefix = ["pipenv", "run"]
+        cmd = prefix + ["pip", "install"]
         for package in packages:
-            cmd.extend(['-e', package])
+            cmd.extend(["-e", package])
 
         steps = [
             CommandStep(
                 cmd=cmd,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Installing python dependencies..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Installing python dependencies...",
+                log_file=log_file,
             )
         ]
 
@@ -43,13 +45,13 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        cmd = ['pipenv', 'update', '--outdated']
+        cmd = ["pipenv", "update", "--outdated"]
 
         steps = [
             CommandStep(
                 cmd=cmd,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Checking outdated packages..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Checking outdated packages...",
             )
         ]
 
@@ -61,13 +63,13 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        cmd = ['pipenv', 'update']
+        cmd = ["pipenv", "update"]
 
         steps = [
             CommandStep(
                 cmd=cmd,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Updating package(s)..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Updating package(s)...",
             )
         ]
 
@@ -79,14 +81,14 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        prefix = ['pipenv']
-        app = prefix + ['install', package + version]
+        prefix = ["pipenv"]
+        app = prefix + ["install", package + version]
 
         steps = [
             CommandStep(
                 cmd=app,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message=f"Updating {package} to version {version}..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message=f"Updating {package} to version {version}...",
             )
         ]
 
@@ -96,18 +98,18 @@ class PackagesCommands(object):
     def install_locked_dependencies(pre, dev):
         """Install dependencies from Pipfile.lock using sync."""
         # NOTE: sync has no interactive process feedback
-        cmd = ['pipenv', 'sync']
+        cmd = ["pipenv", "sync"]
         if pre:
-            cmd += ['--pre']
+            cmd += ["--pre"]
         if dev:
-            cmd += ['--dev']
+            cmd += ["--dev"]
 
         steps = [
             CommandStep(
                 cmd=cmd,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Installing python dependencies... Please be " +
-                        "patient, this operation might take some time..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Installing python dependencies... Please be "
+                + "patient, this operation might take some time...",
             )
         ]
 
@@ -116,17 +118,17 @@ class PackagesCommands(object):
     @staticmethod
     def lock(pre, dev):
         """Steps to lock Python dependencies."""
-        cmd = ['pipenv', 'lock']
+        cmd = ["pipenv", "lock"]
         if pre:
-            cmd += ['--pre']
+            cmd += ["--pre"]
         if dev:
-            cmd += ['--dev']
+            cmd += ["--dev"]
 
         steps = [
             CommandStep(
                 cmd=cmd,
-                env={'PIPENV_VERBOSITY': "-1"},
-                message="Locking python dependencies..."
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Locking python dependencies...",
             )
         ]
 
@@ -135,11 +137,11 @@ class PackagesCommands(object):
     @staticmethod
     def is_locked():
         """Checks if the dependencies have been locked."""
-        locked = 'Pipfile.lock' in listdir('.')
+        locked = "Pipfile.lock" in listdir(".")
         if not locked:
             return ProcessResponse(
-                error="Dependencies were not locked. " +
-                      "Please run `invenio-cli packages lock`.",
+                error="Dependencies were not locked. "
+                + "Please run `invenio-cli packages lock`.",
                 status_code=1,
             )
 

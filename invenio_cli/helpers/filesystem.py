@@ -25,7 +25,7 @@ def hash_file(path_to_file):
     """Hash file to check for consistency."""
     sha256 = hashlib.sha256()
 
-    with open(path_to_file, 'rb') as f:
+    with open(path_to_file, "rb") as f:
         while True:
             data = f.read(BUF_SIZE)
             if not data:
@@ -62,7 +62,4 @@ def force_symlink(target, link_name):
             symlink(target, link_name)
             output = output + "Deleted already existing link."
 
-    return ProcessResponse(
-        output=output,
-        status_code=0
-    )
+    return ProcessResponse(output=output, status_code=0)

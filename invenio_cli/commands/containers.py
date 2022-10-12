@@ -19,8 +19,9 @@ class ContainersCommands(ServicesCommands):
 
     def __init__(self, cli_config, docker_helper=None):
         """Constructor."""
-        docker_helper = docker_helper or \
-            DockerHelper(cli_config.get_project_shortname(), local=False)
+        docker_helper = docker_helper or DockerHelper(
+            cli_config.get_project_shortname(), local=False
+        )
 
         super(ContainersCommands, self).__init__(cli_config, docker_helper)
 
@@ -33,14 +34,13 @@ class ContainersCommands(ServicesCommands):
         steps = [
             FunctionStep(
                 func=PackagesCommands.is_locked,
-                message="Checking if dependencies are locked."
+                message="Checking if dependencies are locked.",
             ),
             FunctionStep(
                 func=self.docker_helper.build_images,
                 args={"pull": pull, "cache": cache},
-                message="Building images..."
-            )
-
+                message="Building images...",
+            ),
         ]
 
         return steps
@@ -53,38 +53,39 @@ class ContainersCommands(ServicesCommands):
                 args={
                     "project_shortname": project_shortname,
                     "command": "invenio shell --no-term-title -c "
-                               "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\""  # noqa
+                    "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\"",  # noqa
                 },
-                message="Flushing redis cache..."
+                message="Flushing redis cache...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio db destroy --yes-i-know"
+                    "command": "invenio db destroy --yes-i-know",
                 },
-                message="Deleting database..."
+                message="Deleting database...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio index destroy --force --yes-i-know"
+                    "command": "invenio index destroy --force --yes-i-know",
                 },
-                message="Deleting indices..."
+                message="Deleting indices...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio index queue init purge"
+                    "command": "invenio index queue init purge",
                 },
-                message="Purging queues..."
+                message="Purging queues...",
             ),
-            FunctionStep(func=self.cli_config.update_services_setup,
+            FunctionStep(
+                func=self.cli_config.update_services_setup,
                 args={"is_setup": False},
-                message="Updating service setup status (False)..."
-            )
+                message="Updating service setup status (False)...",
+            ),
         ]
 
         return steps
@@ -96,50 +97,49 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio db init create"
+                    "command": "invenio db init create",
                 },
-                message="Creating database..."
+                message="Creating database...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
                     "command": "invenio files location create --default "
-                               "default-location "
-                               "${INVENIO_INSTANCE_PATH}/data"
+                    "default-location "
+                    "${INVENIO_INSTANCE_PATH}/data",
                 },
-                message="Creating files location..."
+                message="Creating files location...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio roles create admin"
+                    "command": "invenio roles create admin",
                 },
-                message="Creating admin role..."
+                message="Creating admin role...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio access allow "
-                               "superuser-access role admin"
+                    "command": "invenio access allow " "superuser-access role admin",
                 },
-                message="Assigning superuser access to admin role..."
+                message="Assigning superuser access to admin role...",
             ),
             FunctionStep(
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio index init"
+                    "command": "invenio index init",
                 },
-                message="Creating indices..."
+                message="Creating indices...",
             ),
             FunctionStep(
                 func=self.cli_config.update_services_setup,
                 args={"is_setup": True},
-                message="Updating service setup status (True)..."
-            )
+                message="Updating service setup status (True)...",
+            ),
         ]
 
         return steps
@@ -151,9 +151,9 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio rdm-records demo"
+                    "command": "invenio rdm-records demo",
                 },
-                message="Creating demo records..."
+                message="Creating demo records...",
             )
         ]
 
@@ -166,9 +166,9 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio rdm-records fixtures"
+                    "command": "invenio rdm-records fixtures",
                 },
-                message="Creating fixtures..."
+                message="Creating fixtures...",
             )
         ]
 
@@ -187,7 +187,7 @@ class ContainersCommands(ServicesCommands):
             steps.append(
                 FunctionStep(
                     func=self.ensure_containers_running,
-                    message="Making sure containers are up..."
+                    message="Making sure containers are up...",
                 )
             )
 
@@ -206,14 +206,15 @@ class ContainersCommands(ServicesCommands):
             steps.append(
                 FunctionStep(
                     func=self.docker_helper.stop_containers,
-                    message="Stopping containers...."
+                    message="Stopping containers....",
                 )
             )
 
         return steps
 
-    def start(self, lock=False, build=False, setup=False, demo_data=True,
-              services=True):
+    def start(
+        self, lock=False, build=False, setup=False, demo_data=True, services=True
+    ):
         """Return the steps to start service and application containers.
 
         :param lock: Lock dependencies.
@@ -242,7 +243,7 @@ class ContainersCommands(ServicesCommands):
             FunctionStep(
                 func=self.docker_helper.start_containers,
                 args={"app_only": not services},
-                message="Checking if dependencies are locked."
+                message="Checking if dependencies are locked.",
             )
         )
 

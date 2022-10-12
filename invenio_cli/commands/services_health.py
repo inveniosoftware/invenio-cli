@@ -27,50 +27,77 @@ class ServicesHealthCommands(object):
     """Services status commands."""
 
     @classmethod
-    def es_healthcheck(cls, *args, **kwargs):
-        """Elasticsearch healthcheck."""
-        verbose = kwargs['verbose']
+    def search_healthcheck(cls, *args, **kwargs):
+        """Open/Elasticsearch healthcheck."""
+        verbose = kwargs["verbose"]
 
-        return run_cmd([
-            "curl", "-f",
-            "localhost:9200/_cluster/health?wait_for_status=yellow"
-        ])
+        return run_cmd(
+            ["curl", "-f", "localhost:9200/_cluster/health?wait_for_status=yellow"]
+        )
 
     @classmethod
     def postgresql_healthcheck(cls, *args, **kwargs):
         """Postgresql healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
+        filepath = kwargs["filepath"]
+        verbose = kwargs["verbose"]
 
-        return run_cmd([
-            "docker-compose", "--file", filepath,
-            "exec", "-T", "db", "bash", "-c", "pg_isready",
-        ])
+        return run_cmd(
+            [
+                "docker-compose",
+                "--file",
+                filepath,
+                "exec",
+                "-T",
+                "db",
+                "bash",
+                "-c",
+                "pg_isready",
+            ]
+        )
 
     @classmethod
     def mysql_healthcheck(cls, *args, **kwargs):
         """Mysql healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
-        password = kwargs['project_shortname']
+        filepath = kwargs["filepath"]
+        verbose = kwargs["verbose"]
+        password = kwargs["project_shortname"]
 
-        return run_cmd([
-            "docker-compose", "--file", filepath,
-            "exec", "-T", "db", "bash", "-c",
-            f"mysql -p{password} -e \"select Version();\"",
-        ])
+        return run_cmd(
+            [
+                "docker-compose",
+                "--file",
+                filepath,
+                "exec",
+                "-T",
+                "db",
+                "bash",
+                "-c",
+                f'mysql -p{password} -e "select Version();"',
+            ]
+        )
 
     @classmethod
     def redis_healthcheck(cls, *args, **kwargs):
         """Redis healthcheck."""
-        filepath = kwargs['filepath']
-        verbose = kwargs['verbose']
+        filepath = kwargs["filepath"]
+        verbose = kwargs["verbose"]
 
-        return run_cmd([
-            "docker-compose", "--file", filepath,
-            "exec", "-T", "cache", "bash", "-c",
-            "redis-cli ping", "|", "grep 'PONG'", "&>/dev/null;",
-        ])
+        return run_cmd(
+            [
+                "docker-compose",
+                "--file",
+                filepath,
+                "exec",
+                "-T",
+                "cache",
+                "bash",
+                "-c",
+                "redis-cli ping",
+                "|",
+                "grep 'PONG'",
+                "&>/dev/null;",
+            ]
+        )
 
     @classmethod
     def wait_for_services(
@@ -102,18 +129,21 @@ class ServicesHealthCommands(object):
             )
             while not ready and try_ < max_retries:
                 click.secho(
-                    f"{service} not ready at {try_} retries, waiting " +
-                    f"{exp_backoff_time}s",
-                    fg="yellow"
+                    f"{service} not ready at {try_} retries, waiting "
+                    + f"{exp_backoff_time}s",
+                    fg="yellow",
                 )
                 try_ += 1
                 time.sleep(exp_backoff_time)
                 exp_backoff_time *= 2
-                ready = check(
-                    filepath=filepath,
-                    verbose=verbose,
-                    project_shortname=project_shortname,
-                ).status_code == 0
+                ready = (
+                    check(
+                        filepath=filepath,
+                        verbose=verbose,
+                        project_shortname=project_shortname,
+                    ).status_code
+                    == 0
+                )
 
             if not ready:
                 click.secho(f"Unable to boot up {service}", fg="red")
@@ -123,9 +153,9 @@ class ServicesHealthCommands(object):
 
 
 HEALTHCHECKS = {
-    "es": ServicesHealthCommands.es_healthcheck,
+    "search": ServicesHealthCommands.search_healthcheck,
     "postgresql": ServicesHealthCommands.postgresql_healthcheck,
     "mysql": ServicesHealthCommands.mysql_healthcheck,
-    "redis": ServicesHealthCommands.redis_healthcheck
+    "redis": ServicesHealthCommands.redis_healthcheck,
 }
 """Health check functions module path, as string."""

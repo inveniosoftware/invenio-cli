@@ -12,19 +12,13 @@ from invenio_cli.commands.requirements import RequirementsCommands
 
 def test_check_requirements():
     # major
-    ok_major_higher = RequirementsCommands._check_version(
-        "random", "2.0.0", major=1
-    )
+    ok_major_higher = RequirementsCommands._check_version("random", "2.0.0", major=1)
     assert ok_major_higher.status_code == 0
 
-    ok_major_equal = RequirementsCommands._check_version(
-        "random", "2.0.0", major=2
-    )
+    ok_major_equal = RequirementsCommands._check_version("random", "2.0.0", major=2)
     assert ok_major_equal.status_code == 0
 
-    ok_major_lower = RequirementsCommands._check_version(
-        "random", "2.0.0", major=3
-    )
+    ok_major_lower = RequirementsCommands._check_version("random", "2.0.0", major=3)
     assert ok_major_lower.status_code == 1
 
     # minor

@@ -22,20 +22,19 @@ class RequirementsCommands(object):
     @classmethod
     def _version_from_string(cls, string):
         """Gets the version from a given string."""
-        groups = re.search(r'[0-9]*\.[0-9]*\.[0-9]*', string)
+        groups = re.search(r"[0-9]*\.[0-9]*\.[0-9]*", string)
         return groups.group(0)
 
     @classmethod
-    def _check_version(cls, binary, version,
-                       major, minor=-1, patch=-1, exact=False):
+    def _check_version(cls, binary, version, major, minor=-1, patch=-1, exact=False):
         """Checks a version."""
-        parts = version.split('.')
+        parts = version.split(".")
 
         if len(parts) != 3:
             return ProcessResponse(
                 error=f"{binary} incorrect version format or not found. "
-                      "Check that it is installed correctly",
-                status_code=1
+                "Check that it is installed correctly",
+                status_code=1,
             )
 
         parts = [int(num) for num in parts]
@@ -56,8 +55,7 @@ class RequirementsCommands(object):
 
         if version_ok:
             return ProcessResponse(
-                output=f"{binary} version OK. Got {version}.",
-                status_code=0
+                output=f"{binary} version OK. Got {version}.", status_code=0
             )
 
         expected_version = major
@@ -67,18 +65,31 @@ class RequirementsCommands(object):
                 expected_version = f"{major}.{minor}.{patch}"
 
         return ProcessResponse(
-            error=f"{binary} wrong version."
-                  f"Got {parts} expected {expected_version}",
-            status_code=1
+            error=f"{binary} wrong version." f"Got {parts} expected {expected_version}",
+            status_code=1,
         )
 
     @classmethod
     def check_node_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the node version."""
         # Output comes in the form of 'v14.4.0\n'
-        result = run_cmd(["node", "--version"])
-        version = cls._version_from_string(result.output.strip())
-        return cls._check_version("Node", version, major, minor, patch, exact)
+        try:
+            result = run_cmd(["node", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version("Node", version, major, minor, patch, exact)
+        except Exception as err:
+            return ProcessResponse(error=f"Node not found. Got {err}.", status_code=1)
+
+    @classmethod
+    def check_npm_version(cls, major, minor=-1, patch=-1, exact=False):
+        """Check the npm version."""
+        # Output comes in the form of '6.14.13\n'
+        try:
+            result = run_cmd(["npm", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version("NPM", version, major, minor, patch, exact)
+        except Exception as err:
+            return ProcessResponse(error=f"NPM not found. Got {err}.", status_code=1)
 
     @classmethod
     def check_python_version(cls, major, minor=-1, patch=-1, exact=False):
@@ -93,8 +104,7 @@ class RequirementsCommands(object):
             version_info.micro,
         )
 
-        return cls._check_version(
-            "Python", version, major, minor, patch, exact)
+        return cls._check_version("Python", version, major, minor, patch, exact)
 
     @classmethod
     def check_docker_version(cls, major, minor=-1, patch=-1, exact=False):
@@ -104,15 +114,12 @@ class RequirementsCommands(object):
         try:
             result = run_cmd(["docker", "--version"])
             version = cls._version_from_string(result.output.strip())
-            return cls._check_version(
-                "Docker", version, major, minor, patch, exact)
+            return cls._check_version("Docker", version, major, minor, patch, exact)
         except Exception as err:
-            return ProcessResponse(
-                error=f"Docker not found. Got {err}.", status_code=1)
+            return ProcessResponse(error=f"Docker not found. Got {err}.", status_code=1)
 
     @classmethod
-    def check_docker_compose_version(cls, major, minor=-1, patch=-1,
-                                     exact=False):
+    def check_docker_compose_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the docker compose version."""
         # Output comes in the form of
         # 'docker-compose version 1.27.4, build 4484c46d9d\n'
@@ -128,8 +135,7 @@ class RequirementsCommands(object):
             )
 
     @classmethod
-    def check_imagemagick_version(cls, major, minor=-1, patch=-1,
-                                  exact=False):
+    def check_imagemagick_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the ImageMagick version."""
         # Output comes in the form of 'ImageMagick, version 7.0.11-13\n'
         try:
@@ -145,23 +151,41 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_git_version(cls, major, minor=-1, patch=-1, exact=False):
+        """Check the git version."""
+        # Output comes in the form of 'git version 2.36.1\n'
+        try:
+            result = run_cmd(["git", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version("git", version, major, minor, patch, exact)
+        except Exception as err:
+            return ProcessResponse(
+                error=f"git not found. Got {err}.",
+                status_code=1,
+            )
+
+    @classmethod
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
-        result = run_cmd(["pipenv", "--version"])
+        try:
+            result = run_cmd(["pipenv", "--version"])
 
-        parts = result.output.strip().split(',')
-        if parts[0] != 'pipenv':
+            parts = result.output.strip().split(",")
+            if parts[0] != "pipenv":
+                # this might happen if 'pipenv' points to a different binary
+                return ProcessResponse(
+                    error=f"Pipenv not found. Got {parts[0]}.", status_code=1
+                )
+
+            version = cls._version_from_string(parts[1])
+
             return ProcessResponse(
-                error=f"Pipenv not found. Got {result.error}.",
-                status_code=1
+                output=f"Pipenv OK. Got version {version}.", status_code=0
             )
-
-        version = cls._version_from_string(parts[1])
-
-        return ProcessResponse(
-                output=f"Pipenv OK. Got version {version}.",
-                status_code=0
+        except Exception as err:
+            return ProcessResponse(
+                error=f"Pipenv not found. Got {result.error}.", status_code=1
             )
 
     @classmethod
@@ -171,8 +195,23 @@ class RequirementsCommands(object):
             FunctionStep(
                 func=cls.check_node_version,
                 args={"major": 14, "exact": True},
-                message="Checking Node version..."
-            )
+                message="Checking Node version...",
+            ),
+            FunctionStep(
+                func=cls.check_npm_version,
+                args={"major": 6, "exact": True},
+                message="Checking NPM version...",
+            ),
+            FunctionStep(
+                func=cls.check_imagemagick_version,
+                args={"major": 0, "minor": 0},
+                message="Checking ImageMagick version...",
+            ),
+            FunctionStep(
+                func=cls.check_git_version,
+                args={"major": 0, "minor": 0},
+                message="Checking git version...",
+            ),
         ]
 
         return steps
@@ -184,28 +223,22 @@ class RequirementsCommands(object):
             FunctionStep(
                 func=cls.check_python_version,
                 args={"major": 3, "minor": 6},
-                message="Checking Python version..."
+                message="Checking Python version...",
             ),
             FunctionStep(
                 func=cls.check_pipenv_installed,
-                message="Checking Pipenv is installed..."
+                message="Checking Pipenv is installed...",
             ),
             FunctionStep(
                 func=cls.check_docker_version,
                 args={"major": 0, "minor": 0},
-                message="Checking Docker version..."
+                message="Checking Docker version...",
             ),
             FunctionStep(
                 func=cls.check_docker_compose_version,
                 args={"major": 1, "minor": 17},
-                message="Checking Docker Compose version..."
+                message="Checking Docker Compose version...",
             ),
-            FunctionStep(
-                func=cls.check_imagemagick_version,
-                args={"major": 0, "minor": 0},
-                message="Checking ImageMagick version...",
-                skippable=True,
-            )
         ]
 
         if development:

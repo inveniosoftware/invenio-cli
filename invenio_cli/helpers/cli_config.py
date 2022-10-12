@@ -27,22 +27,20 @@ class CLIConfig(object):
                          (not version controlled)
     """
 
-    CONFIG_FILENAME = '.invenio'
-    PRIVATE_CONFIG_FILENAME = '.invenio.private'
-    CLI_SECTION = 'cli'
-    COOKIECUTTER_SECTION = 'cookiecutter'
-    FILES_SECTION = 'files'
+    CONFIG_FILENAME = ".invenio"
+    PRIVATE_CONFIG_FILENAME = ".invenio.private"
+    CLI_SECTION = "cli"
+    COOKIECUTTER_SECTION = "cookiecutter"
+    FILES_SECTION = "files"
 
-    def __init__(self, project_dir='./'):
+    def __init__(self, project_dir="./"):
         """Constructor.
 
         :param config_dir: Path to general cli config file.
         """
         self.config_path = Path(project_dir) / self.CONFIG_FILENAME
         self.config = ConfigParser()
-        self.private_config_path = (
-            Path(project_dir) / self.PRIVATE_CONFIG_FILENAME
-        )
+        self.private_config_path = Path(project_dir) / self.PRIVATE_CONFIG_FILENAME
         self.private_config = ConfigParser()
 
         try:
@@ -71,7 +69,7 @@ class CLIConfig(object):
 
         If not set yet, raises an InvenioCLIConfigError.
         """
-        path = self.private_config[CLIConfig.CLI_SECTION].get('instance_path')
+        path = self.private_config[CLIConfig.CLI_SECTION].get("instance_path")
         if path:
             return Path(path)
         else:
@@ -79,60 +77,69 @@ class CLIConfig(object):
 
     def update_instance_path(self, new_instance_path):
         """Updates path to application instance directory."""
-        self.private_config[CLIConfig.CLI_SECTION]['instance_path'] = \
-            str(new_instance_path)
+        self.private_config[CLIConfig.CLI_SECTION]["instance_path"] = str(
+            new_instance_path
+        )
 
-        with open(self.private_config_path, 'w') as configfile:
+        with open(self.private_config_path, "w") as configfile:
             self.private_config.write(configfile)
 
         return ProcessResponse(
             output=f"Instance path updated (new value {new_instance_path}).",
-            status_code=0
+            status_code=0,
         )
 
     def get_services_setup(self):
         """Returns bool whether services have been setup or not."""
-        return self.private_config.getboolean(
-            CLIConfig.CLI_SECTION, 'services_setup'
-        )
+        return self.private_config.getboolean(CLIConfig.CLI_SECTION, "services_setup")
 
     def update_services_setup(self, is_setup):
         """Updates path to application instance directory."""
-        self.private_config[CLIConfig.CLI_SECTION]['services_setup'] = \
-            str(is_setup)
+        self.private_config[CLIConfig.CLI_SECTION]["services_setup"] = str(is_setup)
 
-        with open(self.private_config_path, 'w') as configfile:
+        with open(self.private_config_path, "w") as configfile:
             self.private_config.write(configfile)
 
         return ProcessResponse(
             output=f"Service setup status updated (new value {is_setup}).",
-            status_code=0
+            status_code=0,
         )
 
     def get_project_shortname(self):
         """Returns the project's shortname."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION]['project_shortname']
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
 
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION]['database']
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]
 
-    def get_es_version(self):
-        """Returns the database type (mysql, postgresql)."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION]['elasticsearch']
+    def get_search_type(self):
+        """Returns the search type (opensearch1, elasticsearch7)."""
+        sections = self.config[CLIConfig.COOKIECUTTER_SECTION]
+        if "elasticsearch" in sections:
+            # cookiecutter < v10
+            version = sections["elasticsearch"]
+            return f"elasticsearch{version}"
+        elif "search" in sections:
+            # cookiecutter >= v10
+            return sections["search"]
+        else:
+            raise InvenioCLIConfigError(
+                "`search` or `elasticsearch` field not set in .invenio file"
+            )
 
     def get_file_storage(self):
         """Returns the file storage (local, s3, etc.)."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION]['file_storage']
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["file_storage"]
 
     @classmethod
     def _write_private_config(cls, project_dir):
         """Write per-instance config file."""
         config_parser = ConfigParser()
         config_parser[cls.CLI_SECTION] = {}
-        config_parser[cls.CLI_SECTION]['services_setup'] = str(False)
+        config_parser[cls.CLI_SECTION]["services_setup"] = str(False)
         private_config_path = project_dir / cls.PRIVATE_CONFIG_FILENAME
-        with open(private_config_path, 'w') as configfile:
+        with open(private_config_path, "w") as configfile:
             config_parser.write(configfile)
 
     @classmethod
@@ -150,8 +157,8 @@ class CLIConfig(object):
 
         # Internal to Invenio-cli section
         config_parser[cls.CLI_SECTION] = {}
-        config_parser[cls.CLI_SECTION]['flavour'] = flavour
-        config_parser[cls.CLI_SECTION]['logfile'] = '/logs/invenio-cli.log'
+        config_parser[cls.CLI_SECTION]["flavour"] = flavour
+        config_parser[cls.CLI_SECTION]["logfile"] = "/logs/invenio-cli.log"
 
         # Cookiecutter user input section
         config_parser[cls.COOKIECUTTER_SECTION] = {}
@@ -162,7 +169,7 @@ class CLIConfig(object):
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)
 
         config_path = project_dir / cls.CONFIG_FILENAME
-        with open(config_path, 'w') as configfile:
+        with open(config_path, "w") as configfile:
             config_parser.write(configfile)
 
         # Custom to machine (not version controlled)

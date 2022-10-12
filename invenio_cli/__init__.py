@@ -8,6 +8,7 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-from .version import __version__
 
-__all__ = ('__version__',)
+__version__ = "1.0.7"
+
+__all__ = ("__version__",)

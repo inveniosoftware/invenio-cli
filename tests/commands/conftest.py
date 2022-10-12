@@ -18,15 +18,16 @@ import pytest
 @pytest.fixture
 def mock_cli_config():
     """Mock CLIConfig object."""
+
     class MockCLIConfig(object):
         def __init__(self):
             self.services_setup = False
 
         def get_project_dir(self):
-            return Path('project_dir')
+            return Path("project_dir")
 
         def get_instance_path(self):
-            return Path('instance_dir')
+            return Path("instance_dir")
 
         def get_services_setup(self):
             return self.services_setup
@@ -35,13 +36,13 @@ def mock_cli_config():
             self.services_setup = bool(is_setup)
 
         def get_project_shortname(self):
-            return 'project-shortname'
+            return "project-shortname"
 
         def get_db_type(self):
-            return 'postgresql'
+            return "postgresql"
 
         def get_file_storage(self):
-            return 'local'
+            return "local"
 
     return MockCLIConfig()
 
@@ -50,10 +51,7 @@ def mock_cli_config():
 def mocked_pipe():
     """Mock success return subprocess pipe for popen."""
     mocked_pipe = Mock()
-    attrs = {
-        'communicate.return_value': (b'output', b'error'),
-        'returncode': 0
-    }
+    attrs = {"communicate.return_value": (b"output", b"error"), "returncode": 0}
     mocked_pipe.configure_mock(**attrs)
     return mocked_pipe
 
@@ -61,4 +59,4 @@ def mocked_pipe():
 @pytest.fixture()
 def testpkg():
     """Test package.json file."""
-    return str(Path(__file__).parent / 'testpkg')
+    return str(Path(__file__).parent / "testpkg")

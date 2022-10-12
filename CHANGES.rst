@@ -8,6 +8,22 @@
 Changes
 =======
 
+Version 1.0.7 (released 2022-10-10)
+
+- Fix compat issue with RDM versions < v10
+
+Version 1.0.6 (released 2022-10-10)
+
+- Bump default RDM version.
+
+Version 1.0.5 (released 2022-05-31)
+
+- Bump click version.
+- Bump default RDM version.
+- Improve error handling.
+- Add check for npm version.
+- Move ImageMagick check to --development.
+
 Version 1.0.4 (released 2022-02-14)
 
 - Fixes an issue with virtualenv 20.13.1+ brining in setuptools 60.x which is

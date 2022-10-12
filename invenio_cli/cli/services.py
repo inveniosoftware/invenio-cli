@@ -33,14 +33,30 @@ def start(cli_config):
 
 
 @services.command()
-@click.option('-f', '--force', default=False, is_flag=True,
-              help='Force recreation of db tables, ES indices, queues...')
-@click.option('-N', '--no-demo-data', default=False, is_flag=True,
-              help='Disable the creation of demo data')
-@click.option('--stop-services', default=False, is_flag=True,
-              help='Stop containers after setup.')
-@click.option('--services/--no-services', '-s/-n',  default=True, is_flag=True,
-              help='Enable/disable dockerized services (default: enabled).')
+@click.option(
+    "-f",
+    "--force",
+    default=False,
+    is_flag=True,
+    help="Force recreation of db tables, search indices, queues...",
+)
+@click.option(
+    "-N",
+    "--no-demo-data",
+    default=False,
+    is_flag=True,
+    help="Disable the creation of demo data",
+)
+@click.option(
+    "--stop-services", default=False, is_flag=True, help="Stop containers after setup."
+)
+@click.option(
+    "--services/--no-services",
+    "-s/-n",
+    default=True,
+    is_flag=True,
+    help="Enable/disable dockerized services (default: enabled).",
+)
 @pass_cli_config
 def setup(cli_config, force, no_demo_data, stop_services, services):
     """Setup local services."""
@@ -56,29 +72,34 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
 
 # FIXME: Duplicated code from containers.py
 @services.command()
-@click.option('-v', '--verbose', default=False, is_flag=True, required=False,
-              help='Verbose mode will show all logs in the console.')
+@click.option(
+    "-v",
+    "--verbose",
+    default=False,
+    is_flag=True,
+    required=False,
+    help="Verbose mode will show all logs in the console.",
+)
 @pass_cli_config
 def status(cli_config, verbose):
     """Checks if the services are up and running.
 
-    NOTE: currently only ES, DB (postgresql/mysql) and redis are supported.
+    NOTE: currently only search (OS/ES), DB (postgresql/mysql) and redis are supported.
     """
     commands = ServicesCommands(cli_config)
-    services = ["redis", cli_config.get_db_type(), "es"]
+    services = ["redis", cli_config.get_db_type(), "search"]
     statuses = commands.status(services=services, verbose=verbose)
 
     messages = [
         {"message": "{}: up and running.", "fg": "green"},
         {"message": "{}: unable to connect or bad response.", "fg": "red"},
-        {"message": "{}: no healthcheck function defined.", "fg": "yellow"}
+        {"message": "{}: no healthcheck function defined.", "fg": "yellow"},
     ]
 
     for idx, status in enumerate(statuses):
         message = messages[status]
         click.secho(
-            message=message.get("message").format(services[idx]),
-            fg=message.get("fg")
+            message=message.get("message").format(services[idx]), fg=message.get("fg")
         )
 
 
