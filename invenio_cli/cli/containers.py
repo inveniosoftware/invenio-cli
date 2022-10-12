@@ -21,7 +21,7 @@ def containers():
 
 @containers.command()
 @click.option('--pull/--no-pull', default=True, is_flag=True,
-              help='Download newer versions of the images (default: Download).')
+              help='Download/or not newer versions of the images (default: pull).')
 @click.option('--cache/--no-cache', default=True, is_flag=True,
               help='Enable/Disable cache (default: Enable).')
 @pass_cli_config
