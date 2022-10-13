@@ -46,7 +46,11 @@ class LocalCommands(Commands):
         """Copy project's statics and assets into instance dir."""
         click.secho("Copying project statics and assets...", fg="green")
 
-        if os.path.isdir("static"):
+        # static and assets folders do not exist in non-RDM contexts
+        rdm_static_dir_exists = os.path.exists("static")
+        rdm_assets_dir_exists = os.path.exists("assets")
+
+        if rdm_static_dir_exists:
             static = "static"
             src_dir = self.cli_config.get_project_dir() / static
             src_dir = str(src_dir)  # copy_tree below doesn't accept Path objects
@@ -55,7 +59,7 @@ class LocalCommands(Commands):
             # using it for a different purpose then intended but very useful
             copy_tree(src_dir, dst_dir)
 
-        if os.path.isdir("assets"):
+        if rdm_assets_dir_exists:
             assets = "assets"
             src_dir = self.cli_config.get_project_dir() / assets
             src_dir = str(src_dir)

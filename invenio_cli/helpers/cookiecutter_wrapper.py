@@ -74,23 +74,7 @@ class CookiecutterWrapper(object):
                 or "https://github.com/inveniosoftware/cookiecutter-invenio-ils.git"
             )
             self.template_name = self.extract_template_name(self.template)
-            self.checkout = self.checkout or "v1.0rc1"
-
-        if self.flavour.upper() == "ILS":
-            self.template = (
-                self.template_name
-                or "https://github.com/inveniosoftware/cookiecutter-invenio-ils.git"
-            )
-            self.template_name = self.extract_template_name(self.template)
-            self.checkout = self.checkout or "v1.0rc1"
-
-        if self.flavour.upper() == "ILS":
-            self.template = (
-                self.template_name
-                or "https://github.com/inveniosoftware/cookiecutter-invenio-ils.git"
-            )
-            self.template_name = self.extract_template_name(self.template)
-            self.checkout = self.checkout or "v1.0rc1"
+            self.checkout = self.checkout or "v1.0.0rc.1"
 
     def cookiecutter(self):
         """Wrap cookiecutter call."""
