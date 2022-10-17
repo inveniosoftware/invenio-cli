@@ -18,7 +18,9 @@ class PackagesCommands(object):
     """Local installation commands."""
 
     @staticmethod
-    def install_packages(packages, log_file=None):
+    def install_packages(
+        packages, log_file=None, message="Installing python dependencies..."
+    ):
         """Steps to install Python packages.
 
         It is a class method since it does not require any configuration.
@@ -32,7 +34,7 @@ class PackagesCommands(object):
             CommandStep(
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message="Installing python dependencies...",
+                message=message,
                 log_file=log_file,
             )
         ]

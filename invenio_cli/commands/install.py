@@ -64,6 +64,14 @@ class InstallCommands(LocalCommands):
     def install(self, pre, dev=False, flask_env="production"):
         """Development installation steps."""
         steps = self.install_py_dependencies(pre=pre, dev=dev)
+
+        steps.extend(
+            PackagesCommands.install_packages(
+                [self.cli_config.get_project_dir() / "code"],
+                message="Installing instance python code...",
+            ),
+        )
+
         steps.append(
             FunctionStep(
                 func=self.update_instance_path, message="Updating instance path..."
