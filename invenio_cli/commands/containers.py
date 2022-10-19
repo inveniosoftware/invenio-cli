@@ -8,6 +8,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers.docker_helper import DockerHelper
+from ..helpers.rdm import rdm_version
 from .packages import PackagesCommands
 from .services import ServicesCommands
 from .steps import FunctionStep
@@ -173,6 +174,21 @@ class ContainersCommands(ServicesCommands):
 
         return steps
 
+    def static_pages(self, project_shortname):
+        """Steps to set up the static pages for the instance."""
+        steps = [
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": "invenio rdm pages create",
+                },
+                message="Creating static pages...",
+            )
+        ]
+
+        return steps
+
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Return the steps to setup containerize services.
 
@@ -197,6 +213,8 @@ class ContainersCommands(ServicesCommands):
 
         steps.extend(self._setup(project_shortname))
         steps.extend(self.fixtures(project_shortname))
+        if rdm_version()[0] >= 11:
+            steps.extend(self.static_pages(project_shortname))
 
         if demo_data:
             steps.extend(self.demo(project_shortname))
