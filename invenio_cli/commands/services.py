@@ -249,6 +249,19 @@ class ServicesCommands(Commands):
 
         return steps
 
+    def static_pages(self):
+        """Steps to set up the static pages for the instance."""
+        command = ["pipenv", "run", "invenio", "rdm", "pages", "create"]
+        steps = [
+            CommandStep(
+                cmd=command,
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating static pages...",
+            )
+        ]
+
+        return steps
+
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Steps to setup services' containers.
 
@@ -269,6 +282,8 @@ class ServicesCommands(Commands):
 
         steps.extend(self._setup())
         steps.extend(self.fixtures())
+        if rdm_version()[0] >= 11:
+            steps.extend(self.static_pages())
 
         if demo_data:
             steps.extend(self.demo())
