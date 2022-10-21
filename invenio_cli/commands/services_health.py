@@ -118,14 +118,8 @@ class ServicesHealthCommands(object):
         check = HEALTHCHECKS[service]
         check_func = check["func"]
         initial_delay = check.get("initial_delay", 0)
+        wait_initial_delay = initial_delay > 0
         ready = False
-
-        # some services might particularly slow to start up
-        if initial_delay > 0:
-            print_func(
-                f"{service} starting up, checking in {initial_delay}s...",
-            )
-            time.sleep(initial_delay)
 
         while not ready and try_ < max_retries:
             response = check_func(
@@ -134,14 +128,25 @@ class ServicesHealthCommands(object):
                 project_shortname=project_shortname,
             )
             ready = response.status_code == 0
+
             if not ready:
-                print_func(
-                    f"{service} not ready at {try_} retries, waiting "
-                    + f"{exp_backoff_time}s...",
-                )
+                is_first_check = try_ == 1
+
+                # some services might be particularly slow to start up
+                if is_first_check and wait_initial_delay:
+                    print_func(
+                        f"{service} starting up, checking in {initial_delay}s...",
+                    )
+                    time.sleep(initial_delay)
+                else:
+                    print_func(
+                        f"{service} not ready at {try_} retries, waiting "
+                        + f"{exp_backoff_time}s...",
+                    )
+                    time.sleep(exp_backoff_time)
+                    exp_backoff_time *= 2
+
                 try_ += 1
-                time.sleep(exp_backoff_time)
-                exp_backoff_time *= 2
 
         return ready
 
