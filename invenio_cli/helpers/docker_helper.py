@@ -43,6 +43,21 @@ class DockerHelper(object):
         else:
             return project_shortname
 
+    def _get_container_from_service(self, service_name):
+        """Retrieve the docker container for the given service_name."""
+        container_name = [
+            container.name
+            for container in self.docker_client.containers.list()
+            if container.name.startswith(self.container_prefix)
+            and service_name in container.name
+        ]
+
+        return (
+            self.docker_client.containers.get(container_name[0])
+            if container_name
+            else None
+        )
+
     def build_images(self, pull=False, cache=True):
         """Build images.
 
@@ -100,15 +115,21 @@ class DockerHelper(object):
 
     def execute_cli_command(self, project_shortname, command):
         """Execute an invenio CLI command in the API container."""
-        container_name = "{}_web-ui_1".format(self.container_prefix)
-        container = self.docker_client.containers.get(container_name)
-        status = container.exec_run(
-            cmd='/bin/bash -c "{}"'.format(command.replace('"', '\\"')),
-            tty=True,
-            stdout=True,
-            stderr=True,
-        )
-        # FIXME: What happens when exec_run fails? handle exception.
-        return ProcessResponse(
-            output=status.output.decode("utf-8").strip(), status_code=status.exit_code
-        )
+        container = self._get_container_from_service("web-ui")
+        if container:
+            status = container.exec_run(
+                cmd='/bin/bash -c "{}"'.format(command.replace('"', '\\"')),
+                tty=True,
+                stdout=True,
+                stderr=True,
+            )
+            # FIXME: What happens when exec_run fails? handle exception.
+            return ProcessResponse(
+                output=status.output.decode("utf-8").strip(),
+                status_code=status.exit_code,
+            )
+        else:
+            return ProcessResponse(
+                output="Web UI container not found. Is it up and running?",
+                status_code=1,
+            )
