@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.11 (released 2022-10-24)
+
+- Add support for InvenioILS
+
 Version 1.0.8 (released 2022-10-13)
 
 - Fix issue when checking for services to be up
