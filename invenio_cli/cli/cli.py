@@ -86,7 +86,7 @@ def pyshell(debug):
 @invenio_cli.command()
 @click.argument(
     "flavour",
-    type=click.Choice(["RDM"], case_sensitive=False),
+    type=click.Choice(["RDM", "ILS"], case_sensitive=False),
     default="RDM",
     required=False,
 )

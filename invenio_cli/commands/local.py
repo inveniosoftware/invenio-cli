@@ -8,6 +8,7 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import os
 import signal
 from distutils.dir_util import copy_tree
 from os import environ
@@ -45,22 +46,28 @@ class LocalCommands(Commands):
         """Copy project's statics and assets into instance dir."""
         click.secho("Copying project statics and assets...", fg="green")
 
-        static = "static"
-        src_dir = self.cli_config.get_project_dir() / static
-        src_dir = str(src_dir)  # copy_tree below doesn't accept Path objects
-        dst_dir = self.cli_config.get_instance_path() / static
-        dst_dir = str(dst_dir)
-        # using it for a different purpose then intended but very useful
-        copy_tree(src_dir, dst_dir)
+        # static and assets folders do not exist in non-RDM contexts
+        rdm_static_dir_exists = os.path.exists("static")
+        rdm_assets_dir_exists = os.path.exists("assets")
 
-        assets = "assets"
-        src_dir = self.cli_config.get_project_dir() / assets
-        src_dir = str(src_dir)
-        dst_dir = self.cli_config.get_instance_path() / assets
-        dst_dir = str(dst_dir)
-        # The full path to the files that were copied is returned
-        copied_files = copy_tree(src_dir, dst_dir)
-        return copied_files
+        if rdm_static_dir_exists:
+            static = "static"
+            src_dir = self.cli_config.get_project_dir() / static
+            src_dir = str(src_dir)  # copy_tree below doesn't accept Path objects
+            dst_dir = self.cli_config.get_instance_path() / static
+            dst_dir = str(dst_dir)
+            # using it for a different purpose then intended but very useful
+            copy_tree(src_dir, dst_dir)
+
+        if rdm_assets_dir_exists:
+            assets = "assets"
+            src_dir = self.cli_config.get_project_dir() / assets
+            src_dir = str(src_dir)
+            dst_dir = self.cli_config.get_instance_path() / assets
+            dst_dir = str(dst_dir)
+            # The full path to the files that were copied is returned
+            return copy_tree(src_dir, dst_dir)
+        return []
 
     def update_statics_and_assets(self, force, flask_env="production", log_file=None):
         """High-level command to update less/js/images/... files.
