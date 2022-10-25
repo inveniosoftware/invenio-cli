@@ -132,6 +132,14 @@ class CLIConfig(object):
         """Returns the file storage (local, s3, etc.)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["file_storage"]
 
+    def get_author_email(self):
+        """Returns the email of the author/owner of the project."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["author_email"]
+
+    def get_author_name(self):
+        """Returns the name of the author/owner of the project."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION]["author_name"]
+
     @classmethod
     def _write_private_config(cls, project_dir):
         """Write per-instance config file."""

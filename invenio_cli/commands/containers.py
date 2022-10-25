@@ -12,6 +12,7 @@ from ..helpers.rdm import rdm_version
 from .packages import PackagesCommands
 from .services import ServicesCommands
 from .steps import FunctionStep
+from .translations import TranslationsCommands
 
 
 class ContainersCommands(ServicesCommands):
@@ -142,6 +143,32 @@ class ContainersCommands(ServicesCommands):
             ),
         ]
 
+        if rdm_version()[0] >= 10:
+            steps.extend(
+                [
+                    FunctionStep(
+                        func=self.docker_helper.execute_cli_command,
+                        args={
+                            "project_shortname": project_shortname,
+                            "command": "invenio rdm-records custom-fields init",
+                        },
+                        message="Creating custom fields for records...",
+                    ),
+                    FunctionStep(
+                        func=self.docker_helper.execute_cli_command,
+                        args={
+                            "project_shortname": project_shortname,
+                            "command": "invenio communities custom-fields init",
+                        },
+                        message="Creating custom fields for communities...",
+                    ),
+                ]
+            )
+
+        if rdm_version()[0] >= 11:
+            steps.extend(self.static_pages(project_shortname))
+            steps.extend(self.translations(project_shortname))
+
         return steps
 
     def demo(self, project_shortname):
@@ -189,6 +216,31 @@ class ContainersCommands(ServicesCommands):
 
         return steps
 
+    def translations(self, project_shortname):
+        """Steps to compile translations for the instance."""
+        commands = TranslationsCommands(
+            project_path=self.cli_config.get_project_dir(),
+            instance_path=self.cli_config.get_instance_path(),
+        )
+        cmd = commands.compile(
+            # instance path inside the container
+            directory="${INVENIO_INSTANCE_PATH}/translations",
+            symlink=False,
+        )
+        cmd = cmd[0].cmd  # extract compilation command
+        cmd = " ".join(cmd)  # convert to string
+
+        return [
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": cmd,
+                },
+                message="Compilating message catalog...",
+            ),
+        ]
+
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Return the steps to setup containerize services.
 
@@ -213,8 +265,6 @@ class ContainersCommands(ServicesCommands):
 
         steps.extend(self._setup(project_shortname))
         steps.extend(self.fixtures(project_shortname))
-        if rdm_version()[0] >= 11:
-            steps.extend(self.static_pages(project_shortname))
 
         if demo_data:
             steps.extend(self.demo(project_shortname))
