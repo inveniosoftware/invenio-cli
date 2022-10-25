@@ -15,6 +15,7 @@ from .local import LocalCommands
 from .packages import PackagesCommands
 from .requirements import RequirementsCommands
 from .services import ServicesCommands
+from .translations import TranslationsCommands
 from .upgrade import UpgradeCommands
 
 __all__ = (
@@ -26,5 +27,6 @@ __all__ = (
     "PackagesCommands",
     "RequirementsCommands",
     "ServicesCommands",
+    "TranslationsCommands",
     "UpgradeCommands",
 )

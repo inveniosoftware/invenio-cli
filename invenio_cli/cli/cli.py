@@ -29,6 +29,7 @@ from .containers import containers
 from .install import install
 from .packages import packages
 from .services import services
+from .translations import translations
 from .utils import handle_process_response, pass_cli_config, run_steps
 
 
@@ -44,6 +45,7 @@ invenio_cli.add_command(containers)
 invenio_cli.add_command(install)
 invenio_cli.add_command(packages)
 invenio_cli.add_command(services)
+invenio_cli.add_command(translations)
 
 
 @invenio_cli.command("check-requirements")

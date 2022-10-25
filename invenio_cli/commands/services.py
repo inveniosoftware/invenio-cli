@@ -10,6 +10,8 @@
 
 import click
 
+from invenio_cli.commands.translations import TranslationsCommands
+
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse
 from ..helpers.rdm import rdm_version
@@ -214,6 +216,10 @@ class ServicesCommands(Commands):
                 ]
             )
 
+        if rdm_version()[0] >= 11:
+            steps.extend(self.static_pages())
+            steps.extend(self.translations())
+
         steps.append(
             FunctionStep(
                 func=self.cli_config.update_services_setup,
@@ -262,6 +268,14 @@ class ServicesCommands(Commands):
 
         return steps
 
+    def translations(self):
+        """Steps to compile translations."""
+        commands = TranslationsCommands(
+            project_path=self.cli_config.get_project_dir(),
+            instance_path=self.cli_config.get_instance_path(),
+        )
+        return [commands.compile(symlink=False)[0]]
+
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Steps to setup services' containers.
 
@@ -282,8 +296,6 @@ class ServicesCommands(Commands):
 
         steps.extend(self._setup())
         steps.extend(self.fixtures())
-        if rdm_version()[0] >= 11:
-            steps.extend(self.static_pages())
 
         if demo_data:
             steps.extend(self.demo())
