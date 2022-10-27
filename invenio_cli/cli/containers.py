@@ -25,14 +25,15 @@ def containers():
     "--pull/--no-pull",
     default=True,
     is_flag=True,
-    help="Download newer versions of the images (default: True).",
+    help="Pull/or not newer versions of the images (default: pull).",
 )
 @click.option(
     "--cache/--no-cache",
     default=True,
     is_flag=True,
-    help="Disable cache (default=False).",
+    help="Enable/Disable use of Docker-build cache (default: Enable).",
 )
+
 @pass_cli_config
 def build(cli_config, pull, cache):
     """Build application and service images."""
