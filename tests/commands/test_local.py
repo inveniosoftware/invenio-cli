@@ -113,9 +113,7 @@ def test_update_statics_and_assets(p_run_cmd, p_copy_tree, mock_cli_config):
 
     expected_calls = [
         call(["pipenv", "run", "invenio", "collect", "--verbose"]),
-        call(["pipenv", "run", "invenio", "webpack", "clean", "create"]),
-        call(["pipenv", "run", "invenio", "webpack", "install"]),
-        call(["pipenv", "run", "invenio", "webpack", "build"]),
+        call(["pipenv", "run", "invenio", "webpack", "clean", "buildall"]),
     ]
     assert p_run_cmd.mock_calls == expected_calls
     p_copy_tree.assert_any_call("project_dir/static", "instance_dir/static")

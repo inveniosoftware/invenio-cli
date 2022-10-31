@@ -31,9 +31,7 @@ def expected_setup_calls():
         call("project-shortname", "invenio index init"),
         # update_statics_and_assets call
         call("project-shortname", "invenio collect"),
-        call("project-shortname", "invenio webpack create"),
-        call("project-shortname", "invenio webpack install --unsafe"),
-        call("project-shortname", "invenio webpack build"),
+        call("project-shortname", "invenio webpack buildall"),
     ]
 
 
@@ -88,7 +86,7 @@ def test_containerize_no_install(
     commands.containerize(pre=False, force=False, install=False)
 
     assert (
-        call("project-shortname", "invenio webpack install --unsafe")
+        call("project-shortname", "invenio webpack install")
         not in commands.docker_helper.execute_cli_command.mock_calls
     )
 
@@ -155,9 +153,7 @@ def test_update_statics_and_assets(p_docker_helper, p_run_cmd, mock_cli_config):
 
     expected_execute_cli_calls = [
         call("project-shortname", "invenio collect"),
-        call("project-shortname", "invenio webpack create"),
-        call("project-shortname", "invenio webpack install --unsafe"),
-        call("project-shortname", "invenio webpack build"),
+        call("project-shortname", "invenio webpack buildall"),
     ]
     assert (
         commands.docker_helper.execute_cli_command.mock_calls
