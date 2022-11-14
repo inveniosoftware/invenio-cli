@@ -115,6 +115,7 @@ class TranslationsCommands(Commands):
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
                 message=f"Compiling message catalog...",
+                skippable=True,
             ),
         ]
 
