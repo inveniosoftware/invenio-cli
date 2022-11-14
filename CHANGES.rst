@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.13 (released 2022-11-14)
+
+- Allow compilation command to fail in case of missing catalogs.
+
 Version 1.0.12 (released 2022-10-28)
 
 - Adds support for translations (i18n) management commands.
