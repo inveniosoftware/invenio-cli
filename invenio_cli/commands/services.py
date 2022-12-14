@@ -217,7 +217,6 @@ class ServicesCommands(Commands):
             )
 
         if rdm_version()[0] >= 11:
-            steps.extend(self.static_pages())
             steps.extend(self.translations())
 
         steps.append(
@@ -250,19 +249,6 @@ class ServicesCommands(Commands):
                 cmd=command,
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating fixtures...",
-            )
-        ]
-
-        return steps
-
-    def static_pages(self):
-        """Steps to set up the static pages for the instance."""
-        command = ["pipenv", "run", "invenio", "rdm", "pages", "create"]
-        steps = [
-            CommandStep(
-                cmd=command,
-                env={"PIPENV_VERBOSITY": "-1"},
-                message="Creating static pages...",
             )
         ]
 

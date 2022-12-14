@@ -166,7 +166,6 @@ class ContainersCommands(ServicesCommands):
             )
 
         if rdm_version()[0] >= 11:
-            steps.extend(self.static_pages(project_shortname))
             steps.extend(self.translations(project_shortname))
 
         return steps
@@ -196,21 +195,6 @@ class ContainersCommands(ServicesCommands):
                     "command": "invenio rdm-records fixtures",
                 },
                 message="Creating fixtures...",
-            )
-        ]
-
-        return steps
-
-    def static_pages(self, project_shortname):
-        """Steps to set up the static pages for the instance."""
-        steps = [
-            FunctionStep(
-                func=self.docker_helper.execute_cli_command,
-                args={
-                    "project_shortname": project_shortname,
-                    "command": "invenio rdm pages create",
-                },
-                message="Creating static pages...",
             )
         ]
 
