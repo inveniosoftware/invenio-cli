@@ -166,6 +166,7 @@ class ContainersCommands(ServicesCommands):
             )
 
         if rdm_version()[0] >= 11:
+            steps.extend(self.rdm_fixtures(project_shortname))
             steps.extend(self.translations(project_shortname))
 
         return steps
@@ -194,7 +195,22 @@ class ContainersCommands(ServicesCommands):
                     "project_shortname": project_shortname,
                     "command": "invenio rdm-records fixtures",
                 },
-                message="Creating fixtures...",
+                message="Creating records fixtures...",
+            )
+        ]
+
+        return steps
+
+    def rdm_fixtures(self, project_shortname):
+        """Steps to set up the rdm fixtures for the instance."""
+        steps = [
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": "invenio rdm fixtures",
+                },
+                message="Creating rdm fixtures...",
             )
         ]
 
