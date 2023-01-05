@@ -314,7 +314,6 @@ def test_run(
 @pytest.mark.skip()
 @patch("pynpm.package.run_npm")
 def test_link_js_module(p_run_npm, testpkg, mock_cli_config):
-
     LocalCommands(mock_cli_config).link_js_module(testpkg)
 
     expected_calls = [
@@ -328,7 +327,6 @@ def test_link_js_module(p_run_npm, testpkg, mock_cli_config):
 @pytest.mark.skip()
 @patch("pynpm.package.run_npm")
 def test_watch_js_module(p_run_npm, testpkg, mock_cli_config):
-
     LocalCommands(mock_cli_config).watch_js_module(testpkg, link=False)
 
     expected_calls = [
@@ -340,7 +338,6 @@ def test_watch_js_module(p_run_npm, testpkg, mock_cli_config):
 @pytest.mark.skip()
 @patch("pynpm.package.run_npm")
 def test_watch_js_module_w_build(p_run_npm, testpkg, mock_cli_config):
-
     LocalCommands(mock_cli_config).watch_js_module(testpkg, link=True)
 
     expected_calls = [
