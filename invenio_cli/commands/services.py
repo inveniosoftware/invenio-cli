@@ -217,6 +217,7 @@ class ServicesCommands(Commands):
             )
 
         if rdm_version()[0] >= 11:
+            steps.extend(self.rdm_fixtures())
             steps.extend(self.translations())
 
         steps.append(
@@ -248,7 +249,20 @@ class ServicesCommands(Commands):
             CommandStep(
                 cmd=command,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message="Creating fixtures...",
+                message="Creating records fixtures...",
+            )
+        ]
+
+        return steps
+
+    def rdm_fixtures(self):
+        """Steps to set up the rdm fixtures for the instance."""
+        command = ["pipenv", "run", "invenio", "rdm", "fixtures"]
+        steps = [
+            CommandStep(
+                cmd=command,
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating rdm fixtures...",
             )
         ]
 
