@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.14 (released 2023-01-09)
+
+- Add app-rdm fixtures to setup
+
 Version 1.0.13 (released 2022-11-14)
 
 - Allow compilation command to fail in case of missing catalogs.
