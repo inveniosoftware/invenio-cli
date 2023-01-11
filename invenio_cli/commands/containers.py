@@ -238,6 +238,7 @@ class ContainersCommands(ServicesCommands):
                     "command": cmd,
                 },
                 message="Compilating message catalog...",
+                skippable=True,
             ),
         ]
 
