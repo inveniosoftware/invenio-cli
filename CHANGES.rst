@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.15 (released 2023-01-13)
+
+- Setup: fix empty translation folder failing
+
 Version 1.0.14 (released 2023-01-09)
 
 - Add app-rdm fixtures to setup
