@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.16 (released 2023-01-30)
+
+- bump cookiecutter to v11.0
+
 Version 1.0.15 (released 2023-01-13)
 
 - Setup: fix empty translation folder failing
