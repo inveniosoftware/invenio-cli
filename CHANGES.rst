@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.17 (released 2023-01-30)
+
+- requirements: check node version depending on app-rdm version
+
 Version 1.0.16 (released 2023-01-30)
 
 - bump cookiecutter to v11.0
