@@ -13,6 +13,7 @@ import sys
 from os import listdir
 
 from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
 
 
@@ -191,15 +192,23 @@ class RequirementsCommands(object):
     @classmethod
     def check_dev(cls):
         """Steps to check the development pre-requisites."""
+        if rdm_version()[0] >= 11:
+            node_version = 16
+            npm_version = 7
+        else:
+            # for backwards compatibility with v9 (LTS)
+            node_version = 14
+            npm_version = 6
+
         steps = [
             FunctionStep(
                 func=cls.check_node_version,
-                args={"major": 16, "minor": 14},
+                args={"major": node_version, "exact": True},
                 message="Checking Node version...",
             ),
             FunctionStep(
                 func=cls.check_npm_version,
-                args={"major": 7, "minor": 6},
+                args={"major": npm_version, "exact": True},
                 message="Checking NPM version...",
             ),
             FunctionStep(
