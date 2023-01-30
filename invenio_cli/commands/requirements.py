@@ -194,12 +194,12 @@ class RequirementsCommands(object):
         steps = [
             FunctionStep(
                 func=cls.check_node_version,
-                args={"major": 16, "exact": True},
+                args={"major": 16, "minor": 14},
                 message="Checking Node version...",
             ),
             FunctionStep(
                 func=cls.check_npm_version,
-                args={"major": 7, "exact": True},
+                args={"major": 7, "minor": 6},
                 message="Checking NPM version...",
             ),
             FunctionStep(
