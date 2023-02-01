@@ -220,7 +220,7 @@ class ContainersCommands(ServicesCommands):
         """Steps to compile translations for the instance."""
         commands = TranslationsCommands(
             project_path=self.cli_config.get_project_dir(),
-            instance_path=self.cli_config.get_instance_path(),
+            instance_path="${INVENIO_INSTANCE_PATH}",
         )
         cmd = commands.compile(
             # instance path inside the container
@@ -237,7 +237,7 @@ class ContainersCommands(ServicesCommands):
                     "project_shortname": project_shortname,
                     "command": cmd,
                 },
-                message="Compilating message catalog...",
+                message="Compiling message catalog...",
                 skippable=True,
             ),
         ]
