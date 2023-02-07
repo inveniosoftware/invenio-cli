@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.18 (released 2023-02-07)
+
+- containerize: fix translation commands instance path
+
 Version 1.0.17 (released 2023-01-30)
 
 - requirements: check node version depending on app-rdm version
