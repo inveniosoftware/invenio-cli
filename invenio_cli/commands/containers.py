@@ -220,6 +220,8 @@ class ContainersCommands(ServicesCommands):
         """Steps to compile translations for the instance."""
         commands = TranslationsCommands(
             project_path=self.cli_config.get_project_dir(),
+            # we use INVENIO_INSTANCE_PATH that is set in the Dockerfile as
+            # config.instance_path is set only in development `install` command
             instance_path="${INVENIO_INSTANCE_PATH}",
         )
         cmd = commands.compile(
