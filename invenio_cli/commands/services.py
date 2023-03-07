@@ -274,7 +274,7 @@ class ServicesCommands(Commands):
             project_path=self.cli_config.get_project_dir(),
             instance_path=self.cli_config.get_instance_path(),
         )
-        return [commands.compile(symlink=False)[0]]
+        return commands.compile(symlink=False)
 
     def setup(self, force, demo_data=True, stop=False, services=True):
         """Steps to setup services' containers.
