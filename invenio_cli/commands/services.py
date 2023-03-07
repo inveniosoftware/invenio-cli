@@ -220,6 +220,9 @@ class ServicesCommands(Commands):
             steps.extend(self.rdm_fixtures())
             steps.extend(self.translations())
 
+        if rdm_version()[0] >= 12:
+            steps.extend(self.declare_queues())
+
         steps.append(
             FunctionStep(
                 func=self.cli_config.update_services_setup,
@@ -240,6 +243,12 @@ class ServicesCommands(Commands):
             )
         ]
 
+        return steps
+
+    def declare_queues(self):
+        """Steps to declare the MQ queues required for statistics, etc."""
+        command = ["pipenv", "run", "invenio", "queues", "declare"]
+        steps = [CommandStep(cmd=command, message="Declaring queues...")]
         return steps
 
     def fixtures(self):
