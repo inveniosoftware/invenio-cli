@@ -169,6 +169,9 @@ class ContainersCommands(ServicesCommands):
             steps.extend(self.rdm_fixtures(project_shortname))
             steps.extend(self.translations(project_shortname))
 
+        if rdm_version()[0] >= 12:
+            steps.extend(self.declare_queues(project_shortname))
+
         return steps
 
     def demo(self, project_shortname):
@@ -184,6 +187,20 @@ class ContainersCommands(ServicesCommands):
             )
         ]
 
+        return steps
+
+    def declare_queues(self, project_shortname):
+        """Steps to declare the MQ queues required for statistics, etc."""
+        steps = [
+            FunctionStep(
+                func=self.docker_helper.execute_cli_command,
+                args={
+                    "project_shortname": project_shortname,
+                    "command": "invenio queues declare",
+                },
+                message="Declaring queues...",
+            )
+        ]
         return steps
 
     def fixtures(self, project_shortname):
