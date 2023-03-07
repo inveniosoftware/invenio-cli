@@ -45,9 +45,6 @@ def handle_process_response(response, fail_message=None):
         if response.output:
             msg = f"Output: {response.output}"
 
-        if fail_message:
-            msg = fail_message + "\n" + msg
-
         click.secho(msg, fg="yellow")
     elif response.output:
         click.secho(message=response.output, fg="green")
