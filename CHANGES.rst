@@ -1,5 +1,5 @@
 ..
-    Copyright (C) 2019-2022 CERN.
+    Copyright (C) 2019-2023 CERN.
     Copyright (C) 2019-2021 Northwestern University.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
@@ -7,6 +7,10 @@
 
 Changes
 =======
+
+Version 1.0.19 (released 2023-03-10)
+
+- global: remove fail message on warning (i.e. soft failures)
 
 Version 1.0.18 (released 2023-02-07)
 
