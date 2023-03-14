@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.20 (released 2023-03-134)
+
+- setup: add queues initialisation to steps
+
 Version 1.0.19 (released 2023-03-10)
 
 - global: remove fail message on warning (i.e. soft failures)
