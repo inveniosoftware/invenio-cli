@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2023 ULB Münster.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -41,7 +42,8 @@ class ServicesHealthCommands(object):
 
         return run_cmd(
             [
-                "docker-compose",
+                "docker",
+                "compose",
                 "--file",
                 filepath,
                 "exec",
@@ -62,7 +64,8 @@ class ServicesHealthCommands(object):
 
         return run_cmd(
             [
-                "docker-compose",
+                "docker",
+                "compose",
                 "--file",
                 filepath,
                 "exec",
@@ -82,7 +85,8 @@ class ServicesHealthCommands(object):
 
         return run_cmd(
             [
-                "docker-compose",
+                "docker",
+                "compose",
                 "--file",
                 filepath,
                 "exec",
