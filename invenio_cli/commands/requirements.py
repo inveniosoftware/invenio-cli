@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2020-2021 CERN.
 # Copyright (C) 2021 TU Wien.
+# Copyright (C) 2023 ULB Münster.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -113,7 +114,7 @@ class RequirementsCommands(object):
         # Output comes in the form of
         # 'Docker version 19.03.13, build 4484c46d9d\n'
         try:
-            result = run_cmd(["docker", "--version"])
+            result = run_cmd(["docker", "version"])
             version = cls._version_from_string(result.output.strip())
             return cls._check_version("Docker", version, major, minor, patch, exact)
         except Exception as err:
@@ -123,9 +124,9 @@ class RequirementsCommands(object):
     def check_docker_compose_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the docker compose version."""
         # Output comes in the form of
-        # 'docker-compose version 1.27.4, build 4484c46d9d\n'
+        # 'Docker Compose version v2.17.3\n'
         try:
-            result = run_cmd(["docker-compose", "--version"])
+            result = run_cmd(["docker", "compose", "version"])
             version = cls._version_from_string(result.output.strip())
             return cls._check_version(
                 "Docker Compose", version, major, minor, patch, exact
@@ -193,8 +194,8 @@ class RequirementsCommands(object):
     def check_dev(cls):
         """Steps to check the development pre-requisites."""
         if rdm_version()[0] >= 11:
-            node_version = 16
-            npm_version = 7
+            node_version = 18
+            npm_version = 9
         else:
             # for backwards compatibility with v9 (LTS)
             node_version = 14

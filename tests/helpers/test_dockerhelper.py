@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2023 ULB Münster.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -29,7 +30,7 @@ def test_start_containers(p_run_cmd):
     docker_helper.start_containers()
 
     p_run_cmd.run.assert_called_with(
-        ["docker-compose", "--file", "docker-compose.yml", "up", "--build", "-d"]
+        ["docker", "compose", "--file", "docker-compose.yml", "up", "--build", "-d"]
     )
 
     with patch.object(DockerHelper, "_normalize_name", fake_normalize_name):
@@ -38,5 +39,5 @@ def test_start_containers(p_run_cmd):
     docker_helper.start_containers()
 
     p_run_cmd.run.assert_called_with(
-        ["docker-compose", "--file", "docker-compose.full.yml", "up", "--build", "-d"]
+        ["docker", "compose", "--file", "docker-compose.full.yml", "up", "--build", "-d"]
     )
