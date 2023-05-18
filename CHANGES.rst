@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.0.21 (released 2023-05-18)
+
+- deps: support docker < 7 for compatibility with urllib3 v2
+
 Version 1.0.20 (released 2023-03-134)
 
 - setup: add queues initialisation to steps
