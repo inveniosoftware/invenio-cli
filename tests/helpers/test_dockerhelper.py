@@ -39,5 +39,13 @@ def test_start_containers(p_run_cmd):
     docker_helper.start_containers()
 
     p_run_cmd.run.assert_called_with(
-        ["docker", "compose", "--file", "docker-compose.full.yml", "up", "--build", "-d"]
+        [
+            "docker",
+            "compose",
+            "--file",
+            "docker-compose.full.yml",
+            "up",
+            "--build",
+            "-d",
+        ]
     )
