@@ -25,6 +25,7 @@ class DockerHelper(object):
     def __init__(self, project_shortname, local=True, log_config=None):
         """Constructor."""
         super().__init__()
+        self.docker_compose = ["docker", "compose"]
         self.container_prefix = self._normalize_name(project_shortname)
         self.local = local
         self.docker_client = docker.from_env()
@@ -35,7 +36,7 @@ class DockerHelper(object):
         Docker-Compose introduced support for dash and underscore in
         version 1.21.0.
         """
-        dc_version_string = run_cmd(["docker", "compose", "version"])
+        dc_version_string = run_cmd(self.docker_compose + ["version"])
         groups = re.search(r"[0-9].[0-9]*.[0-9]*", dc_version_string.output)
         dc_version = groups.group(0)
 
@@ -65,9 +66,7 @@ class DockerHelper(object):
         :param pull: Adds --pull to the docker-compose command.
         :param cache: Removes --no-cache to the docker-compose command.
         """
-        command = [
-            "docker",
-            "compose",
+        command = self.docker_compose + [
             "--file",
             "docker-compose.full.yml",
             "build",
@@ -85,9 +84,7 @@ class DockerHelper(object):
 
         :param app_only: Boot up only ui and api containers.
         """
-        command = [
-            "docker",
-            "compose",
+        command = self.docker_compose + [
             "--file",
             "docker-compose.yml" if self.local else "docker-compose.full.yml",
             "up",
@@ -101,14 +98,12 @@ class DockerHelper(object):
 
     def stop_containers(self):
         """Stop currently running containers."""
-        command = ["docker", "compose", "--file", "docker-compose.full.yml", "stop"]
+        command = self.docker_compose + ["--file", "docker-compose.full.yml", "stop"]
         return run_cmd(command)
 
     def destroy_containers(self):
         """Stop and remove all containers, volumes and images."""
-        command = [
-            "docker",
-            "compose",
+        command = self.docker_compose + [
             "--file",
             "docker-compose.full.yml",
             "down",

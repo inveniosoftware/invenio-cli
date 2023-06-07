@@ -30,7 +30,8 @@ def test_start_containers(p_run_cmd):
     docker_helper.start_containers()
 
     p_run_cmd.run.assert_called_with(
-        ["docker", "compose", "--file", "docker-compose.yml", "up", "--build", "-d"]
+        docker_helper.docker_compose
+        + ["--file", "docker-compose.yml", "up", "--build", "-d"]
     )
 
     with patch.object(DockerHelper, "_normalize_name", fake_normalize_name):

@@ -16,6 +16,7 @@ from os import listdir
 from ..helpers.process import ProcessResponse, run_cmd, run_interactive
 from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
+from ..helpers.docker_helper import DockerHelper
 
 
 class RequirementsCommands(object):
@@ -125,8 +126,9 @@ class RequirementsCommands(object):
         """Check the docker compose version."""
         # Output comes in the form of
         # 'Docker Compose version v2.17.3\n'
+        docker_helper = DockerHelper("", local=False)
         try:
-            result = run_cmd(["docker", "compose", "version"])
+            result = run_cmd(docker_helper.docker_compose + ["version"])
             version = cls._version_from_string(result.output.strip())
             return cls._check_version(
                 "Docker Compose", version, major, minor, patch, exact
