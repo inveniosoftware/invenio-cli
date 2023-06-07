@@ -196,8 +196,8 @@ class RequirementsCommands(object):
     def check_dev(cls):
         """Steps to check the development pre-requisites."""
         if rdm_version()[0] >= 11:
-            node_version = 18
-            npm_version = 9
+            node_version = 16
+            npm_version = 7
         else:
             # for backwards compatibility with v9 (LTS)
             node_version = 14
