@@ -13,10 +13,10 @@ import re
 import sys
 from os import listdir
 
+from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse, run_cmd, run_interactive
 from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
-from ..helpers.docker_helper import DockerHelper
 
 
 class RequirementsCommands(object):
