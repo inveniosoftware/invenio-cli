@@ -128,7 +128,7 @@ def init(flavour, template, checkout, user_input, config):
         click.secho("Running cookiecutter...", fg="green")
         project_dir = cookiecutter_wrapper.cookiecutter()
 
-        click.secho("Writing invenio-invenio_cli config file...", fg="green")
+        click.secho("Writing invenio-cli config files...", fg="green")
         saved_replay = cookiecutter_wrapper.get_replay()
         CLIConfig.write(project_dir, flavour, saved_replay)
 
