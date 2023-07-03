@@ -9,6 +9,7 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import json
 import re
 import sys
 from os import listdir
@@ -112,11 +113,11 @@ class RequirementsCommands(object):
     @classmethod
     def check_docker_version(cls, major, minor=-1, patch=-1, exact=False):
         """Check the docker version."""
-        # Output comes in the form of
-        # 'Docker version 19.03.13, build 4484c46d9d\n'
+        # Use JSON Formatted output and parse it
         try:
-            result = run_cmd(["docker", "version"])
-            version = cls._version_from_string(result.output.strip())
+            result = run_cmd(["docker", "version", "--format", "json"])
+            result_json = json.loads(result.output.strip())
+            version = cls._version_from_string(result_json["Client"]["Version"])
             return cls._check_version("Docker", version, major, minor, patch, exact)
         except Exception as err:
             return ProcessResponse(error=f"Docker not found. Got {err}.", status_code=1)
