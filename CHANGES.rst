@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.1.0 (released 2023-07-24)
+
+- add compatibility for docker compose v2
+- consider command errors when using install command and fail
+
 Version 1.0.21 (released 2023-05-18)
 
 - deps: support docker < 7 for compatibility with urllib3 v2
