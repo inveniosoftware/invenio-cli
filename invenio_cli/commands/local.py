@@ -69,55 +69,51 @@ class LocalCommands(Commands):
             return copy_tree(src_dir, dst_dir)
         return []
 
+    def _statics(self):
+        # Symlink the instance's statics and assets
+        copied_files = self._copy_statics_and_assets()
+        self._symlink_assets_templates(copied_files)
+        return ProcessResponse(
+            output="Assets and statics updated.",
+            status_code=0,
+        )
+
     def update_statics_and_assets(self, force, flask_env="production", log_file=None):
         """High-level command to update less/js/images/... files.
 
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        prefix = ["pipenv", "run"]
-        collect_cmd = prefix + ["invenio", "collect", "--verbose"]
-        clean_create_cmd = prefix + ["invenio", "webpack", "clean", "create"]
-        create_cmd = prefix + ["invenio", "webpack", "create"]
-        install_cmd = prefix + ["invenio", "webpack", "install"]
-        build_cmd = prefix + ["invenio", "webpack", "build"]
+        prefix = ["pipenv", "run", "invenio"]
+
+        ops = [prefix + ["collect", "--verbose"]]
+
+        if force:
+            ops.append(prefix + ["webpack", "clean", "create"])
+            ops.append(prefix + ["webpack", "install"])
+        else:
+            ops.append(prefix + ["webpack", "create"])
+        ops.append(self._statics)
+        ops.append(prefix + ["webpack", "build"])
+        # Keep the same messages for some of the operations for backward compatibility
+        messages = {
+            "build": "Building assets...",
+            "install": "Installing JS dependencies...",
+        }
 
         with env(FLASK_ENV=flask_env):
-            # Collect into statics/ and assets/ folder
-            click.secho("Collecting statics and assets...", fg="green")
-            run_interactive(
-                collect_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-            )
-            if force:
-                run_interactive(
-                    clean_create_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-                )
-
-                # Installs in assets/node_modules/
-                click.secho("Installing JS dependencies...", fg="green")
-                run_interactive(
-                    install_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-                )
-            else:
-                run_interactive(
-                    create_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-                )
-
-            # Symlink the instance's statics and assets
-            copied_files = self._copy_statics_and_assets()
-            self._symlink_assets_templates(copied_files)
-
-            # Build project
-            click.secho("Building assets...", fg="green")
-            run_interactive(
-                build_cmd, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-            )
-
-        # FIXME: Refactor above to make use of proper error handling.
-        return ProcessResponse(
-            output="Assets and statics updated.",
-            status_code=0,
-        )
+            for op in ops:
+                if callable(op):
+                    response = op()
+                else:
+                    if op[-1] in messages:
+                        click.secho(messages[op[-1]], fg="green")
+                    response = run_interactive(
+                        op, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+                    )
+                if response.status_code != 0:
+                    break
+        return response
 
     def run(self, host, port, debug=True, services=True, celery_log_file=None):
         """Run development server and celery queue."""
