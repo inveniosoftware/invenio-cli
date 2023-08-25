@@ -170,6 +170,8 @@ class LocalCommands(Commands):
                 host,
                 "--port",
                 port,
+                "--extra-files",
+                "invenio.cfg",
             ],
             env=run_env,
         )

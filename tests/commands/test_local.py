@@ -303,6 +303,8 @@ def test_run(
                 "127.0.0.1",
                 "--port",
                 "5000",
+                "--extra-files",
+                "invenio.cfg",
             ],
             env=run_env,
         ),
