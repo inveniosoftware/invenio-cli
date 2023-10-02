@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.2.0 (released 2023-10-02)
+
+- reload on invenio.cfg changes
+
 Version 1.1.0 (released 2023-07-24)
 
 - add compatibility for docker compose v2
