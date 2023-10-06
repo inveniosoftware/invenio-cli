@@ -235,7 +235,7 @@ class RequirementsCommands(object):
         steps = [
             FunctionStep(
                 func=cls.check_python_version,
-                args={"major": 3, "minor": 6},
+                args={"major": 3, "minor": 9},
                 message="Checking Python version...",
             ),
             FunctionStep(
