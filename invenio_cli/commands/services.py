@@ -11,6 +11,7 @@
 import click
 
 from invenio_cli.commands.translations import TranslationsCommands
+from invenio_cli.helpers.env import env
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse
@@ -34,7 +35,11 @@ class ServicesCommands(Commands):
         """Ensures containers are running."""
         project_shortname = self.cli_config.get_project_shortname()
 
-        self.docker_helper.start_containers()
+        instance_path = self.cli_config.get_instance_path()
+        # Set environment variable for the instance path, it might be needed by docker services
+        with env(INSTANCE_PATH=str(instance_path)):
+
+            self.docker_helper.start_containers()
 
         services = ["redis", self.cli_config.get_db_type(), "search"]
         for service in services:
