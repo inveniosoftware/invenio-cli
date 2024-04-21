@@ -13,7 +13,16 @@ from ..commands import InstallCommands
 from .utils import pass_cli_config, run_steps
 
 
-@click.command()
+@click.group(invoke_without_command=True)
+@click.pass_context
+def install(ctx):
+    """Commands for installing the project."""
+    if ctx.invoked_subcommand is None:
+        # If no sub-command is passed, default to the install all command.
+        ctx.invoke(install_all)
+
+
+@install.command("all")
 @click.option(
     "--pre",
     default=False,
@@ -35,8 +44,8 @@ from .utils import pass_cli_config, run_steps
     " statics/assets.",
 )
 @pass_cli_config
-def install(cli_config, pre, dev, production):
-    """Installs the  project locally.
+def install_all(cli_config, pre, dev, production):
+    """Installs the project locally.
 
     Installs dependencies, creates instance directory,
     links invenio.cfg + templates, copies images and other statics and finally
@@ -50,5 +59,17 @@ def install(cli_config, pre, dev, production):
     )
     on_fail = "Failed to install dependencies."
     on_success = "Dependencies installed successfully."
+
+    run_steps(steps, on_fail, on_success)
+
+
+@install.command()
+@pass_cli_config
+def symlink(cli_config):
+    """Symlinks project files in the instance directory."""
+    commands = InstallCommands(cli_config)
+    steps = commands.symlink()
+    on_fail = "Failed to symlink project files and folders."
+    on_success = "Project ffles and folders symlinked successfully."
 
     run_steps(steps, on_fail, on_success)

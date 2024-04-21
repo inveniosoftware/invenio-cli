@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -54,42 +55,39 @@ class InstallCommands(LocalCommands):
             result.output = "Instance path updated successfully."
         return result
 
-    def symlink_project_file_or_folder(self, target):
+    def _symlink_project_file_or_folder(self, target):
         """Create symlink in instance pointing to project file or folder."""
         target_path = self.cli_config.get_project_dir() / target
         link_path = self.cli_config.get_instance_path() / target
 
         return filesystem.force_symlink(target_path, link_path)
 
-    def install(self, pre, dev=False, debug=False):
-        """Development installation steps."""
-        steps = self.install_py_dependencies(pre=pre, dev=dev)
+    def symlink(self):
+        """Sylink all necessary project files and folders."""
+        steps = []
         steps.append(
             FunctionStep(
                 func=self.update_instance_path, message="Updating instance path..."
             )
         )
-        steps.append(
-            FunctionStep(
-                func=self.symlink_project_file_or_folder,
-                args={"target": "invenio.cfg"},
-                message="Symlinking 'invenio.cfg'...",
-            )
+        steps.extend(
+            [
+                FunctionStep(
+                    func=self._symlink_project_file_or_folder,
+                    args={"target": path},
+                    message=f"Symlinking '{path}'...",
+                )
+                for path in ("invenio.cfg", "templates", "app_data")
+            ]
         )
-        steps.append(
-            FunctionStep(
-                func=self.symlink_project_file_or_folder,
-                args={"target": "templates"},
-                message="Symlinking 'templates'...",
-            )
-        )
-        steps.append(
-            FunctionStep(
-                func=self.symlink_project_file_or_folder,
-                args={"target": "app_data"},
-                message="Symlinking 'app_data'...",
-            )
-        )
+        return steps
+
+    def install(self, pre, dev=False, debug=False):
+        """Development installation steps."""
+        steps = self.install_py_dependencies(pre=pre, dev=dev)
+
+        steps.extend(self.symlink())
+
         steps.append(
             FunctionStep(
                 func=self.update_statics_and_assets,
