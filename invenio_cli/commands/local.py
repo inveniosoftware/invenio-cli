@@ -301,6 +301,8 @@ class LocalCommands(Commands):
                 "--events",
                 "--loglevel",
                 "INFO",
+                "--queues",
+                "celery,low",
             ]
 
             if celery_log_file:
