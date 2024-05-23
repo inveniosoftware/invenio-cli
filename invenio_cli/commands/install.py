@@ -70,6 +70,7 @@ class InstallCommands(LocalCommands):
                 func=self.update_instance_path, message="Updating instance path..."
             )
         )
+
         steps.extend(
             [
                 FunctionStep(
@@ -82,18 +83,19 @@ class InstallCommands(LocalCommands):
         )
         return steps
 
-    def install(self, pre, dev=False, debug=False):
-        """Development installation steps."""
-        steps = self.install_py_dependencies(pre=pre, dev=dev)
-
-        steps.extend(self.symlink())
-
-        steps.append(
+    def install_assets(self, debug=False):
+        """Install assets."""
+        return [
             FunctionStep(
                 func=self.update_statics_and_assets,
                 args={"force": True, "debug": debug},
                 message="Updating statics and assets...",
             )
-        )
+        ]
 
+    def install(self, pre, dev=False, flask_env="production"):
+        """Development installation steps."""
+        steps = self.install_py_dependencies(pre=pre, dev=dev)
+        steps.extend(self.symlink())
+        steps.extend(self.install_assets(flask_env))
         return steps
