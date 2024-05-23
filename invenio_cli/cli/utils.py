@@ -48,3 +48,14 @@ def handle_process_response(response, fail_message=None):
         click.secho(msg, fg="yellow")
     elif response.output:
         click.secho(message=response.output, fg="green")
+
+
+def combine_decorators(*decorators):
+    """Combine multiple decorators."""
+
+    def _decorator(f):
+        for dec in reversed(decorators):
+            f = dec(f)
+        return f
+
+    return _decorator

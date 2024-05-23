@@ -36,8 +36,7 @@ class RequirementsCommands(object):
 
         if len(parts) != 3:
             return ProcessResponse(
-                error=f"{binary} incorrect version format or not found. "
-                "Check that it is installed correctly",
+                error=f"{binary} incorrect version format or not found. Check that it is installed correctly",  # noqa
                 status_code=1,
             )
 

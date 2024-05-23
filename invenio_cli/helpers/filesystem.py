@@ -60,6 +60,6 @@ def force_symlink(target, link_name):
         if e.errno == errno.EEXIST:
             remove(link_name)
             symlink(target, link_name)
-            output = output + "Deleted already existing link."
+            output = f"{output} Deleted already existing link."
 
     return ProcessResponse(output=output, status_code=0)

@@ -40,8 +40,7 @@ def install(ctx):
     "-p/-d",
     default=False,
     is_flag=True,
-    help="Production mode copies statics/assets. Development mode symlinks"
-    " statics/assets.",
+    help="Production mode copies statics/assets. Development mode symlinks them.",
 )
 @pass_cli_config
 def install_all(cli_config, pre, dev, production):
@@ -93,8 +92,7 @@ def install_python(cli_config, pre, dev):
     "-p/-d",
     default=False,
     is_flag=True,
-    help="Production mode copies statics/assets. Development mode symlinks"
-    " statics/assets.",
+    help="Production mode copies statics/assets. Development mode symlinks them.",
 )
 @pass_cli_config
 def install_assets(cli_config, production):
@@ -115,6 +113,6 @@ def symlink(cli_config):
     commands = InstallCommands(cli_config)
     steps = commands.symlink()
     on_fail = "Failed to symlink project files and folders."
-    on_success = "Project ffles and folders symlinked successfully."
+    on_success = "Project files and folders symlinked successfully."
 
     run_steps(steps, on_fail, on_success)
