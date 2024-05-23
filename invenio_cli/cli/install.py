@@ -60,6 +60,51 @@ def install_all(cli_config, pre, dev, production):
     run_steps(steps, on_fail, on_success)
 
 
+@install.command("python")
+@click.option(
+    "--pre",
+    default=False,
+    is_flag=True,
+    help="If specified, allows the installation of alpha releases",
+)
+@click.option(
+    "--dev/--no-dev",
+    default=True,
+    is_flag=True,
+    help="Includes development dependencies.",
+)
+@pass_cli_config
+def install_python(cli_config, pre, dev):
+    """Install Python dependencies and packages."""
+    commands = InstallCommands(cli_config)
+    steps = commands.install_py_dependencies(pre=pre, dev=dev)
+    on_fail = "Failed to install Python dependencies."
+    on_success = "Python dependencies installed successfully."
+
+    run_steps(steps, on_fail, on_success)
+
+
+@install.command("assets")
+@click.option(
+    "--production/--development",
+    "-p/-d",
+    default=False,
+    is_flag=True,
+    help="Production mode copies statics/assets. Development mode symlinks"
+    " statics/assets.",
+)
+@pass_cli_config
+def install_assets(cli_config, production):
+    """Install assets."""
+    commands = InstallCommands(cli_config)
+    flask_env = "production" if production else "development"
+    steps = commands.install_assets(flask_env)
+    on_fail = "Failed to install assets."
+    on_success = "Assets installed successfully."
+
+    run_steps(steps, on_fail, on_success)
+
+
 @install.command()
 @pass_cli_config
 def symlink(cli_config):
