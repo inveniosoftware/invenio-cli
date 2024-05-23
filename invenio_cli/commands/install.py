@@ -69,16 +69,29 @@ class InstallCommands(LocalCommands):
                 func=self.update_instance_path, message="Updating instance path..."
             )
         )
-        steps.extend([
-            FunctionStep(
-                func=self._symlink_project_file_or_folder,
-                args={"target": path},
-                message=f"Symlinking '{path}'...",
-            )
-            for path in ("invenio.cfg", "templates", "app_data")
-        ])
+
+        paths = ("invenio.cfg", "templates", "app_data")
+        steps.extend(
+            [
+                FunctionStep(
+                    func=self._symlink_project_file_or_folder,
+                    args={"target": path},
+                    message=f"Symlinking '{path}'...",
+                )
+                for path in paths
+            ]
+        )
         return steps
 
+    def install_assets(self, flask_env="production"):
+        """Install assets."""
+        return [
+            FunctionStep(
+                func=self.update_statics_and_assets,
+                args={"force": True, "flask_env": flask_env},
+                message="Updating statics and assets...",
+            )
+        ]
 
     def install(self, pre, dev=False, flask_env="production"):
         """Development installation steps."""
@@ -89,12 +102,6 @@ class InstallCommands(LocalCommands):
             )
         )
         steps.extend(self.symlink())
-        steps.append(
-            FunctionStep(
-                func=self.update_statics_and_assets,
-                args={"force": True, "flask_env": flask_env},
-                message="Updating statics and assets...",
-            )
-        )
+        steps.extend(self.install_assets(flask_env))
 
         return steps
