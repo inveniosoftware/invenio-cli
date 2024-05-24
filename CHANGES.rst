@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.3.0 (released 2024-05-24)
+
+- deps: pin docker to >=7.1.0 due to bug on requests
+- services: add instance path to env on setup
+
 Version 1.2.0 (released 2023-10-02)
 
 - reload on invenio.cfg changes
