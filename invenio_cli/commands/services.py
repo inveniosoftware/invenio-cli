@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2020 CERN.
+# Copyright (C) 2020-2024 CERN.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it

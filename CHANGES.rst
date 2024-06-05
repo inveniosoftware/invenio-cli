@@ -1,5 +1,5 @@
 ..
-    Copyright (C) 2019-2023 CERN.
+    Copyright (C) 2019-2024 CERN.
     Copyright (C) 2019-2021 Northwestern University.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
@@ -7,6 +7,10 @@
 
 Changes
 =======
+
+Version 1.3.1 (released 2024-06-05)
+
+- config: fix missing "instance_path" usage
 
 Version 1.3.0 (released 2024-05-24)
 
