@@ -64,7 +64,7 @@ class CLIConfig(object):
         """Returns path to project directory."""
         return self.config_path.parent.resolve()
 
-    def get_instance_path(self):
+    def get_instance_path(self, throw=True):
         """Returns path to application instance directory.
 
         If not set yet, raises an InvenioCLIConfigError.
@@ -72,7 +72,7 @@ class CLIConfig(object):
         path = self.private_config[CLIConfig.CLI_SECTION].get("instance_path")
         if path:
             return Path(path)
-        else:
+        elif throw:
             raise InvenioCLIConfigError("Accessing unset 'instance_path'")
 
     def update_instance_path(self, new_instance_path):

@@ -35,10 +35,12 @@ class ServicesCommands(Commands):
         """Ensures containers are running."""
         project_shortname = self.cli_config.get_project_shortname()
 
-        instance_path = self.cli_config.get_instance_path()
+        cmd_env = {}
+        instance_path = self.cli_config.get_instance_path(throw=False)
+        if instance_path:
+            cmd_env = {"INSTANCE_PATH": str(instance_path)}
         # Set environment variable for the instance path, it might be needed by docker services
-        with env(INSTANCE_PATH=str(instance_path)):
-
+        with env(**cmd_env):
             self.docker_helper.start_containers()
 
         services = ["redis", self.cli_config.get_db_type(), "search"]
