@@ -29,8 +29,6 @@ class ServicesHealthCommands(object):
     @classmethod
     def search_healthcheck(cls, *args, **kwargs):
         """Open/Elasticsearch healthcheck."""
-        verbose = kwargs["verbose"]
-
         host = kwargs["search_host"]
         port = kwargs["search_port"]
         return run_cmd(
@@ -41,7 +39,6 @@ class ServicesHealthCommands(object):
     def postgresql_healthcheck(cls, *args, **kwargs):
         """Postgresql healthcheck."""
         filepath = kwargs["filepath"]
-        verbose = kwargs["verbose"]
 
         return run_cmd(
             [
@@ -62,7 +59,6 @@ class ServicesHealthCommands(object):
     def mysql_healthcheck(cls, *args, **kwargs):
         """Mysql healthcheck."""
         filepath = kwargs["filepath"]
-        verbose = kwargs["verbose"]
         password = kwargs["project_shortname"]
 
         return run_cmd(
@@ -84,7 +80,6 @@ class ServicesHealthCommands(object):
     def redis_healthcheck(cls, *args, **kwargs):
         """Redis healthcheck."""
         filepath = kwargs["filepath"]
-        verbose = kwargs["verbose"]
 
         return run_cmd(
             [
