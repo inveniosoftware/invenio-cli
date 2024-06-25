@@ -80,7 +80,7 @@ class ServicesCommands(Commands):
             )
 
         return ProcessResponse(
-            output=f"Services setup status consistent.", status_code=0
+            output="Services setup status consistent.", status_code=0
         )
 
     def _cleanup(self):
