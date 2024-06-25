@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2020-2024 CERN.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -49,6 +50,8 @@ class ServicesCommands(Commands):
                 service,
                 project_shortname=project_shortname,
                 print_func=lambda msg: click.secho(msg, fg="yellow"),
+                search_host=self.cli_config.get_search_host(),
+                search_port=self.cli_config.get_search_port(),
             )
 
             if not ready:
@@ -380,6 +383,8 @@ class ServicesCommands(Commands):
                     filepath="docker-services.yml",
                     verbose=verbose,
                     project_shortname=project_shortname,
+                    search_host=self.cli_config.get_search_host(),
+                    search_port=self.cli_config.get_search_port(),
                 )
                 # Append 0 if OK, else 1
                 # FIXME: Deal with codes higher than 1. Needed?

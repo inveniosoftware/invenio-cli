@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2020 CERN.
 # Copyright (C) 2023 ULB Münster.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -30,8 +31,10 @@ class ServicesHealthCommands(object):
         """Open/Elasticsearch healthcheck."""
         verbose = kwargs["verbose"]
 
+        host = kwargs["search_host"]
+        port = kwargs["search_port"]
         return run_cmd(
-            ["curl", "-f", "localhost:9200/_cluster/health?wait_for_status=yellow"]
+            ["curl", "-f", f"{host}:{port}/_cluster/health?wait_for_status=yellow"]
         )
 
     @classmethod
@@ -110,6 +113,8 @@ class ServicesHealthCommands(object):
         filepath="docker-services.yml",
         max_retries=6,
         verbose=False,
+        search_host="localhost",
+        search_port="9200",
     ):
         """Wait for the given service to be up."""
         if service not in HEALTHCHECKS:
@@ -130,6 +135,8 @@ class ServicesHealthCommands(object):
                 filepath=filepath,
                 verbose=verbose,
                 project_shortname=project_shortname,
+                search_host=search_host,
+                search_port=search_port,
             )
             ready = response.status_code == 0
 
