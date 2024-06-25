@@ -3,6 +3,7 @@
 # Copyright (C) 2019-2024 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -108,6 +109,17 @@ class CLIConfig(object):
     def get_project_shortname(self):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
+
+    def get_search_port(self):
+        """Returns the search port."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("search_port", "9200")
+
+    def get_search_host(self):
+        """Returns the search host."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get(
+            "search_host",
+            "localhost",
+        )
 
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
