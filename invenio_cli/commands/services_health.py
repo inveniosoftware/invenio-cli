@@ -52,7 +52,7 @@ class ServicesHealthCommands(object):
                 "exec",
                 "-T",
                 "db",
-                "bash",
+                "sh",
                 "-c",
                 "pg_isready",
             ]
@@ -95,7 +95,7 @@ class ServicesHealthCommands(object):
                 "exec",
                 "-T",
                 "cache",
-                "bash",
+                "sh",
                 "-c",
                 "redis-cli ping",
                 "|",
