@@ -4,6 +4,7 @@
 # Copyright (C) 2019 CERN.
 # Copyright (C) 2019 Northwestern University.
 # Copyright (C) 2023 ULB Münster.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -98,14 +99,18 @@ class DockerHelper(object):
 
     def stop_containers(self):
         """Stop currently running containers."""
-        command = self.docker_compose + ["--file", "docker-compose.full.yml", "stop"]
+        command = self.docker_compose + [
+            "--file",
+            "docker-compose.yml" if self.local else "docker-compose.full.yml",
+            "stop",
+        ]
         return run_cmd(command)
 
     def destroy_containers(self):
         """Stop and remove all containers, volumes and images."""
         command = self.docker_compose + [
             "--file",
-            "docker-compose.full.yml",
+            "docker-compose.yml" if self.local else "docker-compose.full.yml",
             "down",
             "--volumes",
         ]
