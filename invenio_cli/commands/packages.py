@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020-2021 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -23,8 +23,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        prefix = ["pipenv", "run"]
-        cmd = prefix + ["pip", "install"]
+        cmd = ["uv", "pip", "install"]
         for package in packages:
             cmd.extend(["-e", package])
 
@@ -45,6 +44,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
+        raise RuntimeError("not yet ported to uv")
         cmd = ["pipenv", "update", "--outdated"]
 
         steps = [
@@ -63,6 +63,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
+        raise RuntimeError("not yet ported to uv")
         cmd = ["pipenv", "update"]
 
         steps = [
@@ -81,6 +82,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
+        raise RuntimeError("not yet ported to uv")
         prefix = ["pipenv"]
         app = prefix + ["install", package + version]
 
@@ -96,13 +98,8 @@ class PackagesCommands(object):
 
     @staticmethod
     def install_locked_dependencies(pre, dev):
-        """Install dependencies from Pipfile.lock using sync."""
-        # NOTE: sync has no interactive process feedback
-        cmd = ["pipenv", "sync"]
-        if pre:
-            cmd += ["--pre"]
-        if dev:
-            cmd += ["--dev"]
+        """Install dependencies from requirements.txt using install."""
+        cmd = ["uv", "pip", "install", "-r", "requirements.txt"]
 
         steps = [
             CommandStep(
@@ -118,11 +115,7 @@ class PackagesCommands(object):
     @staticmethod
     def lock(pre, dev):
         """Steps to lock Python dependencies."""
-        cmd = ["pipenv", "lock"]
-        if pre:
-            cmd += ["--pre"]
-        if dev:
-            cmd += ["--dev"]
+        cmd = ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"]
 
         steps = [
             CommandStep(
@@ -137,7 +130,7 @@ class PackagesCommands(object):
     @staticmethod
     def is_locked():
         """Checks if the dependencies have been locked."""
-        locked = "Pipfile.lock" in listdir(".")
+        locked = "requirements.txt" in listdir(".")
         if not locked:
             return ProcessResponse(
                 error="Dependencies were not locked. "
