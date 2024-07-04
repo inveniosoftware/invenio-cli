@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2022 CERN.
+# Copyright (C) 2024 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -13,13 +13,13 @@ import re
 from pipfile import Pipfile
 
 
-def rdm_version():
-    """Return the latest RDM version."""
+def ils_version():
+    """Return the latest ILS version."""
     parsed = Pipfile.load(filename="./Pipfile")
 
     groups = re.search(
         r"[0-9]*\.[0-9]*\.[0-9]*",
-        parsed.data["default"].get("invenio-app-rdm", {}).get("version", ""),
+        parsed.data["default"].get("invenio-app-ils", {}).get("version", ""),
     )
 
     if groups:
