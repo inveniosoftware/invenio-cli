@@ -14,6 +14,7 @@ from invenio_cli.commands.translations import TranslationsCommands
 from invenio_cli.helpers.env import env
 
 from ..helpers.docker_helper import DockerHelper
+from ..helpers.ils import ils_version
 from ..helpers.process import ProcessResponse
 from ..helpers.rdm import rdm_version
 from .commands import Commands
@@ -139,7 +140,7 @@ class ServicesCommands(Commands):
             return "{}/data".format(self.cli_config.get_instance_path())
         return "{}://default".format(self.cli_config.get_file_storage().lower())
 
-    def _setup(self):
+    def _setup(self, demo_data=False):
         """Services initialization steps."""
         steps = [
             FunctionStep(
@@ -193,42 +194,61 @@ class ServicesCommands(Commands):
             ),
         ]
 
-        if rdm_version()[0] >= 10:
+        rdm_version_value = rdm_version()
+        if rdm_version_value:
+            if rdm_version_value[0] >= 10:
+                steps.extend(
+                    [
+                        CommandStep(
+                            cmd=[
+                                "pipenv",
+                                "run",
+                                "invenio",
+                                "rdm-records",
+                                "custom-fields",
+                                "init",
+                            ],
+                            env={"PIPENV_VERBOSITY": "-1"},
+                            message="Creating custom fields for records...",
+                        ),
+                        CommandStep(
+                            cmd=[
+                                "pipenv",
+                                "run",
+                                "invenio",
+                                "communities",
+                                "custom-fields",
+                                "init",
+                            ],
+                            env={"PIPENV_VERBOSITY": "-1"},
+                            message="Creating custom fields for communities...",
+                        ),
+                    ]
+                )
+
+            if rdm_version_value[0] >= 11:
+                steps.extend(self.rdm_fixtures())
+                steps.extend(self.translations())
+
+            if rdm_version_value[0] >= 12:
+                steps.extend(self.declare_queues())
+
+            steps.extend(self.fixtures())
+            if demo_data:
+                steps.extend(self.demo())
+        elif ils_version():
+            cmd = ["pipenv", "run", "invenio", "setup", "--verbose"]
+            if not demo_data:
+                cmd.append("--skip-demo-data")
             steps.extend(
                 [
                     CommandStep(
-                        cmd=[
-                            "pipenv",
-                            "run",
-                            "invenio",
-                            "rdm-records",
-                            "custom-fields",
-                            "init",
-                        ],
+                        cmd=cmd,
                         env={"PIPENV_VERBOSITY": "-1"},
-                        message="Creating custom fields for records...",
-                    ),
-                    CommandStep(
-                        cmd=[
-                            "pipenv",
-                            "run",
-                            "invenio",
-                            "communities",
-                            "custom-fields",
-                            "init",
-                        ],
-                        env={"PIPENV_VERBOSITY": "-1"},
-                        message="Creating custom fields for communities...",
-                    ),
+                        message="Setting up services...",
+                    )
                 ]
             )
-
-        if rdm_version()[0] >= 11:
-            steps.extend(self.rdm_fixtures())
-            steps.extend(self.translations())
-
-        if rdm_version()[0] >= 12:
-            steps.extend(self.declare_queues())
 
         steps.append(
             FunctionStep(
@@ -310,11 +330,7 @@ class ServicesCommands(Commands):
         if force:
             steps.extend(self._cleanup())
 
-        steps.extend(self._setup())
-        steps.extend(self.fixtures())
-
-        if demo_data:
-            steps.extend(self.demo())
+        steps.extend(self._setup(demo_data))
 
         if stop:
             steps.append(
