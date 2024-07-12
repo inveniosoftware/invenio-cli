@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.4.0 (released 2024-07-12)
+
+- services: add support for InvneioILS setup
+
 Version 1.3.1 (released 2024-06-05)
 
 - config: fix missing "instance_path" usage
