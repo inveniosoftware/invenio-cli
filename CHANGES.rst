@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.5.0 (released 2024-08-01)
+
+- dependencies: update for invenio-app-rdm v12
+
 Version 1.4.0 (released 2024-07-12)
 
 - services: add support for InvneioILS setup
