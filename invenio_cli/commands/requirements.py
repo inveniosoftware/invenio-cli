@@ -196,7 +196,10 @@ class RequirementsCommands(object):
     @classmethod
     def check_dev(cls):
         """Steps to check the development pre-requisites."""
-        if rdm_version()[0] >= 11:
+        if rdm_version()[0] >= 12:
+            node_version = 18
+            npm_version = 10
+        elif rdm_version()[0] >= 11:
             node_version = 16
             npm_version = 7
         else:
@@ -207,12 +210,12 @@ class RequirementsCommands(object):
         steps = [
             FunctionStep(
                 func=cls.check_node_version,
-                args={"major": node_version, "exact": True},
+                args={"major": node_version},
                 message="Checking Node version...",
             ),
             FunctionStep(
                 func=cls.check_npm_version,
-                args={"major": npm_version, "exact": True},
+                args={"major": npm_version},
                 message="Checking NPM version...",
             ),
             FunctionStep(
@@ -235,7 +238,7 @@ class RequirementsCommands(object):
         steps = [
             FunctionStep(
                 func=cls.check_python_version,
-                args={"major": 3, "minor": 6},
+                args={"major": 3, "minor": 9},
                 message="Checking Python version...",
             ),
             FunctionStep(
