@@ -120,7 +120,7 @@ def stop(cli_config):
 @services.command()
 @pass_cli_config
 def destroy(cli_config):
-    """Destroy developement services."""
+    """Destroy development services."""
     commands = ServicesCommands(cli_config)
     click.secho("Destroying services' containers, volumes...", fg="green")
     steps = commands.destroy()
