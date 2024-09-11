@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2020 CERN.
 # Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2024 University Politehnica of Bucharest
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -178,3 +179,7 @@ class LocalCommands(Commands):
 
         click.secho(f"Instance running!\nVisit https://{host}:{port}", fg="green")
         server.wait()
+        click.secho("Server execution ended.", fg="red")
+        if services:
+            worker.wait()
+            click.secho("Worker execution ended.", fg="red")
