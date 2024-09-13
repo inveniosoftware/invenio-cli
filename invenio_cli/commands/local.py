@@ -139,8 +139,9 @@ class LocalCommands(Commands):
         """Constructor."""
         super().__init__(cli_config)
 
-    def _symlink_assets_templates(self, files_to_link):
+    def _symlink_assets_templates(self):
         """Symlink the assets folder."""
+        files_to_link = self._copied_files
         assets = "assets"
         click.secho("Symlinking {}...".format(assets), fg="green")
 
@@ -176,8 +177,8 @@ class LocalCommands(Commands):
             dst_dir = self.cli_config.get_instance_path() / assets
             dst_dir = str(dst_dir)
             # The full path to the files that were copied is returned
-            return copy_tree(src_dir, dst_dir)
-        return []
+            self._copied_files = copy_tree(src_dir, dst_dir)
+        self._copied_files = []
 
     def _statics(self):
         # Symlink the instance's statics and assets
@@ -224,9 +225,20 @@ class LocalCommands(Commands):
         #         if response.status_code != 0:
         #             break
         # return response
+        import time
+        import timeit
 
+        t0 = time.time()
         app = create_cli()
+        t1 = time.time()
+        create_cli_time = t1 - t0
+
+        t0 = time.time()
         collect = Collect(app)
+        t1 = time.time()
+        collect_time = t1 - t0
+
+        t0 = time.time()
         project = WebpackBundleProject(
             __name__,
             project_folder="assets",
@@ -235,14 +247,23 @@ class LocalCommands(Commands):
             bundles=bundles_from_entry_point("invenio_assets.webpack"),
             app=app,
         )
-        collect.collect(verbose=True)
+        t1 = time.time()
+        project_time = t1 - t0
 
-        project.clean()
-        project.create()
-        project.install()
-        copied_files = self._copy_statics_and_assets()
-        self._symlink_assets_templates(copied_files)
-        project.build()
+        collect_time = timeit.timeit(lambda: collect.collect(verbose=True), number=1)
+
+        clean_time = timeit.timeit(lambda: project.clean(), number=1)
+        create_time = timeit.timeit(lambda: project.create(), number=1)
+        install_time = timeit.timeit(lambda: project.install(), number=1)
+
+        # copied_files = self._copy_statics_and_assets()
+        # self._symlink_assets_templates(copied_files)
+        copy_time = timeit.timeit(lambda: self._copy_statics_and_assets(), number=1)
+        symlink_time = timeit.timeit(lambda: self._symlink_assets_templates(), number=1)
+        build_time = timeit.timeit(lambda: project.build(), number=1)
+        print(
+            f"LocalCommands.update_statics_and_assets\n create_cli_time: {create_cli_time}\n collect_time: {collect_time}\n project_time: {project_time}\n collect_time: {collect_time}\n clean_time: {clean_time}\n create_time: {create_time}\n install_time: {install_time}\n copy_time: {copy_time}\n symlink_time: {symlink_time}\n build_time: {build_time}\n "
+        )
 
     def run(self, host, port, debug=True, services=True, celery_log_file=None):
         """Run development server and celery queue."""
