@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -16,9 +16,12 @@ from pathlib import Path
 from subprocess import Popen as popen
 
 import click
+from flask_collect import Collect
+from invenio_app.factory import create_cli
+from invenio_assets.webpack import project
 
-from ..helpers import env, filesystem
-from ..helpers.process import ProcessResponse, run_interactive
+from ..helpers import filesystem
+from ..helpers.process import ProcessResponse
 from .commands import Commands
 
 
@@ -83,37 +86,16 @@ class LocalCommands(Commands):
 
         Needed here (parent) because is used by Assets and Install commands.
         """
-        # Commands
-        prefix = ["pipenv", "run", "invenio"]
-
-        ops = [prefix + ["collect", "--verbose"]]
-
-        if force:
-            ops.append(prefix + ["webpack", "clean", "create"])
-            ops.append(prefix + ["webpack", "install"])
-        else:
-            ops.append(prefix + ["webpack", "create"])
-        ops.append(self._statics)
-        ops.append(prefix + ["webpack", "build"])
-        # Keep the same messages for some of the operations for backward compatibility
-        messages = {
-            "build": "Building assets...",
-            "install": "Installing JS dependencies...",
-        }
-
-        with env(FLASK_ENV=flask_env):
-            for op in ops:
-                if callable(op):
-                    response = op()
-                else:
-                    if op[-1] in messages:
-                        click.secho(messages[op[-1]], fg="green")
-                    response = run_interactive(
-                        op, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
-                    )
-                if response.status_code != 0:
-                    break
-        return response
+        app = create_cli()
+        project.app = app
+        collect = Collect(app)
+        collect.collect(verbose=True)
+        project.clean()
+        project.create()
+        project.install()
+        copied_files = self._copy_statics_and_assets()
+        self._symlink_assets_templates(copied_files)
+        project.build()
 
     def run(self, host, port, debug=True, services=True, celery_log_file=None):
         """Run development server and celery queue."""
