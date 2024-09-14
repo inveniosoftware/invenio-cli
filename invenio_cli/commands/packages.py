@@ -99,7 +99,8 @@ class PackagesCommands(object):
     @staticmethod
     def install_locked_dependencies(pre, dev):
         """Install dependencies from requirements.txt using install."""
-        cmd = ["uv", "pip", "install", "-r", "requirements.txt"]
+        # cmd = ["uv", "pip", "install", "-r", "requirements.txt"]
+        cmd = ["uv", "sync"]
 
         steps = [
             CommandStep(
@@ -115,7 +116,8 @@ class PackagesCommands(object):
     @staticmethod
     def lock(pre, dev):
         """Steps to lock Python dependencies."""
-        cmd = ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"]
+        # cmd = ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"]
+        cmd = ["uv", "lock"]
 
         steps = [
             CommandStep(
