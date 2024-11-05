@@ -120,6 +120,14 @@ class CLIConfig(object):
             "localhost",
         )
 
+    def get_web_port(self):
+        """Returns web port."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_port", "5000")
+
+    def get_web_host(self):
+        """Returns web host."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_host", "127.0.0.1")
+
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]
