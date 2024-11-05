@@ -63,8 +63,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        raise RuntimeError("not yet ported to uv")
-        cmd = ["pipenv", "update"]
+        cmd = ["uv", "sync", "--upgrade"]
 
         steps = [
             CommandStep(
@@ -99,7 +98,6 @@ class PackagesCommands(object):
     @staticmethod
     def install_locked_dependencies(pre, dev):
         """Install dependencies from requirements.txt using install."""
-        # cmd = ["uv", "pip", "install", "-r", "requirements.txt"]
         cmd = ["uv", "sync"]
 
         steps = [
@@ -116,7 +114,6 @@ class PackagesCommands(object):
     @staticmethod
     def lock(pre, dev):
         """Steps to lock Python dependencies."""
-        # cmd = ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"]
         cmd = ["uv", "lock"]
 
         steps = [
@@ -132,7 +129,7 @@ class PackagesCommands(object):
     @staticmethod
     def is_locked():
         """Checks if the dependencies have been locked."""
-        locked = "requirements.txt" in listdir(".")
+        locked = "uv.lock" in listdir(".")
         if not locked:
             return ProcessResponse(
                 error="Dependencies were not locked. "
