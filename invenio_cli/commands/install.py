@@ -59,30 +59,25 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        # FIXME: Transform into steps.
-        # Currently not possible because the second step (update instance
-        # path) requires the ouptut of the previous step
-        result = run_cmd(
-            [
-                "pipenv",
-                "run",
-                "invenio",
-                "shell",
-                "--no-term-title",
-                "-c",
-                "\"print(app.instance_path, end='')\"",
-            ]
+        # https://github.com/inveniosoftware/invenio-app/blob/master/invenio_app/factory.py#L34
+        # a problem is INVENIO_INSTANCE_PATH is set to not default!
+        # maybe give possibility to override via click command!
+        instance_path = f"{sys.prefix}/var/instance"
+        self.cli_config.update_instance_path(instance_path)
+
+        try:
+            os.makedirs(instance_path)
+        except FileExistsError:
+            pass
+
+        return ProcessResponse(
+            output="Instance path updated successfully.", status_code=0
         )
-        if result.status_code == 0:
-            self.cli_config.update_instance_path(result.output.strip())
-            result.output = "Instance path updated successfully."
-        return result
 
     def _symlink_project_file_or_folder(self, target):
         """Create symlink in instance pointing to project file or folder."""
         target_path = self.cli_config.get_project_dir() / target
         link_path = self.cli_config.get_instance_path() / target
-
         return filesystem.force_symlink(target_path, link_path)
 
     def symlink(self):
@@ -90,7 +85,8 @@ class InstallCommands(LocalCommands):
         steps = []
         steps.append(
             FunctionStep(
-                func=self.update_instance_path, message="Updating instance path..."
+                func=self.update_instance_path,
+                message="Updating instance path...",
             )
         )
 
@@ -144,5 +140,4 @@ class InstallCommands(LocalCommands):
         )
         steps.extend(self.symlink())
         steps.extend(self.install_assets(flask_env))
-
         return steps
