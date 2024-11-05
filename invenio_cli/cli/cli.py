@@ -3,6 +3,7 @@
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019 Northwestern University.
 # Copyright (C) 2022 Forschungszentrum Jülich GmbH.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -164,8 +165,18 @@ services_option = click.option(
     help="Enable/disable dockerized services (default: enabled).",
 )
 web_options = combine_decorators(
-    click.option("--host", "-h", default="127.0.0.1", help="The interface to bind to."),
-    click.option("--port", "-p", default=5000, help="The port to bind to."),
+    click.option(
+        "--host",
+        "-h",
+        default=None,
+        help="The interface to bind to. The default is defined in the CLIConfig.",
+    ),
+    click.option(
+        "--port",
+        "-p",
+        default=None,
+        help="The port to bind to. The default is defined in the CLIConfig.",
+    ),
     click.option(
         "--debug/--no-debug",
         "-d/",
@@ -188,6 +199,9 @@ def run_web(cli_config, host, port, debug, services):
         response = cmds.ensure_containers_running()
         # fail and exit if containers are not running
         handle_process_response(response)
+
+    host = host or cli_config.get_web_host()
+    port = port or cli_config.get_web_port()
 
     commands = LocalCommands(cli_config)
     processes = commands.run_web(host=host, port=str(port), debug=debug)
@@ -234,6 +248,9 @@ def run_all(cli_config, host, port, debug, services, celery_log_file):
         response = cmds.ensure_containers_running()
         # fail and exit if containers are not running
         handle_process_response(response)
+
+    host = host or cli_config.get_web_host()
+    port = port or cli_config.get_web_port()
 
     commands = LocalCommands(cli_config)
     processes = commands.run_all(
