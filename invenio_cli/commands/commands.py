@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,7 +13,7 @@ from ..helpers.process import run_interactive
 from .steps import CommandStep
 
 
-class Commands(object):
+class Commands:
     """Abstraction over CLI commands that are either local or containerized."""
 
     def __init__(self, cli_config):

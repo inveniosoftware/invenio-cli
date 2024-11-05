@@ -127,17 +127,13 @@ class InstallCommands(LocalCommands):
                 func=self.update_statics_and_assets,
                 args={"force": True, "flask_env": flask_env},
                 message="Updating statics and assets...",
-            )
+            ),
         ]
 
     def install(self, pre, dev=False, flask_env="production"):
         """Development installation steps."""
-        steps = self.install_py_dependencies(pre=pre, dev=dev)
-        steps.append(
-            FunctionStep(
-                func=self.update_instance_path, message="Updating instance path..."
-            )
-        )
+        steps = []
+        steps.extend(self.install_py_dependencies(pre=pre, dev=dev))
         steps.extend(self.symlink())
         steps.extend(self.install_assets(flask_env))
         return steps
