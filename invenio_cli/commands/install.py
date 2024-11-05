@@ -1,17 +1,41 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Invenio module to ease the creation and management of applications."""
 
+
+import os
+import site
+import sys
+from pathlib import Path
+
 from ..helpers import filesystem
-from ..helpers.process import run_cmd
+from ..helpers.process import ProcessResponse
 from .local import LocalCommands
 from .packages import PackagesCommands
 from .steps import FunctionStep
+
+
+def reload_editable_package(item):
+    """Reload editable packages.
+
+    Manually process a .pth file to add paths to sys.path or execute import
+    statements. Only necessary on the install step, because assets build doesn't
+    know the previously install packages
+    """
+    with Path(item).open("r") as pth_file:
+        for line in pth_file:
+            line = line.strip()
+
+            if line.startswith("import"):
+                exec(line)
+            elif os.path.isdir(line) and line not in sys.path:
+                sys.path.insert(0, line)
 
 
 class InstallCommands(LocalCommands):
@@ -83,9 +107,26 @@ class InstallCommands(LocalCommands):
         )
         return steps
 
+    def reload_editable_packages(self):
+        """Reload editable packages."""
+        site_packages = site.getsitepackages()
+
+        for site_package in site_packages:
+            for item in os.listdir(site_package):
+                if item.startswith("__editable__") and item.endswith(".pth"):
+                    reload_editable_package(site_package + "/" + item)
+
+        return ProcessResponse(
+            output="Reloaded successfully editable packages.", status_code=0
+        )
+
     def install_assets(self, flask_env="production"):
         """Install assets."""
         return [
+            FunctionStep(
+                func=self.reload_editable_packages,
+                message="Reload editable packages",
+            ),
             FunctionStep(
                 func=self.update_statics_and_assets,
                 args={"force": True, "flask_env": flask_env},
