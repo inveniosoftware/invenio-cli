@@ -17,9 +17,13 @@ def rdm_version():
     """Return the latest RDM version."""
     parsed = Pipfile.load(filename="./Pipfile")
 
+    version = parsed.data["default"].get("invenio-app-rdm", {}).get("version", "")
+    if not version:
+        version = parsed.data["default"].get("invenio-app-rdm", {}).get("ref", "")
+
     groups = re.search(
         r"[0-9]*\.[0-9]*\.[0-9]*",
-        parsed.data["default"].get("invenio-app-rdm", {}).get("version", ""),
+        version,
     )
 
     if groups:
