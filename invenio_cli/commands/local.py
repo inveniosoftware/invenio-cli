@@ -91,10 +91,10 @@ class LocalCommands(Commands):
         # not yet installed.
         from flask_collect import Collect
         from invenio_app.factory import create_app
-        from invenio_assets.webpack import project
 
         app = create_app()
         collect = Collect(app)
+        project = app.extensions["invenio-assets"].project
 
         project.app = app
         collect.collect(verbose=True)
