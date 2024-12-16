@@ -90,10 +90,10 @@ class LocalCommands(Commands):
         # processed by the python interpreter the following three packages are
         # not yet installed.
         from flask_collect import Collect
-        from invenio_app.factory import create_cli
+        from invenio_app.factory import create_app
         from invenio_assets.webpack import project
 
-        app = create_cli()
+        app = create_app()
         collect = Collect(app)
 
         project.app = app
