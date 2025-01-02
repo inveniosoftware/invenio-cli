@@ -11,8 +11,9 @@
 import os
 import signal
 from distutils.dir_util import copy_tree
-from os import environ
+from os import environ, symlink
 from pathlib import Path
+from shutil import copyfile
 from subprocess import Popen as popen
 
 import click
@@ -70,6 +71,37 @@ class LocalCommands(Commands):
             self._copied_files = copy_tree(src_dir, dst_dir)
         self._copied_files = []
 
+    def _symlink_locked_file(self):
+        """Symlink locked file."""
+        instance_path = self.cli_config.get_instance_path()
+        project_dir = self.cli_config.get_project_dir()
+
+        if self.cli_config.javascript_packages_manager == "npm":
+            lock_file = "packages-lock.json"
+        elif self.cli_config.javascript_packages_manager == "pnpm":
+            lock_file = "pnpm-lock.yaml"
+
+        source_path = project_dir / lock_file
+        target_path = instance_path / "assets" / lock_file
+
+        if Path(source_path).exists():
+            symlink(source_path, target_path)
+
+    def _cache_locked_file(self):
+        """Cache locked file."""
+        instance_path = self.cli_config.get_instance_path()
+        project_dir = self.cli_config.get_project_dir()
+
+        if self.cli_config.javascript_packages_manager == "npm":
+            lock_file = "packages-lock.json"
+        elif self.cli_config.javascript_packages_manager == "pnpm":
+            lock_file = "pnpm-lock.yaml"
+
+        target_path = project_dir / lock_file
+        source_path = instance_path / "assets" / lock_file
+        if not source_path.is_symlink():
+            copyfile(source_path, target_path)
+
     def _statics(self):
         # Symlink the instance's statics and assets
         copied_files = self._copy_statics_and_assets()
@@ -79,7 +111,9 @@ class LocalCommands(Commands):
             status_code=0,
         )
 
-    def update_statics_and_assets(self, force, flask_env="production", log_file=None):
+    def update_statics_and_assets(
+        self, force, flask_env="production", log_file=None, re_lock=True
+    ):
         """High-level command to update less/js/images/... files.
 
         Needed here (parent) because is used by Assets and Install commands.
@@ -87,11 +121,13 @@ class LocalCommands(Commands):
 
         # they are intentionally here. update_statics_and_assets could be called
         # on the invenio-cli install command. at the point the local.py is
-        # processed by the python interpreter the following three packages are
+        # processed by the python interpreter the following two packages are
         # not yet installed.
         from flask_collect import Collect
         from invenio_app.factory import create_app
 
+        # takes around 4 seconds
+        # the app is mainly used to set up the blueprints, therefore difficult to remove the creation
         app = create_app()
         app.config.setdefault(
             "JAVASCRIPT_PACKAGES_MANAGER", self.cli_config.javascript_packages_manager
@@ -99,17 +135,28 @@ class LocalCommands(Commands):
         app.config.setdefault("ASSETS_BUILDER", self.cli_config.assets_builder)
 
         collect = Collect(app)
-        project = app.extensions["invenio-assets"].project
 
+        project = app.extensions["invenio-assets"].project
         project.app = app
+
         collect.collect(verbose=True)
+
         project.clean()
         project.create()
+
+        if not re_lock:
+            self._symlink_locked_file()
+
+        # pnpm: around 10 seconds, with symlinked lock file 2 seconds
         project.install()
 
         self._copy_statics_and_assets()
         self._symlink_assets_templates()
+
+        # rspack: around 6 seconds
         project.build()
+
+        self._cache_locked_file()
 
         return ProcessResponse(output="Assets build", status_code=0)
 

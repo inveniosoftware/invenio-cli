@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -53,7 +54,7 @@ def install_all(cli_config, pre, dev, production):
     """
     commands = InstallCommands(cli_config)
     flask_env = "production" if production else "development"
-    steps = commands.install(pre=pre, dev=dev, flask_env=flask_env)
+    steps = commands.install(pre=pre, dev=dev, flask_env=flask_env, re_lock=False)
     on_fail = "Failed to install dependencies."
     on_success = "Dependencies installed successfully."
 
@@ -93,12 +94,13 @@ def install_python(cli_config, pre, dev):
     help="Production mode copies statics/assets. Development mode symlinks"
     " statics/assets.",
 )
+@click.option("--re-lock", default=False, is_flag=True, help="relock javascript.")
 @pass_cli_config
-def install_assets(cli_config, production):
+def install_assets(cli_config, production, re_lock):
     """Install assets."""
     commands = InstallCommands(cli_config)
     flask_env = "production" if production else "development"
-    steps = commands.install_assets(flask_env)
+    steps = commands.install_assets(flask_env, re_lock)
     on_fail = "Failed to install assets."
     on_success = "Assets installed successfully."
 

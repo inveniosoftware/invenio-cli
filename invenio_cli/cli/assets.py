@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2022-2024 Graz University of Technology.
+# Copyright (C) 2022-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -42,14 +42,16 @@ def assets():
 @click.option(
     "--node-log-file", default=None, help="Specify node log file (default: None)"
 )
+@click.option("--re-lock", default=False, is_flag=True, help="relock javascript.")
 @pass_cli_config
-def build(cli_config, no_wipe, production, node_log_file):
+def build(cli_config, no_wipe, production, node_log_file, re_lock):
     """Build the static and assets files on the local installation."""
     commands = AssetsCommands(cli_config)
     commands.update_statics_and_assets(
         force=not no_wipe,  # If no_wipe=True, it means force=False
         flask_env="production" if production else "development",
         log_file=node_log_file,
+        re_lock=re_lock,
     )
 
 
