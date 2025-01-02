@@ -113,9 +113,12 @@ class AssetsCommands(LocalCommands):
 
     def watch_assets(self):
         """High-level command to watch assets for changes."""
-        # Commands
-        prefix = ["pipenv", "run"]
-        watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
+        watch_cmd = self.cli_config.python_package_manager.run_command(
+            "invenio",
+            "webpack",
+            "run",
+            "start",
+        )
 
         with env(FLASK_DEBUG="true"):
             # Collect into statics/ and assets/ folder

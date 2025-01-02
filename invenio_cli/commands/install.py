@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2025 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Invenio module to ease the creation and management of applications."""
+
+import sys
 
 from ..helpers import filesystem
 from ..helpers.process import run_cmd
@@ -26,29 +28,25 @@ class InstallCommands(LocalCommands):
         """Install Python dependencies."""
         # If not locked, lock. Then install.
         steps = []
+        packages_commands = PackagesCommands(self.cli_config)
 
-        if PackagesCommands.is_locked().status_code > 0:
-            steps.extend(PackagesCommands.lock(pre, dev))
+        if packages_commands.is_locked().status_code > 0:
+            steps.extend(packages_commands.lock(pre, dev))
 
-        steps.extend(PackagesCommands.install_locked_dependencies(pre, dev))
+        steps.extend(packages_commands.install_locked_dependencies(pre, dev))
 
         return steps
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        # FIXME: Transform into steps.
-        # Currently not possible because the second step (update instance
-        # path) requires the ouptut of the previous step
         result = run_cmd(
-            [
-                "pipenv",
-                "run",
+            self.cli_config.python_package_manager.run_command(
                 "invenio",
                 "shell",
                 "--no-term-title",
                 "-c",
                 "\"print(app.instance_path, end='')\"",
-            ]
+            )
         )
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
@@ -93,7 +91,7 @@ class InstallCommands(LocalCommands):
             )
         ]
 
-    def install(self, pre, dev=False, flask_env="production"):
+    def install(self, pre, dev=False, debug=False, flask_env="production"):
         """Development installation steps."""
         steps = self.install_py_dependencies(pre=pre, dev=dev)
         steps.extend(self.symlink())
