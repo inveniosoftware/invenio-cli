@@ -9,7 +9,10 @@
 
 import os
 from abc import ABC
-from typing import List
+from pathlib import Path
+from typing import Dict, List, Union
+
+from pynpm import NPMPackage, PNPMPackage
 
 
 class PythonPackageManager(ABC):
@@ -171,3 +174,57 @@ class UV(PythonPackageManager):
         # Also, it has a good chance of not properly setting a PS1...
         shell = os.getenv("SHELL")
         return [shell, "-c", f"source .venv/bin/activate; exec {shell} -i"]
+
+
+class JavascriptPackageManager(ABC):
+    """Interface for creating tool-specific JS package management commands."""
+
+    name = None
+
+    def create_pynpm_package(self, package_json_path: Union[Path, str]) -> NPMPackage:
+        """Create a variant of ``NPMPackage`` with the path to ``package.json``."""
+        raise NotImplementedError()
+
+    def install_local_package(self, path: Union[Path, str]) -> List[str]:
+        """Install the local JS package."""
+        raise NotImplementedError()
+
+    def env_overrides(self) -> Dict[str, str]:
+        """Provide environment overrides for building Invenio assets."""
+        return {}
+
+
+class NPM(JavascriptPackageManager):
+    """Generate ``npm`` commands for managing JS packages."""
+
+    name = "npm"
+
+    def create_pynpm_package(self, package_json_path):
+        """Create an ``NPMPackage`` with the path to ``package.json``."""
+        return NPMPackage(package_json_path)
+
+    def install_local_package(self, path):
+        """Install the local JS package."""
+        return ["--prefix", str(path)]
+
+    def env_overrides(self):
+        """Provide environment overrides for building Invenio assets."""
+        return {"INVENIO_WEBPACKEXT_NPM_PKG_CLS": "pynpm:NPMPackage"}
+
+
+class PNPM(JavascriptPackageManager):
+    """Generate ``pnpm`` commands for managing JS packages."""
+
+    name = "pnpm"
+
+    def create_pynpm_package(self, package_json_path):
+        """Create a ``PNPMPackage`` with the path to ``package.json``."""
+        return PNPMPackage(package_json_path)
+
+    def install_local_package(self, path):
+        """Install the local JS package."""
+        return ["-C", str(path)]
+
+    def env_overrides(self):
+        """Provide environment overrides for building Invenio assets."""
+        return {"INVENIO_WEBPACKEXT_NPM_PKG_CLS": "pynpm:PNPMPackage"}
