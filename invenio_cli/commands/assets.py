@@ -7,11 +7,9 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import subprocess
 from pathlib import Path
 
 import click
-from pynpm import NPMPackage
 
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
@@ -26,17 +24,16 @@ class AssetsCommands(LocalCommands):
         """Constructor."""
         super().__init__(cli_config)
 
-    @staticmethod
-    def _module_pkg(path):
+    def _module_pkg(self, path):
         """NPM package for the given path."""
-        return NPMPackage(Path(path) / "package.json")
+        path = Path(path) / "package.json"
+        return self.cli_config.javascript_package_manager.create_pynpm_package(path)
 
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
         return self._module_pkg(self.cli_config.get_instance_path() / "assets")
 
-    @staticmethod
-    def _watch_js_module(pkg):
+    def _watch_js_module(self, pkg):
         """Watch the JS module for changes."""
         click.secho("Starting watching module...", fg="green")
         status_code = pkg.run_script("watch")
@@ -62,10 +59,12 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
-    @staticmethod
-    def _npm_install_command(path):
+    def _npm_install_command(self, path, module_pkg):
         """Run command and return a ProcessResponse."""
-        status_code = subprocess.call(["npm", "install", "--prefix", path])
+        install_args = self.cli_config.javascript_package_manager.install_local_package(
+            path
+        )
+        status_code = module_pkg.install(" ".join(install_args))
         if status_code == 0:
             return ProcessResponse(
                 output="Dependent packages installed correctly", status_code=0
@@ -135,7 +134,7 @@ class AssetsCommands(LocalCommands):
         steps = [
             FunctionStep(  # Install dependent packages
                 func=self._npm_install_command,
-                args={"path": path},
+                args={"path": path, "module_pkg": module_pkg},
                 message="Installing dependent packages...",
             ),
             FunctionStep(  # Run build script
