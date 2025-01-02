@@ -4,6 +4,7 @@
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019-2021 Northwestern University.
 # Copyright (C) 2022 Forschungszentrum Jülich GmbH.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -21,7 +22,7 @@ from cookiecutter.main import cookiecutter
 from .cli_config import CLIConfig
 
 
-class CookiecutterWrapper(object):
+class CookiecutterWrapper:
     """Cookiecutter helper object for InvenioCLI."""
 
     @classmethod

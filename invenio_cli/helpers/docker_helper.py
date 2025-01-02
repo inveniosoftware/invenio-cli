@@ -4,7 +4,7 @@
 # Copyright (C) 2019 CERN.
 # Copyright (C) 2019 Northwestern University.
 # Copyright (C) 2023 ULB Münster.
-# Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -20,7 +20,7 @@ from .process import ProcessResponse, run_cmd, run_interactive
 DOCKER_COMPOSE_VERSION_DASH = "1.21.0"
 
 
-class DockerHelper(object):
+class DockerHelper:
     """Utility class to interact with docker-compose."""
 
     def __init__(self, project_shortname, local=True, log_config=None):

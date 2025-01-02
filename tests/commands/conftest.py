@@ -3,6 +3,7 @@
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -19,7 +20,7 @@ import pytest
 def mock_cli_config():
     """Mock CLIConfig object."""
 
-    class MockCLIConfig(object):
+    class MockCLIConfig:
         def __init__(self):
             self.services_setup = False
 

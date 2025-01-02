@@ -3,6 +3,7 @@
 # Copyright (C) 2020-2021 CERN.
 # Copyright (C) 2021 TU Wien.
 # Copyright (C) 2023 ULB Münster.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,15 +13,14 @@
 import json
 import re
 import sys
-from os import listdir
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.process import ProcessResponse, run_cmd
 from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
 
 
-class RequirementsCommands(object):
+class RequirementsCommands:
     """Pre-requirements check."""
 
     @classmethod
