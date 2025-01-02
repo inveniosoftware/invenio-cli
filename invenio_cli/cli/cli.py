@@ -73,9 +73,10 @@ def check_requirements(development):
 
 
 @invenio_cli.command()
-def shell():
+@pass_cli_config
+def shell(cli_config):
     """Shell command."""
-    Commands.shell()
+    Commands(cli_config).shell()
 
 
 @invenio_cli.command()
@@ -86,9 +87,10 @@ def shell():
     is_flag=True,
     help="Enable Flask development mode (default: disabled).",
 )
-def pyshell(debug):
+@pass_cli_config
+def pyshell(cli_config, debug):
     """Python shell command."""
-    Commands.pyshell(debug=debug)
+    Commands(cli_config).pyshell(debug=debug)
 
 
 @invenio_cli.command()
@@ -290,9 +292,10 @@ def destroy(cli_config):
 
 @invenio_cli.command()
 @click.option("--script", required=True, help="The path of custom migration script.")
-def upgrade(script):
+@pass_cli_config
+def upgrade(cli_config, script):
     """Upgrades the current instance to a newer version."""
-    steps = UpgradeCommands.upgrade(script)
+    steps = UpgradeCommands(cli_config).upgrade(script)
     on_fail = "Upgrade failed."
     on_success = "Upgrade sucessfull."
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -34,7 +35,7 @@ class ContainersCommands(ServicesCommands):
         """
         steps = [
             FunctionStep(
-                func=PackagesCommands.is_locked,
+                func=lambda: PackagesCommands(self.cli_config).is_locked(),
                 message="Checking if dependencies are locked.",
             ),
             FunctionStep(
@@ -233,6 +234,7 @@ class ContainersCommands(ServicesCommands):
     def translations(self, project_shortname):
         """Steps to compile translations for the instance."""
         commands = TranslationsCommands(
+            self.cli_config,
             project_path=self.cli_config.get_project_dir(),
             # we use INVENIO_INSTANCE_PATH that is set in the Dockerfile as
             # config.instance_path is set only in development `install` command
@@ -312,7 +314,7 @@ class ContainersCommands(ServicesCommands):
 
         if lock:
             # FIXME: Should this params be accepted? sensible defaults?
-            steps.extend(PackagesCommands.lock(pre=True, dev=True))
+            steps.extend(PackagesCommands(self.cli_config).lock(pre=True, dev=True))
 
         if build:
             steps.extend(self.build())

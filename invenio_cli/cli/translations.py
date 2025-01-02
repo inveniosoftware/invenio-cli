@@ -31,7 +31,7 @@ def translations():
 def extract(cli_config, babel_ini):
     """Extract messages for i18n support (translations)."""
     click.secho("Extracting messages...", fg="green")
-    steps = TranslationsCommands.extract(
+    steps = TranslationsCommands(cli_config).extract(
         msgid_bugs_address=cli_config.get_author_email(),
         copyright_holder=cli_config.get_author_name(),
         babel_file=cli_config.get_project_dir() / Path("translations/babel.ini"),
@@ -50,7 +50,7 @@ def extract(cli_config, babel_ini):
 def init(cli_config, locale):
     """Initialized message catalog for a given locale."""
     click.secho("Initializing messages catalog...", fg="green")
-    steps = TranslationsCommands.init(
+    steps = TranslationsCommands(cli_config).init(
         output_dir=cli_config.get_project_dir() / Path("translations/"),
         input_file=cli_config.get_project_dir() / Path("translations/messages.pot"),
         locale=locale,
@@ -66,7 +66,7 @@ def init(cli_config, locale):
 def update(cli_config):
     """Update messages catalog."""
     click.secho("Updating messages catalog...", fg="green")
-    steps = TranslationsCommands.update(
+    steps = TranslationsCommands(cli_config).update(
         output_dir=cli_config.get_project_dir() / Path("translations/"),
         input_file=cli_config.get_project_dir() / Path("translations/messages.pot"),
     )
@@ -83,6 +83,7 @@ def compile(cli_config, fuzzy):
     """Compile message catalog."""
     click.secho("Compiling catalog...", fg="green")
     commands = TranslationsCommands(
+        cli_config,
         project_path=cli_config.get_project_dir(),
         instance_path=cli_config.get_instance_path(),
     )
