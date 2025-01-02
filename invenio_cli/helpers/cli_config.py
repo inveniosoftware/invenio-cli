@@ -61,6 +61,11 @@ class CLIConfig(object):
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
 
+    @property
+    def python_packages_manager(self):
+        """Get python package manager."""
+        return self.config[CLIConfig.CLI_SECTION].get("python_packages_manager", "pip")
+
     def get_project_dir(self):
         """Returns path to project directory."""
         return self.config_path.parent.resolve()

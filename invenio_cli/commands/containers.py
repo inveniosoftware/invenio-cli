@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -34,7 +35,7 @@ class ContainersCommands(ServicesCommands):
         """
         steps = [
             FunctionStep(
-                func=PackagesCommands.is_locked,
+                func=lambda: PackagesCommands(self.cli_config).is_locked(),
                 message="Checking if dependencies are locked.",
             ),
             FunctionStep(
@@ -315,7 +316,7 @@ class ContainersCommands(ServicesCommands):
 
         if lock:
             # FIXME: Should this params be accepted? sensible defaults?
-            steps.extend(PackagesCommands.lock(pre=True, dev=True))
+            steps.extend(PackagesCommands(self.cli_config).lock(pre=True, dev=True))
 
         if build:
             steps.extend(self.build())

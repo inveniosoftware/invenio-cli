@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020-2021 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -34,7 +34,7 @@ def lock(cli_config, pre, dev):
         + f"Include dev-packages: {dev}.",
         fg="green",
     )
-    steps = PackagesCommands.lock(pre, dev)
+    steps = PackagesCommands(cli_config).lock(pre, dev)
     on_fail = "Failed to lock dependencies."
     on_success = "Dependencies locked successfully."
 
@@ -58,7 +58,7 @@ def install(cli_config, packages, skip_build, pip_log_file, node_log_file):
     if len(packages) < 1:
         raise click.UsageError("You must specify at least one package.")
 
-    steps = PackagesCommands.install_packages(packages, pip_log_file)
+    steps = PackagesCommands(cli_config).install_packages(packages, pip_log_file)
 
     on_fail = f"Failed to install packages {packages}."
     on_success = f"Packages {packages} installed successfully."
@@ -77,7 +77,7 @@ def install(cli_config, packages, skip_build, pip_log_file, node_log_file):
 @pass_cli_config
 def outdated(cli_config):
     """Show outdated Python dependencies."""
-    steps = PackagesCommands.outdated_packages()
+    steps = PackagesCommands(cli_config).outdated_packages()
 
     on_fail = "Some of the packages need to be updated."
     on_success = "All packages are up to date."
@@ -94,11 +94,13 @@ def update(cli_config, version=None):
         db = cli_config.get_db_type()
         search = cli_config.get_search_type()
         package = f"invenio-app-rdm[{db},{search}]~="
-        steps = PackagesCommands.update_package_new_version(package, version)
+        steps = PackagesCommands(cli_config).update_package_new_version(
+            package, version
+        )
         on_fail = f"Failed to update version {version}"
         on_success = f"Version {version} installed successfully."
     else:
-        steps = PackagesCommands.update_packages()
+        steps = PackagesCommands(cli_config).update_packages()
         on_fail = "Failed to update packages."
         on_success = "Packages installed successfully."
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2025 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -26,11 +26,12 @@ class InstallCommands(LocalCommands):
         """Install Python dependencies."""
         # If not locked, lock. Then install.
         steps = []
+        packages_commands = PackagesCommands(self.cli_config)
 
-        if PackagesCommands.is_locked().status_code > 0:
-            steps.extend(PackagesCommands.lock(pre, dev))
+        if packages_commands.is_locked().status_code > 0:
+            steps.extend(packages_commands.lock(pre, dev))
 
-        steps.extend(PackagesCommands.install_locked_dependencies(pre, dev))
+        steps.extend(packages_commands.install_locked_dependencies(pre, dev))
 
         return steps
 
