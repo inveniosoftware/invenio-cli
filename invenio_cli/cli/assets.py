@@ -56,6 +56,14 @@ def build(cli_config, no_wipe, production, node_log_file, re_lock):
 
 
 @assets.command()
+@pass_cli_config
+def lock(cli_config):
+    """Lock assets."""
+    commands = AssetsCommands(cli_config)
+    commands.lock()
+
+
+@assets.command()
 @click.argument("path", type=click.Path(exists=True))
 @pass_cli_config
 def install(cli_config, path):

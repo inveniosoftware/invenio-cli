@@ -160,6 +160,35 @@ class LocalCommands(Commands):
 
         return ProcessResponse(output="Assets build", status_code=0)
 
+    def lock(self):
+        """Lock javascript dependencies."""
+        from flask_collect import Collect
+        from invenio_app.factory import create_app
+
+        # takes around 4 seconds
+        # the app is mainly used to set up the blueprints, therefore difficult to remove the creation
+        app = create_app()
+        app.config.setdefault(
+            "JAVASCRIPT_PACKAGES_MANAGER", self.cli_config.javascript_packages_manager
+        )
+        app.config.setdefault("ASSETS_BUILDER", self.cli_config.assets_builder)
+
+        collect = Collect(app)
+
+        project = app.extensions["invenio-assets"].project
+        project.app = app
+
+        collect.collect(verbose=True)
+
+        project.clean()
+        project.create()
+
+        project.install("--lockfile-only")
+
+        self._cache_locked_file()
+
+        return ProcessResponse(output="Assets locked", status_code=0)
+
     def _handle_sigint(self, name, process):
         """Terminate services on SIGINT."""
         prev_handler = signal.getsignal(signal.SIGINT)
