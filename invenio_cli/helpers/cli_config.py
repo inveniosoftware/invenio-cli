@@ -63,8 +63,20 @@ class CLIConfig(object):
 
     @property
     def python_packages_manager(self):
-        """Get python package manager."""
+        """Get python packages manager."""
         return self.config[CLIConfig.CLI_SECTION].get("python_packages_manager", "pip")
+
+    @property
+    def javascript_packages_manager(self):
+        """Get javascript packages manager."""
+        return self.config[CLIConfig.CLI_SECTION].get(
+            "javascript_packages_manager", "npm"
+        )
+
+    @property
+    def assets_builder(self):
+        """Get assets builder."""
+        return self.config[CLIConfig.CLI_SECTION].get("assets_builder", "webpack")
 
     def get_project_dir(self):
         """Returns path to project directory."""
