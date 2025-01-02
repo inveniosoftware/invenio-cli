@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2022-2024 Graz University of Technology.
+# Copyright (C) 2022-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -93,6 +93,11 @@ class LocalCommands(Commands):
         from invenio_app.factory import create_app
 
         app = create_app()
+        app.config.setdefault(
+            "JAVASCRIPT_PACKAGES_MANAGER", self.cli_config.javascript_packages_manager
+        )
+        app.config.setdefault("ASSETS_BUILDER", self.cli_config.assets_builder)
+
         collect = Collect(app)
         project = app.extensions["invenio-assets"].project
 
