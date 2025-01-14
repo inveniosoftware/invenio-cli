@@ -139,7 +139,7 @@ class LocalCommands(Commands):
         project = app.extensions["invenio-assets"].project
         project.app = app
 
-        collect.collect(verbose=True)
+        collect.collect(verbose=False)
 
         project.clean()
         project.create()
