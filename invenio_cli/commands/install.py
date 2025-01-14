@@ -12,10 +12,12 @@
 import os
 import site
 import sys
+from contextlib import suppress
 from pathlib import Path
 
+from ..errors import InvenioCLIConfigError
 from ..helpers import filesystem
-from ..helpers.process import ProcessResponse
+from ..helpers.process import ProcessResponse, run_cmd
 from .local import LocalCommands
 from .packages import PackagesCommands
 from .steps import FunctionStep
@@ -60,20 +62,29 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        # https://github.com/inveniosoftware/invenio-app/blob/master/invenio_app/factory.py#L34
-        # a problem is INVENIO_INSTANCE_PATH is set to not default!
-        # maybe give possibility to override via click command!
-        instance_path = f"{sys.prefix}/var/instance"
-        self.cli_config.update_instance_path(instance_path)
-
         try:
-            os.makedirs(instance_path)
-        except FileExistsError:
-            pass
+            instance_path = self.cli_config.get_instance_path()
 
-        return ProcessResponse(
-            output="Instance path updated successfully.", status_code=0
-        )
+            with suppress(FileExistsError):
+                os.makedirs(instance_path)
+
+            return ProcessResponse(output="Instance path already set.", status_code=0)
+        except InvenioCLIConfigError:
+            result = run_cmd(
+                [
+                    "pipenv",
+                    "run",
+                    "invenio",
+                    "shell",
+                    "--no-term-title",
+                    "-c",
+                    "\"print(app.instance_path, end='')\"",
+                ]
+            )
+            if result.status_code == 0:
+                self.cli_config.update_instance_path(result.output.strip())
+                result.output = "Instance path updated successfully."
+            return result
 
     def _symlink_project_file_or_folder(self, target):
         """Create symlink in instance pointing to project file or folder."""
