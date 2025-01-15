@@ -232,7 +232,7 @@ class LocalCommands(Commands):
         click.secho(f"Instance running!\nVisit https://{host}:{port}", fg="green")
         return [proc]
 
-    def run_worker(self, celery_log_file=None):
+    def run_worker(self, celery_log_file=None, celery_log_level="INFO"):
         """Run Celery worker."""
         click.secho("Starting celery worker...", fg="green")
 
@@ -246,7 +246,7 @@ class LocalCommands(Commands):
             "--beat",
             "--events",
             "--loglevel",
-            "INFO",
+            celery_log_level,
             "--queues",
             "celery,low",
         ]
@@ -262,9 +262,17 @@ class LocalCommands(Commands):
         click.secho("Worker running!", fg="green")
         return [proc]
 
-    def run_all(self, host, port, debug=True, services=True, celery_log_file=None):
+    def run_all(
+        self,
+        host,
+        port,
+        debug=True,
+        services=True,
+        celery_log_file=None,
+        celery_log_level="INFO",
+    ):
         """Run all services."""
         return [
             *self.run_web(host, port, debug),
-            *self.run_worker(celery_log_file),
+            *self.run_worker(celery_log_file, celery_log_level),
         ]
