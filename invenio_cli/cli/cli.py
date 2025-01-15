@@ -3,7 +3,7 @@
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019 Northwestern University.
 # Copyright (C) 2022 Forschungszentrum Jülich GmbH.
-# Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -213,6 +213,11 @@ worker_options = combine_decorators(
         default=None,
         help="Celery log file (default: None, this means logging to stderr)",
     ),
+    click.option(
+        "--celery-log-level",
+        default="INFO",
+        help="Celery log level (default: INFO)",
+    ),
 )
 
 
@@ -220,7 +225,7 @@ worker_options = combine_decorators(
 @services_option
 @worker_options
 @pass_cli_config
-def run_worker(cli_config, services, celery_log_file):
+def run_worker(cli_config, services, celery_log_file, celery_log_level):
     """Starts the local development server."""
     if services:
         cmds = ServicesCommands(cli_config)
@@ -229,7 +234,9 @@ def run_worker(cli_config, services, celery_log_file):
         handle_process_response(response)
 
     commands = LocalCommands(cli_config)
-    processes = commands.run_worker(celery_log_file=celery_log_file)
+    processes = commands.run_worker(
+        celery_log_file=celery_log_file, celery_log_level=celery_log_level
+    )
     for proc in processes:
         proc.wait()
 
@@ -239,7 +246,7 @@ def run_worker(cli_config, services, celery_log_file):
 @web_options
 @worker_options
 @pass_cli_config
-def run_all(cli_config, host, port, debug, services, celery_log_file):
+def run_all(cli_config, host, port, debug, services, celery_log_file, celery_log_level):
     """Starts web and worker development servers."""
     if services:
         cmds = ServicesCommands(cli_config)
@@ -257,6 +264,7 @@ def run_all(cli_config, host, port, debug, services, celery_log_file):
         debug=debug,
         services=services,
         celery_log_file=celery_log_file,
+        celery_log_level=celery_log_level,
     )
     for proc in processes:
         proc.wait()
