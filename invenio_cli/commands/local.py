@@ -118,7 +118,6 @@ class LocalCommands(Commands):
 
         Needed here (parent) because is used by Assets and Install commands.
         """
-
         # they are intentionally here. update_statics_and_assets could be called
         # on the invenio-cli install command. at the point the local.py is
         # processed by the python interpreter the following two packages are
