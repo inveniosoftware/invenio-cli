@@ -123,11 +123,12 @@ class LocalCommands(Commands):
         # processed by the python interpreter the following two packages are
         # not yet installed.
         from flask_collect import Collect
-        from invenio_app.factory import create_app
+        from invenio_app.factory import create_ui
 
         # takes around 4 seconds
         # the app is mainly used to set up the blueprints, therefore difficult to remove the creation
-        app = create_app()
+        app = create_ui()
+
         app.config.setdefault(
             "JAVASCRIPT_PACKAGES_MANAGER", self.cli_config.javascript_packages_manager
         )
