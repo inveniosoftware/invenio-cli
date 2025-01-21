@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -8,10 +9,11 @@
 """Invenio module to ease the creation and management of applications."""
 
 import subprocess
+import sys
 from pathlib import Path
 
 import click
-from pynpm import NPMPackage
+from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
@@ -26,10 +28,15 @@ class AssetsCommands(LocalCommands):
         """Constructor."""
         super().__init__(cli_config)
 
-    @staticmethod
-    def _module_pkg(path):
+    def _module_pkg(self, path):
         """NPM package for the given path."""
-        return NPMPackage(Path(path) / "package.json")
+        if self.cli_config.javascript_packages_manager == "npm":
+            return NPMPackage(Path(path) / "package.json")
+        elif self.cli_config.javascript_packages_manager == "pnpm":
+            return PNPMPackage(Path(path) / "package.json")
+        else:
+            print("please configure javascript package manager.")
+            sys.exit()
 
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
@@ -72,8 +79,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error="Unable to install dependent packages. "
-                "Got error code {status_code}",
+                error=f"Unable to install dependent packages. Got error code {status_code}",
                 status_code=status_code,
             )
 
@@ -103,7 +109,8 @@ class AssetsCommands(LocalCommands):
         status_code = assets_pkg.link(module_name)
         if status_code == 0:
             return ProcessResponse(
-                output="Global module linked correctly to local folder", status_code=0
+                output="Global module linked correctly to local folder",
+                status_code=0,
             )
         else:
             return ProcessResponse(
@@ -113,8 +120,14 @@ class AssetsCommands(LocalCommands):
 
     def watch_assets(self):
         """High-level command to watch assets for changes."""
-        # Commands
-        prefix = ["pipenv", "run"]
+        if self.cli_config.python_packages_manager == "uv":
+            prefix = ["uv", "run"]
+        elif self.cli_config.python_packages_manager == "pip":
+            prefix = ["pipenv", "run"]
+        else:
+            print("please configure python package manager.")
+            sys.exit()
+
         watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
 
         with env(FLASK_DEBUG="true"):
