@@ -125,6 +125,11 @@ class LocalCommands(Commands):
         from flask_collect import Collect
         from invenio_app.factory import create_ui
 
+        # this is necessary to have the instance_path pointing to the active
+        # virtual environment, if invenio-cli is used from a global context.
+        # this is used in create_ui
+        os.environ["INVENIO_INSTANCE_PATH"] = str(self.cli_config.get_instance_path())
+
         # takes around 4 seconds
         # the app is mainly used to set up the blueprints, therefore difficult to remove the creation
         app = create_ui()

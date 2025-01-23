@@ -11,33 +11,15 @@
 
 import os
 import site
-import sys
 from contextlib import suppress
-from pathlib import Path
 
 from ..errors import InvenioCLIConfigError
 from ..helpers import filesystem
 from ..helpers.process import ProcessResponse, run_cmd
+from .commands import reload_editable_package
 from .local import LocalCommands
 from .packages import PackagesCommands
 from .steps import FunctionStep
-
-
-def reload_editable_package(item):
-    """Reload editable packages.
-
-    Manually process a .pth file to add paths to sys.path or execute import
-    statements. Only necessary on the install step, because assets build doesn't
-    know the previously install packages
-    """
-    with Path(item).open("r") as pth_file:
-        for line in pth_file:
-            line = line.strip()
-
-            if line.startswith("import"):
-                exec(line)
-            elif os.path.isdir(line) and line not in sys.path:
-                sys.path.insert(0, line)
 
 
 class InstallCommands(LocalCommands):
