@@ -8,7 +8,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 import click
 
 from ..commands import AssetsCommands, PackagesCommands
@@ -70,7 +69,7 @@ def install(cli_config, packages, skip_build, pip_log_file, node_log_file):
     if not skip_build:
         click.secho("Rebuilding assets...")
         AssetsCommands(cli_config).update_statics_and_assets(
-            force=True, flask_env="development", log_file=node_log_file
+            force=True, debug=True, log_file=node_log_file
         )
 
 

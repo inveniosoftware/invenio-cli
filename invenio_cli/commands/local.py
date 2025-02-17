@@ -78,7 +78,7 @@ class LocalCommands(Commands):
             status_code=0,
         )
 
-    def update_statics_and_assets(self, force, flask_env="production", log_file=None):
+    def update_statics_and_assets(self, force, debug=False, log_file=None):
         """High-level command to update less/js/images/... files.
 
         Needed here (parent) because is used by Assets and Install commands.
@@ -101,7 +101,7 @@ class LocalCommands(Commands):
             "install": "Installing JS dependencies...",
         }
 
-        with env(FLASK_ENV=flask_env):
+        with env(FLASK_DEUBG="true" if debug else "false"):
             for op in ops:
                 if callable(op):
                     response = op()
@@ -153,7 +153,7 @@ class LocalCommands(Commands):
 
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
-        run_env["FLASK_ENV"] = "development" if debug else "production"
+        run_env["FLASK_DEBUG"] = str(debug)
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
         server = popen(
