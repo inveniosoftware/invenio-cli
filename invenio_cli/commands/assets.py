@@ -7,7 +7,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 import subprocess
 from pathlib import Path
 
@@ -73,7 +72,7 @@ class AssetsCommands(LocalCommands):
             )
         else:
             return ProcessResponse(
-                error=f"Unable to install dependent packages. "
+                error="Unable to install dependent packages. "
                 "Got error code {status_code}",
                 status_code=status_code,
             )
@@ -118,7 +117,7 @@ class AssetsCommands(LocalCommands):
         prefix = ["pipenv", "run"]
         watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
 
-        with env(FLASK_ENV="development"):
+        with env(FLASK_DEBUG="true"):
             # Collect into statics/ and assets/ folder
             click.secho(
                 "Starting assets watching (press CTRL+C to stop)...", fg="green"

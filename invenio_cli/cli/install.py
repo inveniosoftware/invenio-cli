@@ -43,8 +43,11 @@ def install(cli_config, pre, dev, production):
     builds front-end assets.
     """
     commands = InstallCommands(cli_config)
-    flask_env = "production" if production else "development"
-    steps = commands.install(pre=pre, dev=dev, flask_env=flask_env)
+    steps = commands.install(
+        pre=pre,
+        dev=dev,
+        debug=not production,
+    )
     on_fail = "Failed to install dependencies."
     on_success = "Dependencies installed successfully."
 
