@@ -8,6 +8,8 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import sys
+
 from ..helpers import filesystem
 from ..helpers.process import run_cmd
 from .local import LocalCommands
@@ -37,12 +39,17 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        # FIXME: Transform into steps.
-        # Currently not possible because the second step (update instance
-        # path) requires the ouptut of the previous step
+        if self.cli_config.python_packages_manager == "uv":
+            prefix = "uv"
+        elif self.cli_config.python_packages_manager == "pip":
+            prefix = "pipenv"
+        else:
+            print("please configure python package manager.")
+            sys.exit()
+
         result = run_cmd(
             [
-                "pipenv",
+                prefix,
                 "run",
                 "invenio",
                 "shell",
