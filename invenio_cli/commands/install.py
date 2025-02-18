@@ -44,29 +44,21 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        try:
-            instance_path = self.cli_config.get_instance_path()
-
-            with suppress(FileExistsError):
-                os.makedirs(instance_path)
-
-            return ProcessResponse(output="Instance path already set.", status_code=0)
-        except InvenioCLIConfigError:
-            result = run_cmd(
-                [
-                    "pipenv",
-                    "run",
-                    "invenio",
-                    "shell",
-                    "--no-term-title",
-                    "-c",
-                    "\"print(app.instance_path, end='')\"",
-                ]
-            )
-            if result.status_code == 0:
-                self.cli_config.update_instance_path(result.output.strip())
-                result.output = "Instance path updated successfully."
-            return result
+        result = run_cmd(
+            [
+                "pipenv",
+                "run",
+                "invenio",
+                "shell",
+                "--no-term-title",
+                "-c",
+                "\"print(app.instance_path, end='')\"",
+            ]
+        )
+        if result.status_code == 0:
+            self.cli_config.update_instance_path(result.output.strip())
+            result.output = "Instance path updated successfully."
+        return result
 
     def _symlink_project_file_or_folder(self, target):
         """Create symlink in instance pointing to project file or folder."""
