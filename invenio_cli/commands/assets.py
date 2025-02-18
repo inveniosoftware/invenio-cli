@@ -133,13 +133,7 @@ class AssetsCommands(LocalCommands):
             print("please configure python package manager.")
             sys.exit()
 
-        if self.cli_config.assets_builder == "webpack":
-            watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
-        elif self.cli_config.assets_builder == "rspack":
-            watch_cmd = prefix + ["invenio", "webpack", "run", "start-rspack"]
-        else:
-            print("please configure assets builder.")
-            sys.exit()
+        watch_cmd = prefix + ["invenio", "webpack", "run", "start"]
 
         with env(FLASK_ENV="development"):
             # Collect into statics/ and assets/ folder
