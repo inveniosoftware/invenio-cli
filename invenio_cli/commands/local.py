@@ -18,8 +18,8 @@ from subprocess import Popen as popen
 
 import click
 
-from ..helpers import filesystem  # env,
-from ..helpers.process import ProcessResponse  # , run_interactive
+from ..helpers import env, filesystem
+from ..helpers.process import ProcessResponse, run_interactive
 from .commands import Commands
 
 
@@ -30,7 +30,7 @@ class LocalCommands(Commands):
         """Constructor."""
         super().__init__(cli_config)
 
-    def _symlink_assets_templates(self):
+    def _symlink_assets_templates(self, *args, **kwargs):
         """Symlink the assets folder."""
         files_to_link = self._copied_files
         assets = "assets"
@@ -102,7 +102,7 @@ class LocalCommands(Commands):
         if not source_path.is_symlink():
             copyfile(source_path, target_path)
 
-    def _statics(self):
+    def _statics(self, *args, **kwargs):
         # Symlink the instance's statics and assets
         copied_files = self._copy_statics_and_assets()
         self._symlink_assets_templates(copied_files)
@@ -118,52 +118,39 @@ class LocalCommands(Commands):
 
         Needed here (parent) because is used by Assets and Install commands.
         """
-        # they are intentionally here. update_statics_and_assets could be called
-        # on the invenio-cli install command. at the point the local.py is
-        # processed by the python interpreter the following two packages are
-        # not yet installed.
-        from flask_collect import Collect
-        from invenio_app.factory import create_ui
+        # Commands
+        prefix = ["pipenv", "run", "invenio"]
 
-        # this is necessary to have the instance_path pointing to the active
-        # virtual environment, if invenio-cli is used from a global context.
-        # this is used in create_ui
-        os.environ["INVENIO_INSTANCE_PATH"] = str(self.cli_config.get_instance_path())
+        ops = [prefix + ["collect", "--verbose"]]
 
-        # takes around 4 seconds
-        # the app is mainly used to set up the blueprints, therefore difficult to remove the creation
-        app = create_ui()
+        if force:
+            ops.append(prefix + ["webpack", "clean", "create"])
+            ops.append(prefix + ["webpack", "install"])
+        else:
+            ops.append(prefix + ["webpack", "create"])
+        ops.append(self._statics)
+        ops.append(prefix + ["webpack", "build"])
+        # Keep the same messages for some of the operations for backward compatibility
+        messages = {
+            "build": "Building assets...",
+            "install": "Installing JS dependencies...",
+        }
 
-        app.config.setdefault(
-            "JAVASCRIPT_PACKAGES_MANAGER", self.cli_config.javascript_packages_manager
-        )
-        app.config.setdefault("ASSETS_BUILDER", self.cli_config.assets_builder)
-
-        collect = Collect(app)
-
-        project = app.extensions["invenio-assets"].project
-        project.app = app
-
-        collect.collect(verbose=False)
-
-        project.clean()
-        project.create()
-
-        if not re_lock:
-            self._symlink_locked_file()
-
-        # pnpm: around 10 seconds, with symlinked lock file 2 seconds
-        project.install()
-
-        self._copy_statics_and_assets()
-        self._symlink_assets_templates()
-
-        # rspack: around 6 seconds
-        project.build()
-
-        self._cache_locked_file()
-
-        return ProcessResponse(output="Assets build", status_code=0)
+        with env(FLASK_DEBUG="true"):
+            for op in ops:
+                if callable(op):
+                    response = op()
+                else:
+                    if op[-1] in messages:
+                        click.secho(messages[op[-1]], fg="green")
+                    response = run_interactive(
+                        op,
+                        env={"PIPENV_VERBOSITY": "-1"},
+                        log_file=log_file,
+                    )
+                if response.status_code != 0:
+                    break
+        return response
 
     def lock(self):
         """Lock javascript dependencies."""
