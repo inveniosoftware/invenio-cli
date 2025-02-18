@@ -10,6 +10,7 @@
 
 import os
 import signal
+import sys
 from distutils.dir_util import copy_tree
 from os import environ, symlink
 from pathlib import Path
@@ -119,7 +120,13 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        prefix = ["pipenv", "run", "invenio"]
+        if self.cli_config.python_packages_manager == "uv":
+            prefix = ["uv", "run", "invenio"]
+        elif self.cli_config.python_packages_manager == "pip":
+            prefix = ["pipenv", "run", "invenio"]
+        else:
+            print("please configure python package manager.")
+            sys.exit()
 
         ops = [prefix + ["collect", "--verbose"]]
 
