@@ -69,7 +69,7 @@ class Commands:
     @classmethod
     def pyshell(cls, debug=False):
         """Start a Python shell."""
-        with env(FLASK_ENV="development" if debug else "production"):
+        with env(FLASK_DEBUG=str(debug)):
             command = ["pipenv", "run", "invenio", "shell"]
             return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 

@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -159,9 +160,7 @@ def test_install(mock_cli_config):
     commands._update_instance_path.assert_called()
     expected_symlink_calls = [call("invenio.cfg"), call("templates"), call("app_data")]
     assert commands._symlink_project_file_or_folder.mock_calls == expected_symlink_calls
-    commands.update_statics_and_assets.assert_called_with(
-        force=True, flask_env="production"
-    )
+    commands.update_statics_and_assets.assert_called_with(force=True, debug=False)
 
 
 @pytest.mark.skip()
@@ -285,7 +284,7 @@ def test_run(
     commands.run(host=host, port=port, debug=True)
 
     run_env = environ.copy()
-    run_env["FLASK_ENV"] = "development"
+    run_env["FLASK_DEBUG"] = "True"
     run_env["INVENIO_SITE_HOSTNAME"] = f"{host}:{port}"
     expected_calls = [
         call(["pipenv", "run", "celery", "--app", "invenio_app.celery", "worker"]),

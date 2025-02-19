@@ -112,7 +112,7 @@ class LocalCommands(Commands):
         )
 
     def update_statics_and_assets(
-        self, force, flask_env="production", log_file=None, re_lock=True
+        self, force, debug=False, log_file=None, re_lock=True
     ):
         """High-level command to update less/js/images/... files.
 
@@ -211,7 +211,7 @@ class LocalCommands(Commands):
         """Run development server."""
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
-        run_env["FLASK_ENV"] = "development" if debug else "production"
+        run_env["FLASK_DEBUG"] = str(debug)
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
         proc = popen(

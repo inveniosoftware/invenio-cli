@@ -49,7 +49,7 @@ def build(cli_config, no_wipe, production, node_log_file, re_lock):
     commands = AssetsCommands(cli_config)
     commands.update_statics_and_assets(
         force=not no_wipe,  # If no_wipe=True, it means force=False
-        flask_env="production" if production else "development",
+        debug=not production,
         log_file=node_log_file,
         re_lock=re_lock,
     )

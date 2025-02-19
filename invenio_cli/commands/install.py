@@ -110,7 +110,7 @@ class InstallCommands(LocalCommands):
             output="Reloaded successfully editable packages.", status_code=0
         )
 
-    def install_assets(self, flask_env="production", re_lock=True):
+    def install_assets(self, debug=False, re_lock=True):
         """Install assets."""
         return [
             FunctionStep(
@@ -119,15 +119,15 @@ class InstallCommands(LocalCommands):
             ),
             FunctionStep(
                 func=self.update_statics_and_assets,
-                args={"force": True, "flask_env": flask_env, "re_lock": re_lock},
+                args={"force": True, "debug": debug, "re_lock": re_lock},
                 message="Updating statics and assets...",
             ),
         ]
 
-    def install(self, pre, dev=False, flask_env="production", re_lock=True):
+    def install(self, pre, dev=False, debug=False, re_lock=True):
         """Development installation steps."""
         steps = []
         steps.extend(self.install_py_dependencies(pre=pre, dev=dev))
         steps.extend(self.symlink())
-        steps.extend(self.install_assets(flask_env, re_lock))
+        steps.extend(self.install_assets(debug, re_lock))
         return steps
