@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import click
-from pynpm import NPMPackage
+from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
@@ -31,9 +31,6 @@ class AssetsCommands(LocalCommands):
 
     def _module_pkg(self, path):
         """NPM package for the given path."""
-        # the import statement is here, because flask_webpackext is installed afterwards
-        from flask_webpackext.project import PNPMPackage
-
         if self.cli_config.javascript_packages_manager == "npm":
             return NPMPackage(Path(path) / "package.json")
         elif self.cli_config.javascript_packages_manager == "pnpm":
