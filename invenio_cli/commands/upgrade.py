@@ -27,7 +27,7 @@ class UpgradeCommands(object):
         Last, the search indices are destroyed, initialized and rebuilt.
         It is a class method since it does not require any configuration.
         """
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         alembic_cmd = pkg_man.run_command("invenio", "alembic", "upgrade")
         destroy_index_cmd = pkg_man.run_command(
             "invenio", "index", "destroy", "--yes-i-know"

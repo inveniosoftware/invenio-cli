@@ -40,7 +40,7 @@ class InstallCommands(LocalCommands):
     def update_instance_path(self):
         """Update path to instance in config."""
         result = run_cmd(
-            self.cli_config.python_packages_manager.run_command(
+            self.cli_config.python_package_manager.run_command(
                 "invenio",
                 "shell",
                 "--no-term-title",
@@ -91,7 +91,7 @@ class InstallCommands(LocalCommands):
             )
         ]
 
-    def install(self, pre, dev=False, flask_env="production"):
+    def install(self, pre, dev=False, debug=False, flask_env="production"):
         """Development installation steps."""
         steps = self.install_py_dependencies(pre=pre, dev=dev)
         steps.extend(self.symlink())

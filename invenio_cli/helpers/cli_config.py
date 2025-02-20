@@ -64,10 +64,10 @@ class CLIConfig(object):
                 self.private_config.read_file(cfg_file)
 
     @property
-    def python_packages_manager(self) -> PythonPackageManager:
+    def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get(
-            "python_packages_manager", None
+            "python_package_manager", None
         )
         if manager_name == Pipenv.name:
             return Pipenv()
@@ -84,10 +84,10 @@ class CLIConfig(object):
             )
 
     @property
-    def javascript_packages_manager(self):
+    def javascript_package_manager(self):
         """Get javascript packages manager."""
         return self.config[CLIConfig.CLI_SECTION].get(
-            "javascript_packages_manager", "npm"
+            "javascript_package_manager", "npm"
         )
 
     @property

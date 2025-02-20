@@ -25,7 +25,7 @@ class PackagesCommands(object):
 
     def install_packages(self, packages, log_file=None):
         """Steps to install Python packages."""
-        cmd = self.cli_config.python_packages_manager.editable_dev_install(*packages)
+        cmd = self.cli_config.python_package_manager.editable_dev_install(*packages)
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -39,7 +39,7 @@ class PackagesCommands(object):
 
     def outdated_packages(self):
         """Steps to show outdated packages."""
-        cmd = self.cli_config.python_packages_manager.list_outdated_packages()
+        cmd = self.cli_config.python_package_manager.list_outdated_packages()
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -52,7 +52,7 @@ class PackagesCommands(object):
 
     def update_packages(self):
         """Steps to update all Python packages."""
-        cmd = self.cli_config.python_packages_manager.update_packages()
+        cmd = self.cli_config.python_package_manager.update_packages()
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -68,7 +68,7 @@ class PackagesCommands(object):
 
         It is a class method since it does not require any configuration.
         """
-        cmd = self.cli_config.python_packages_manager.install_package(package, version)
+        cmd = self.cli_config.python_package_manager.install_package(package, version)
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -81,7 +81,7 @@ class PackagesCommands(object):
 
     def install_locked_dependencies(self, pre, dev):
         """Install dependencies from requirements.txt using install."""
-        cmd = self.cli_config.python_packages_manager.install_locked_deps(pre, dev)
+        cmd = self.cli_config.python_package_manager.install_locked_deps(pre, dev)
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -96,7 +96,7 @@ class PackagesCommands(object):
 
     def lock(self, pre, dev):
         """Steps to lock Python dependencies."""
-        cmd = self.cli_config.python_packages_manager.lock_dependencies(pre, dev)
+        cmd = self.cli_config.python_package_manager.lock_dependencies(pre, dev)
         steps = [
             CommandStep(
                 cmd=cmd,
@@ -109,7 +109,7 @@ class PackagesCommands(object):
 
     def is_locked(self):
         """Checks if the dependencies have been locked."""
-        lock_file_name = self.cli_config.python_packages_manager.lock_file_name
+        lock_file_name = self.cli_config.python_package_manager.lock_file_name
         locked = lock_file_name in listdir(".")
 
         if not locked:

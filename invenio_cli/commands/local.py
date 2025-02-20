@@ -85,7 +85,7 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         ops = [pkg_man.run_command("invenio", "collect", "--verbose")]
 
         if force:
@@ -135,7 +135,7 @@ class LocalCommands(Commands):
         run_env["FLASK_DEBUG"] = str(debug)
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         proc = popen(
             pkg_man.run_command(
                 "invenio",
@@ -161,7 +161,7 @@ class LocalCommands(Commands):
         """Run Celery worker."""
         click.secho("Starting celery worker...", fg="green")
 
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         celery_command = pkg_man.run_command(
             "celery",
             "--app",

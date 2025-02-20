@@ -30,9 +30,9 @@ class AssetsCommands(LocalCommands):
 
     def _module_pkg(self, path):
         """NPM package for the given path."""
-        if self.cli_config.javascript_packages_manager == "npm":
+        if self.cli_config.javascript_package_manager == "npm":
             return NPMPackage(Path(path) / "package.json")
-        elif self.cli_config.javascript_packages_manager == "pnpm":
+        elif self.cli_config.javascript_package_manager == "pnpm":
             return PNPMPackage(Path(path) / "package.json")
         else:
             print("please configure javascript package manager.")
@@ -120,7 +120,7 @@ class AssetsCommands(LocalCommands):
 
     def watch_assets(self):
         """High-level command to watch assets for changes."""
-        watch_cmd = self.cli_config.python_packages_manager.run_command(
+        watch_cmd = self.cli_config.python_package_manager.run_command(
             "invenio",
             "webpack",
             "run",

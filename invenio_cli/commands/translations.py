@@ -34,7 +34,7 @@ class TranslationsCommands(Commands):
         add_comments="NOTE",
     ):
         """Extract messages from source code and templates."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         cmd = pkg_man.run_command(
             "pybabel",
             "extract",
@@ -56,7 +56,7 @@ class TranslationsCommands(Commands):
 
     def init(self, output_dir, input_file, locale):
         """Initialize a new language catalog."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         cmd = pkg_man.run_command(
             "pybabel",
             "init",
@@ -75,7 +75,7 @@ class TranslationsCommands(Commands):
 
     def update(self, output_dir, input_file):
         """Update the message catalog."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         cmd = pkg_man.run_command(
             "pybabel",
             "update",
@@ -100,7 +100,7 @@ class TranslationsCommands(Commands):
     ):
         """Compile the message catalog."""
         directory = directory or self.project_path / translation_folder
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
 
         cmd = pkg_man.run_command(
             "pybabel",

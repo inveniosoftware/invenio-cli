@@ -86,7 +86,7 @@ class ServicesCommands(Commands):
 
     def _cleanup(self):
         """Services cleanup steps."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         steps = [
             CommandStep(
                 cmd=pkg_man.run_command(
@@ -142,7 +142,7 @@ class ServicesCommands(Commands):
 
     def _setup(self, demo_data=False):
         """Services initialization steps."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         steps = [
             FunctionStep(
                 func=self.services_expected_status,
@@ -255,7 +255,7 @@ class ServicesCommands(Commands):
 
     def demo(self):
         """Steps to add demo records into the instance."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         steps = [
             CommandStep(
                 cmd=pkg_man.run_command("invenio", "rdm-records", "demo"),
@@ -268,14 +268,14 @@ class ServicesCommands(Commands):
 
     def declare_queues(self):
         """Steps to declare the MQ queues required for statistics, etc."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         command = pkg_man.run_command("invenio", "queues", "declare")
         steps = [CommandStep(cmd=command, message="Declaring queues...")]
         return steps
 
     def fixtures(self):
         """Steps to set up the required fixtures for the instance."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         command = pkg_man.run_command("invenio", "rdm-records", "fixtures")
         steps = [
             CommandStep(
@@ -289,7 +289,7 @@ class ServicesCommands(Commands):
 
     def rdm_fixtures(self):
         """Steps to set up the rdm fixtures for the instance."""
-        pkg_man = self.cli_config.python_packages_manager
+        pkg_man = self.cli_config.python_package_manager
         command = pkg_man.run_command("invenio", "rdm", "fixtures")
         steps = [
             CommandStep(
