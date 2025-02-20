@@ -10,6 +10,7 @@
 from pathlib import Path
 
 from ..commands import Commands
+from ..helpers.cli_config import CLIConfig
 from ..helpers.filesystem import force_symlink
 from .steps import CommandStep, FunctionStep
 
@@ -17,16 +18,14 @@ from .steps import CommandStep, FunctionStep
 class TranslationsCommands(Commands):
     """Translations CLI commands."""
 
-    CMD_PREFIX = ["pipenv", "run"]
-
-    def __init__(self, project_path, instance_path):
+    def __init__(self, cli_config: CLIConfig, project_path=None, instance_path=None):
         """Constructor."""
+        self.cli_config = cli_config
         self.project_path = project_path
         self.instance_path = instance_path
 
-    @classmethod
     def extract(
-        cls,
+        self,
         babel_file,
         output_file,
         input_dirs,
@@ -35,7 +34,8 @@ class TranslationsCommands(Commands):
         add_comments="NOTE",
     ):
         """Extract messages from source code and templates."""
-        cmd = cls.CMD_PREFIX + [
+        pkg_man = self.cli_config.python_packages_manager
+        cmd = pkg_man.run_command(
             "pybabel",
             "extract",
             f"--mapping-file={babel_file}",
@@ -44,7 +44,7 @@ class TranslationsCommands(Commands):
             f"--msgid-bugs-address={msgid_bugs_address}",
             f"--copyright-holder={copyright_holder}",
             f"--add-comments={add_comments}",
-        ]
+        )
 
         return [
             CommandStep(
@@ -54,16 +54,16 @@ class TranslationsCommands(Commands):
             )
         ]
 
-    @classmethod
-    def init(cls, output_dir, input_file, locale):
+    def init(self, output_dir, input_file, locale):
         """Initialize a new language catalog."""
-        cmd = cls.CMD_PREFIX + [
+        pkg_man = self.cli_config.python_packages_manager
+        cmd = pkg_man.run_command(
             "pybabel",
             "init",
             f"--output-dir={output_dir}",
             f"--input-file={input_file}",
             f"--locale={locale}",
-        ]
+        )
 
         return [
             CommandStep(
@@ -73,15 +73,15 @@ class TranslationsCommands(Commands):
             )
         ]
 
-    @classmethod
-    def update(cls, output_dir, input_file):
+    def update(self, output_dir, input_file):
         """Update the message catalog."""
-        cmd = cls.CMD_PREFIX + [
+        pkg_man = self.cli_config.python_packages_manager
+        cmd = pkg_man.run_command(
             "pybabel",
             "update",
             f"--output-dir={output_dir}",
             f"--input-file={input_file}",
-        ]
+        )
 
         return [
             CommandStep(
@@ -100,12 +100,13 @@ class TranslationsCommands(Commands):
     ):
         """Compile the message catalog."""
         directory = directory or self.project_path / translation_folder
+        pkg_man = self.cli_config.python_packages_manager
 
-        cmd = self.CMD_PREFIX + [
+        cmd = pkg_man.run_command(
             "pybabel",
             "compile",
             f"--directory={directory}",
-        ]
+        )
 
         if fuzzy:
             cmd.append("--use-fuzzy")

@@ -7,14 +7,18 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+from ..helpers.cli_config import CLIConfig
 from .steps import CommandStep
 
 
 class UpgradeCommands(object):
     """Local installation commands."""
 
-    @staticmethod
-    def upgrade(script_path):
+    def __init__(self, cli_config: CLIConfig):
+        """Constructor."""
+        self.cli_config = cli_config
+
+    def upgrade(self, script_path):
         """Steps to perform an upgrade of the invenio instance.
 
         First, and alembic upgrade is launched to allow alembic to migrate the
@@ -23,13 +27,19 @@ class UpgradeCommands(object):
         Last, the search indices are destroyed, initialized and rebuilt.
         It is a class method since it does not require any configuration.
         """
-        prefix = ["pipenv", "run", "invenio"]
-        alembic_cmd = prefix + ["alembic", "upgrade"]
-        destroy_index_cmd = prefix + ["index", "destroy", "--yes-i-know"]
-        init_index_cmd = prefix + ["index", "init"]
-        rec_rebuild_index_cmd = prefix + ["rdm-records", "rebuild-index"]
-        comm_rebuild_index_cmd = prefix + ["communities", "rebuild-index"]
-        script_cmd = prefix + ["shell", script_path]
+        pkg_man = self.cli_config.python_packages_manager
+        alembic_cmd = pkg_man.run_command("invenio", "alembic", "upgrade")
+        destroy_index_cmd = pkg_man.run_command(
+            "invenio", "index", "destroy", "--yes-i-know"
+        )
+        init_index_cmd = pkg_man.run_command("invenio", "index", "init")
+        rec_rebuild_index_cmd = pkg_man.run_command(
+            "invenio", "rdm-records", "rebuild-index"
+        )
+        comm_rebuild_index_cmd = pkg_man.run_command(
+            "invenio", "communities", "rebuild-index"
+        )
+        script_cmd = pkg_man.run_command("invenio", "shell", script_path)
 
         steps = [
             CommandStep(

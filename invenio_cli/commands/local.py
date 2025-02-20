@@ -10,6 +10,7 @@
 
 import os
 import signal
+import sys
 from distutils.dir_util import copy_tree
 from os import environ
 from pathlib import Path
@@ -84,17 +85,16 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        prefix = ["pipenv", "run", "invenio"]
-
-        ops = [prefix + ["collect", "--verbose"]]
+        pkg_man = self.cli_config.python_packages_manager
+        ops = [pkg_man.run_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(prefix + ["webpack", "clean", "create"])
-            ops.append(prefix + ["webpack", "install"])
+            ops.append(pkg_man.run_command("invenio", "webpack", "clean", "create"))
+            ops.append(pkg_man.run_command("invenio", "webpack", "install"))
         else:
-            ops.append(prefix + ["webpack", "create"])
+            ops.append(pkg_man.run_command("invenio", "webpack", "create"))
         ops.append(self._statics)
-        ops.append(prefix + ["webpack", "build"])
+        ops.append(pkg_man.run_command("invenio", "webpack", "build"))
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
@@ -115,51 +115,29 @@ class LocalCommands(Commands):
                     break
         return response
 
-    def run(self, host, port, debug=True, services=True, celery_log_file=None):
-        """Run development server and celery queue."""
+    def _handle_sigint(self, name, process):
+        """Terminate services on SIGINT."""
+        prev_handler = signal.getsignal(signal.SIGINT)
 
-        def signal_handler(sig, frame):
-            click.secho("Stopping server and worker...", fg="green")
-            server.terminate()
-            if services:
-                worker.terminate()
-            click.secho("Server and worker stopped...", fg="green")
+        def _signal_handler(sig, frame):
+            click.secho(f"Stopping {name}...", fg="green")
+            process.terminate()
+            click.secho(f"{name} stopped...", fg="green")
+            if prev_handler is not None:
+                prev_handler(sig, frame)
 
-        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGINT, _signal_handler)
 
-        if services:
-            click.secho("Starting celery worker...", fg="green")
-
-            celery_command = [
-                "pipenv",
-                "run",
-                "celery",
-                "--app",
-                "invenio_app.celery",
-                "worker",
-                "--beat",
-                "--events",
-                "--loglevel",
-                "INFO",
-            ]
-
-            if celery_log_file:
-                celery_command += [
-                    "--logfile",
-                    celery_log_file,
-                ]
-
-            worker = popen(celery_command)
-
+    def run_web(self, host, port, debug=True):
+        """Run development server."""
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
         run_env["FLASK_DEBUG"] = str(debug)
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
-        server = popen(
-            [
-                "pipenv",
-                "run",
+        pkg_man = self.cli_config.python_packages_manager
+        proc = popen(
+            pkg_man.run_command(
                 "invenio",
                 "run",
                 "--cert",
@@ -172,9 +150,53 @@ class LocalCommands(Commands):
                 port,
                 "--extra-files",
                 "invenio.cfg",
-            ],
+            ),
             env=run_env,
         )
-
+        self._handle_sigint("Web server", proc)
         click.secho(f"Instance running!\nVisit https://{host}:{port}", fg="green")
-        server.wait()
+        return [proc]
+
+    def run_worker(self, celery_log_file=None, celery_log_level="INFO"):
+        """Run Celery worker."""
+        click.secho("Starting celery worker...", fg="green")
+
+        pkg_man = self.cli_config.python_packages_manager
+        celery_command = pkg_man.run_command(
+            "celery",
+            "--app",
+            "invenio_app.celery",
+            "worker",
+            "--beat",
+            "--events",
+            "--loglevel",
+            celery_log_level,
+            "--queues",
+            "celery,low",
+        )
+
+        if celery_log_file:
+            celery_command += [
+                "--logfile",
+                celery_log_file,
+            ]
+
+        proc = popen(celery_command)
+        self._handle_sigint("Celery worker", proc)
+        click.secho("Worker running!", fg="green")
+        return [proc]
+
+    def run_all(
+        self,
+        host,
+        port,
+        debug=True,
+        services=True,
+        celery_log_file=None,
+        celery_log_level="INFO",
+    ):
+        """Run all services."""
+        return [
+            *self.run_web(host, port, debug),
+            *self.run_worker(celery_log_file, celery_log_level),
+        ]

@@ -7,6 +7,8 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+
+from ..helpers.cli_config import CLIConfig
 from ..helpers.env import env
 from ..helpers.process import run_interactive
 from .steps import CommandStep
@@ -15,7 +17,7 @@ from .steps import CommandStep
 class Commands(object):
     """Abstraction over CLI commands that are either local or containerized."""
 
-    def __init__(self, cli_config):
+    def __init__(self, cli_config: CLIConfig):
         """Constructor.
 
         :param cli_config: :class:CLIConfig instance
@@ -31,11 +33,11 @@ class Commands(object):
         ]
         return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 
-    @classmethod
-    def pyshell(cls, debug=False):
+    def pyshell(self, debug=False):
         """Start a Python shell."""
+        pkg_man = self.cli_config.python_packages_manager
         with env(FLASK_DEBUG=str(debug)):
-            command = ["pipenv", "run", "invenio", "shell"]
+            command = pkg_man.run_command("invenio", "shell")
             return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 
     def destroy(self):
