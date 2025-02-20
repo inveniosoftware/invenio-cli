@@ -30,20 +30,14 @@ class AssetsCommands(LocalCommands):
 
     def _module_pkg(self, path):
         """NPM package for the given path."""
-        if self.cli_config.javascript_package_manager == "npm":
-            return NPMPackage(Path(path) / "package.json")
-        elif self.cli_config.javascript_package_manager == "pnpm":
-            return PNPMPackage(Path(path) / "package.json")
-        else:
-            print("please configure javascript package manager.")
-            sys.exit()
+        path = Path(path) / "package.json"
+        return self.cli_config.javascript_package_manager.create_pynpm_package(path)
 
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
         return self._module_pkg(self.cli_config.get_instance_path() / "assets")
 
-    @staticmethod
-    def _watch_js_module(pkg):
+    def _watch_js_module(self, pkg):
         """Watch the JS module for changes."""
         click.secho("Starting watching module...", fg="green")
         status_code = pkg.run_script("watch")
@@ -69,10 +63,10 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
-    @staticmethod
-    def _npm_install_command(path):
+    def _npm_install_command(self, path):
         """Run command and return a ProcessResponse."""
-        status_code = subprocess.call(["npm", "install", "--prefix", path])
+        cmd = self.cli_config.javascript_package_manager.install_local_package(path)
+        status_code = subprocess.call(cmd)
         if status_code == 0:
             return ProcessResponse(
                 output="Dependent packages installed correctly", status_code=0

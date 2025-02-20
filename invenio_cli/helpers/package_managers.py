@@ -9,7 +9,10 @@
 
 
 from abc import ABC
+from pathlib import Path
 from typing import List
+
+from pynpm import NPMPackage, PNPMPackage
 
 
 class PythonPackageManager(ABC):
@@ -143,3 +146,45 @@ class UV(PythonPackageManager):
         if prereleases:
             cmd += ["--prerelease", "allow"]
         return cmd
+
+
+class JavascriptPackageManager(ABC):
+    """Interface for creating tool-specific JS package management commands."""
+
+    name = None
+
+    def create_pynpm_package(self, package_json_path: Path | str) -> NPMPackage:
+        """Create a variant of ``NPMPackage`` with the path to ``package.json``."""
+        raise NotImplementedError()
+
+    def install_local_package(self, path: Path | str) -> List[str]:
+        """Install the local JS package."""
+        raise NotImplementedError()
+
+
+class NPM(JavascriptPackageManager):
+    """Generate ``npm`` commands for managing JS packages."""
+
+    name = "npm"
+
+    def create_pynpm_package(self, package_json_path):
+        """Create an ``NPMPackage`` with the path to ``package.json``."""
+        return NPMPackage(package_json_path)
+
+    def install_local_package(self, path):
+        """Install the local JS package."""
+        return ["npm", "install", "--prefix", str(path)]
+
+
+class PNPM(JavascriptPackageManager):
+    """Generate ``pnpm`` commands for managing JS packages."""
+
+    name = "pnpm"
+
+    def create_pynpm_package(self, package_json_path):
+        """Create a ``PNPMPackage`` with the path to ``package.json``."""
+        return PNPMPackage(package_json_path)
+
+    def install_local_package(self, path):
+        """Install the local JS package."""
+        raise NotImplementedError()
