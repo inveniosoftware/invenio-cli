@@ -15,6 +15,7 @@ from pathlib import Path
 
 from ..errors import InvenioCLIConfigError
 from .filesystem import get_created_files
+from .package_managers import UV, Pipenv, PythonPackageManager
 from .process import ProcessResponse
 
 
@@ -39,9 +40,10 @@ class CLIConfig(object):
 
         :param config_dir: Path to general cli config file.
         """
-        self.config_path = Path(project_dir) / self.CONFIG_FILENAME
+        self.project_path = Path(project_dir)
+        self.config_path = self.project_path / self.CONFIG_FILENAME
         self.config = ConfigParser()
-        self.private_config_path = Path(project_dir) / self.PRIVATE_CONFIG_FILENAME
+        self.private_config_path = self.project_path / self.PRIVATE_CONFIG_FILENAME
         self.private_config = ConfigParser()
 
         try:
@@ -62,9 +64,24 @@ class CLIConfig(object):
                 self.private_config.read_file(cfg_file)
 
     @property
-    def python_packages_manager(self):
+    def python_packages_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
-        return self.config[CLIConfig.CLI_SECTION].get("python_packages_manager", "pip")
+        manager_name = self.config[CLIConfig.CLI_SECTION].get(
+            "python_packages_manager", None
+        )
+        if manager_name == Pipenv.name:
+            return Pipenv()
+        elif manager_name == UV.name:
+            return UV()
+
+        if (self.project_path / "Pipfile").is_file():
+            return Pipenv()
+        elif (self.project_path / "pyproject.toml").is_file():
+            return UV()
+        else:
+            raise RuntimeError(
+                "Could not determine the Python package manager, please configure it."
+            )
 
     @property
     def javascript_packages_manager(self):

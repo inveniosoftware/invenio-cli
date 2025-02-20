@@ -292,9 +292,10 @@ def destroy(cli_config):
 
 @invenio_cli.command()
 @click.option("--script", required=True, help="The path of custom migration script.")
-def upgrade(script):
+@pass_cli_config
+def upgrade(cli_config, script):
     """Upgrades the current instance to a newer version."""
-    steps = UpgradeCommands.upgrade(script)
+    steps = UpgradeCommands(cli_config).upgrade(script)
     on_fail = "Upgrade failed."
     on_success = "Upgrade sucessfull."
 

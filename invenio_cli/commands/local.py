@@ -85,23 +85,16 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        if self.cli_config.python_packages_manager == "uv":
-            prefix = ["uv", "run", "invenio"]
-        elif self.cli_config.python_packages_manager == "pip":
-            prefix = ["pipenv", "run", "invenio"]
-        else:
-            print("please configure python package manager.")
-            sys.exit()
-
-        ops = [prefix + ["collect", "--verbose"]]
+        pkg_man = self.cli_config.python_packages_manager
+        ops = [pkg_man.run_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(prefix + ["webpack", "clean", "create"])
-            ops.append(prefix + ["webpack", "install"])
+            ops.append(pkg_man.run_command("invenio", "webpack", "clean", "create"))
+            ops.append(pkg_man.run_command("invenio", "webpack", "install"))
         else:
-            ops.append(prefix + ["webpack", "create"])
+            ops.append(pkg_man.run_command("invenio", "webpack", "create"))
         ops.append(self._statics)
-        ops.append(prefix + ["webpack", "build"])
+        ops.append(pkg_man.run_command("invenio", "webpack", "build"))
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
@@ -142,10 +135,9 @@ class LocalCommands(Commands):
         run_env["FLASK_DEBUG"] = str(debug)
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
+        pkg_man = self.cli_config.python_packages_manager
         proc = popen(
-            [
-                "pipenv",
-                "run",
+            pkg_man.run_command(
                 "invenio",
                 "run",
                 "--cert",
@@ -158,7 +150,7 @@ class LocalCommands(Commands):
                 port,
                 "--extra-files",
                 "invenio.cfg",
-            ],
+            ),
             env=run_env,
         )
         self._handle_sigint("Web server", proc)
@@ -169,9 +161,8 @@ class LocalCommands(Commands):
         """Run Celery worker."""
         click.secho("Starting celery worker...", fg="green")
 
-        celery_command = [
-            "pipenv",
-            "run",
+        pkg_man = self.cli_config.python_packages_manager
+        celery_command = pkg_man.run_command(
             "celery",
             "--app",
             "invenio_app.celery",
@@ -182,7 +173,7 @@ class LocalCommands(Commands):
             celery_log_level,
             "--queues",
             "celery,low",
-        ]
+        )
 
         if celery_log_file:
             celery_command += [

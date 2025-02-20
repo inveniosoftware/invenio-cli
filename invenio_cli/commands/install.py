@@ -39,24 +39,14 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        if self.cli_config.python_packages_manager == "uv":
-            prefix = "uv"
-        elif self.cli_config.python_packages_manager == "pip":
-            prefix = "pipenv"
-        else:
-            print("please configure python package manager.")
-            sys.exit()
-
         result = run_cmd(
-            [
-                prefix,
-                "run",
+            self.cli_config.python_packages_manager.run_command(
                 "invenio",
                 "shell",
                 "--no-term-title",
                 "-c",
                 "\"print(app.instance_path, end='')\"",
-            ]
+            )
         )
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
