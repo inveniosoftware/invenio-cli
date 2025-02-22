@@ -108,7 +108,8 @@ class UV(PythonPackageManager):
 
     def run_command(self, *command):
         """Generate command to run the given command in the managed environment."""
-        return [self.name, "run", *command]
+        # "--no-sync" is used to not override locally installed editable packages
+        return [self.name, "run", "--no-sync", *command]
 
     def editable_dev_install(self, *packages):
         """Install the local packages as editable, but ignore it for locking."""
@@ -129,7 +130,7 @@ class UV(PythonPackageManager):
 
     def list_outdated_packages(self):
         """List outdated installed packages."""
-        raise NotImplementedError("Listing outdated packages is not implemented in uv")
+        return [self.name, "sync", "--upgrade", "--dry-run"]
 
     def install_locked_deps(self, prereleases, devtools):
         """Install the packages according to the lock file."""
