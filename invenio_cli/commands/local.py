@@ -85,16 +85,17 @@ class LocalCommands(Commands):
         Needed here (parent) because is used by Assets and Install commands.
         """
         # Commands
-        pkg_man = self.cli_config.python_package_manager
-        ops = [pkg_man.run_command("invenio", "collect", "--verbose")]
+        py_pkg_man = self.cli_config.python_package_manager
+        js_pkg_man = self.cli_config.javascript_package_manager
+        ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(pkg_man.run_command("invenio", "webpack", "clean", "create"))
-            ops.append(pkg_man.run_command("invenio", "webpack", "install"))
+            ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
+            ops.append(py_pkg_man.run_command("invenio", "webpack", "install"))
         else:
-            ops.append(pkg_man.run_command("invenio", "webpack", "create"))
+            ops.append(py_pkg_man.run_command("invenio", "webpack", "create"))
         ops.append(self._statics)
-        ops.append(pkg_man.run_command("invenio", "webpack", "build"))
+        ops.append(py_pkg_man.run_command("invenio", "webpack", "build"))
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
@@ -109,7 +110,9 @@ class LocalCommands(Commands):
                     if op[-1] in messages:
                         click.secho(messages[op[-1]], fg="green")
                     response = run_interactive(
-                        op, env={"PIPENV_VERBOSITY": "-1"}, log_file=log_file
+                        op,
+                        env={"PIPENV_VERBOSITY": "-1", **js_pkg_man.env_overrides()},
+                        log_file=log_file,
                     )
                 if response.status_code != 0:
                     break

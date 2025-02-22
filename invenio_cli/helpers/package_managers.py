@@ -10,7 +10,7 @@
 
 from abc import ABC
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from pynpm import NPMPackage, PNPMPackage
 
@@ -162,6 +162,10 @@ class JavascriptPackageManager(ABC):
         """Install the local JS package."""
         raise NotImplementedError()
 
+    def env_overrides(self) -> Dict[str, str]:
+        """Provide environment overrides for building Invenio assets."""
+        return {}
+
 
 class NPM(JavascriptPackageManager):
     """Generate ``npm`` commands for managing JS packages."""
@@ -176,6 +180,10 @@ class NPM(JavascriptPackageManager):
         """Install the local JS package."""
         return ["npm", "install", "--prefix", str(path)]
 
+    def env_overrides(self):
+        """Provide environment overrides for building Invenio assets."""
+        return {"INVENIO_ASSETS_NPM_PKG_CLS": "pynpm:NPMPackage"}
+
 
 class PNPM(JavascriptPackageManager):
     """Generate ``pnpm`` commands for managing JS packages."""
@@ -189,3 +197,7 @@ class PNPM(JavascriptPackageManager):
     def install_local_package(self, path):
         """Install the local JS package."""
         raise NotImplementedError()
+
+    def env_overrides(self):
+        """Provide environment overrides for building Invenio assets."""
+        return {"INVENIO_ASSETS_NPM_PKG_CLS": "pynpm:PNPMPackage"}
