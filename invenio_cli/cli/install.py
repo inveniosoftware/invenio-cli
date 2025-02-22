@@ -115,6 +115,6 @@ def symlink(cli_config):
     commands = InstallCommands(cli_config)
     steps = commands.symlink()
     on_fail = "Failed to symlink project files and folders."
-    on_success = "Project ffles and folders symlinked successfully."
+    on_success = "Project files and folders symlinked successfully."
 
     run_steps(steps, on_fail, on_success)
