@@ -7,7 +7,7 @@
 
 """Wrappers around various package managers to be used under the hood."""
 
-
+import os
 from abc import ABC
 from pathlib import Path
 from typing import Dict, List
@@ -47,6 +47,14 @@ class PythonPackageManager(ABC):
 
     def lock_dependencies(self, prereleases: bool, devtools: bool) -> List[str]:
         """Update the lock file."""
+        raise NotImplementedError()
+
+    def remove_venv(self) -> List[str]:
+        """Remove the created virtualenv."""
+        raise NotImplementedError()
+
+    def start_activated_subshell(self) -> List[str]:
+        """Remove the created virtualenv."""
         raise NotImplementedError()
 
 
@@ -99,6 +107,14 @@ class Pipenv(PythonPackageManager):
             cmd += ["--dev"]
         return cmd
 
+    def remove_venv(self):
+        """Remove the created virtualenv."""
+        return ["pipenv", "--rm"]
+
+    def start_activated_subshell(self) -> List[str]:
+        """Remove the created virtualenv."""
+        return ["pipenv", "shell"]
+
 
 class UV(PythonPackageManager):
     """Generate ``uv`` commands for managing Python packages."""
@@ -147,6 +163,19 @@ class UV(PythonPackageManager):
         if prereleases:
             cmd += ["--prerelease", "allow"]
         return cmd
+
+    def remove_venv(self):
+        """Remove the created virtualenv."""
+        # This assumes the default location for the uv venv
+        return ["rm", "-r", ".venv"]
+
+    def start_activated_subshell(self) -> List[str]:
+        """Remove the created virtualenv."""
+        # This assumes we're using a Unixoid OS...
+        # Since Invenio doesn't support Windows that should be given
+        # Also, it has a good chance of not properly setting a PS1...
+        shell = os.getenv("SHELL")
+        return [shell, "-c", f"source .venv/bin/activate; exec {shell} -i"]
 
 
 class JavascriptPackageManager(ABC):

@@ -24,13 +24,9 @@ class Commands(object):
         """
         self.cli_config = cli_config
 
-    @classmethod
-    def shell(cls):
+    def shell(self):
         """Start a shell in the virtual environment."""
-        command = [
-            "pipenv",
-            "shell",
-        ]
+        command = self.cli_config.python_package_manager.start_activated_subshell()
         return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 
     def pyshell(self, debug=False):
@@ -46,9 +42,10 @@ class Commands(object):
         NOTE: This function has no knowledge of the existence of services.
               Refer to services.py to destroy services' containers.
         """
+        command = self.cli_config.python_package_manager.remove_venv()
         steps = [
             CommandStep(
-                cmd=["pipenv", "--rm"],
+                cmd=command,
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Destroying virtual environment",
             )
