@@ -15,6 +15,14 @@ from pathlib import Path
 
 from ..errors import InvenioCLIConfigError
 from .filesystem import get_created_files
+from .package_managers import (
+    NPM,
+    PNPM,
+    UV,
+    JavascriptPackageManager,
+    Pipenv,
+    PythonPackageManager,
+)
 from .process import ProcessResponse
 
 
@@ -39,9 +47,10 @@ class CLIConfig(object):
 
         :param config_dir: Path to general cli config file.
         """
-        self.config_path = Path(project_dir) / self.CONFIG_FILENAME
+        self.project_path = Path(project_dir)
+        self.config_path = self.project_path / self.CONFIG_FILENAME
         self.config = ConfigParser()
-        self.private_config_path = Path(project_dir) / self.PRIVATE_CONFIG_FILENAME
+        self.private_config_path = self.project_path / self.PRIVATE_CONFIG_FILENAME
         self.private_config = ConfigParser()
 
         try:
@@ -60,6 +69,43 @@ class CLIConfig(object):
             CLIConfig._write_private_config(Path(project_dir))
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
+
+    @property
+    def python_package_manager(self) -> PythonPackageManager:
+        """Get python packages manager."""
+        manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
+        if manager_name == Pipenv.name:
+            return Pipenv()
+        elif manager_name == UV.name:
+            return UV()
+
+        if (self.project_path / "Pipfile").is_file():
+            return Pipenv()
+        elif (self.project_path / "pyproject.toml").is_file():
+            return UV()
+        else:
+            raise RuntimeError(
+                "Could not determine the Python package manager, please configure it."
+            )
+
+    @property
+    def javascript_package_manager(self) -> JavascriptPackageManager:
+        """Get javascript packages manager."""
+        manager_name = self.config[CLIConfig.CLI_SECTION].get(
+            "javascript_package_manager"
+        )
+        if manager_name == NPM.name:
+            return NPM()
+        elif manager_name == PNPM.name:
+            return PNPM()
+
+        # fallback to NPM?
+        return NPM()
+
+    @property
+    def assets_builder(self):
+        """Get assets builder."""
+        return self.config[CLIConfig.CLI_SECTION].get("assets_builder", "webpack")
 
     def get_project_dir(self):
         """Returns path to project directory."""
@@ -120,6 +166,14 @@ class CLIConfig(object):
             "search_host",
             "localhost",
         )
+
+    def get_web_port(self):
+        """Returns web port."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_port", "5000")
+
+    def get_web_host(self):
+        """Returns web host."""
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_host", "127.0.0.1")
 
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
