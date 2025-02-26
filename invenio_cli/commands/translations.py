@@ -7,7 +7,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-from pathlib import Path
 
 from ..commands import Commands
 from ..helpers.cli_config import CLIConfig
@@ -87,7 +86,7 @@ class TranslationsCommands(Commands):
             CommandStep(
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message=f"Updating message catalog...",
+                message="Updating message catalog...",
             )
         ]
 
@@ -115,7 +114,7 @@ class TranslationsCommands(Commands):
             CommandStep(
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
-                message=f"Compiling message catalog...",
+                message="Compiling message catalog...",
                 skippable=True,
             ),
         ]
