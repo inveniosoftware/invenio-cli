@@ -120,7 +120,7 @@ class AssetsCommands(LocalCommands):
             "start",
         )
 
-        with env(FLASK_DEBUG="true"):
+        with env(FLASK_DEBUG="1"):
             # Collect into statics/ and assets/ folder
             click.secho(
                 "Starting assets watching (press CTRL+C to stop)...", fg="green"

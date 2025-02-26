@@ -32,7 +32,7 @@ class Commands(object):
     def pyshell(self, debug=False):
         """Start a Python shell."""
         pkg_man = self.cli_config.python_package_manager
-        with env(FLASK_DEBUG=str(debug)):
+        with env(FLASK_DEBUG="1" if debug else "0"):
             command = pkg_man.run_command("invenio", "shell")
             return run_interactive(command, env={"PIPENV_VERBOSITY": "-1"})
 

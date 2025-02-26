@@ -283,7 +283,7 @@ def test_run(
     commands.run(host=host, port=port, debug=True)
 
     run_env = environ.copy()
-    run_env["FLASK_DEBUG"] = "True"
+    run_env["FLASK_DEBUG"] = "1"
     run_env["INVENIO_SITE_HOSTNAME"] = f"{host}:{port}"
     expected_calls = [
         call(["pipenv", "run", "celery", "--app", "invenio_app.celery", "worker"]),
