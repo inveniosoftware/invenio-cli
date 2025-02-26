@@ -18,10 +18,10 @@ def test_env():
     assert "SERVER_NAME" not in os.environ
     assert "FLASK_DEBUG" not in os.environ
 
-    os.environ["FLASK_DEBUG"] = "true"
-    with env(SERVER_NAME="example.com", FLASK_DEBUG="false"):
+    os.environ["FLASK_DEBUG"] = "1"
+    with env(SERVER_NAME="example.com", FLASK_DEBUG="0"):
         assert os.environ["SERVER_NAME"] == "example.com"
-        assert os.environ["FLASK_DEBUG"] == "false"
+        assert os.environ["FLASK_DEBUG"] == "0"
 
-    assert os.environ["FLASK_DEBUG"] == "true"
+    assert os.environ["FLASK_DEBUG"] == "1"
     assert "SERVER_NAME" not in os.environ

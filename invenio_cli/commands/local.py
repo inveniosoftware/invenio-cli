@@ -102,7 +102,7 @@ class LocalCommands(Commands):
             "install": "Installing JS dependencies...",
         }
 
-        with env(FLASK_DEUBG="true" if debug else "false"):
+        with env(FLASK_DEBUG="1" if debug else "0"):
             for op in ops:
                 if callable(op):
                     response = op()
@@ -135,7 +135,7 @@ class LocalCommands(Commands):
         """Run development server."""
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
-        run_env["FLASK_DEBUG"] = str(debug)
+        run_env["FLASK_DEBUG"] = "1" if debug else "0"
         run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
         run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
         pkg_man = self.cli_config.python_package_manager
