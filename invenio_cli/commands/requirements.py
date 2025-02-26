@@ -12,10 +12,9 @@
 import json
 import re
 import sys
-from os import listdir
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.process import ProcessResponse, run_cmd, run_interactive
+from ..helpers.process import ProcessResponse, run_cmd
 from ..helpers.rdm import rdm_version
 from .steps import FunctionStep
 
@@ -187,7 +186,7 @@ class RequirementsCommands(object):
             return ProcessResponse(
                 output=f"Pipenv OK. Got version {version}.", status_code=0
             )
-        except Exception as err:
+        except Exception:
             return ProcessResponse(
                 error=f"Pipenv not found. Got {result.error}.", status_code=1
             )

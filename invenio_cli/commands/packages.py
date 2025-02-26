@@ -8,7 +8,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import sys
 from os import listdir
 
 from ..helpers.cli_config import CLIConfig

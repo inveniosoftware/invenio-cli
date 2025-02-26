@@ -70,8 +70,8 @@ def update(cli_config):
         output_dir=cli_config.get_project_dir() / Path("translations/"),
         input_file=cli_config.get_project_dir() / Path("translations/messages.pot"),
     )
-    on_fail = f"Failed to update message catalog."
-    on_success = f"Message catalog updated successfully."
+    on_fail = "Failed to update message catalog."
+    on_success = "Message catalog updated successfully."
 
     run_steps(steps, on_fail, on_success)
 
