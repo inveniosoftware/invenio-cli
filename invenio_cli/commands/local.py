@@ -10,7 +10,6 @@
 
 import os
 import signal
-import sys
 from distutils.dir_util import copy_tree
 from os import environ
 from pathlib import Path

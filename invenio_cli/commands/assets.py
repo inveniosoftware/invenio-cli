@@ -9,11 +9,9 @@
 """Invenio module to ease the creation and management of applications."""
 
 import subprocess
-import sys
 from pathlib import Path
 
 import click
-from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
