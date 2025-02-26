@@ -58,8 +58,7 @@ class CLIConfig(object):
                 self.config.read_file(cfg_file)
         except FileNotFoundError as e:
             raise InvenioCLIConfigError(
-                "Missing '{0}' file in current directory. "
-                "Are you in the project folder?".format(e.filename),
+                f"Missing '{e.filename}' file in current directory. Are you in the project folder?",  # noqa
             )
 
         try:

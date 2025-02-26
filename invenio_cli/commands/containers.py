@@ -54,8 +54,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio shell --no-term-title -c "
-                    "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\"",  # noqa
+                    "command": "invenio shell --no-term-title -c \"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\"",  # noqa
                 },
                 message="Flushing redis cache...",
             ),
@@ -107,9 +106,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio files location create --default "
-                    "default-location "
-                    "${INVENIO_INSTANCE_PATH}/data",
+                    "command": "invenio files location create --default default-location ${INVENIO_INSTANCE_PATH}/data",  # noqa
                 },
                 message="Creating files location...",
             ),
@@ -125,7 +122,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio access allow " "superuser-access role admin",
+                    "command": "invenio access allow superuser-access role admin",
                 },
                 message="Assigning superuser access to admin role...",
             ),

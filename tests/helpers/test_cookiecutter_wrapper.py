@@ -17,8 +17,8 @@ def test_constructor():
     assert cookiecutter.tmp_file is None
     assert cookiecutter.flavour == "RDM"
     assert (
-        cookiecutter.template == "https://github.com/inveniosoftware/"
-        "cookiecutter-invenio-rdm.git"
+        cookiecutter.template
+        == "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git"
     )
     assert cookiecutter.template_name == "cookiecutter-invenio-rdm"
     assert cookiecutter.checkout == "master"

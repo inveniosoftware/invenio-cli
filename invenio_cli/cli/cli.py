@@ -112,8 +112,7 @@ def pyshell(cli_config, debug):
 @click.option(
     "--user-input/--no-input",
     default=True,
-    help="If input is disabled, uses the defaults (if --config is"
-    " also passed, uses values from an .invenio config file).",
+    help="If input is disabled, uses the defaults (if --config is also passed, uses values from an .invenio config file).",  # noqa
 )
 @click.option(
     "--config", required=False, help="The .invenio configuration file to use."
@@ -184,8 +183,7 @@ web_options = combine_decorators(
         "-d/",
         default=True,
         is_flag=True,
-        help="Enable/disable debug mode including auto-reloading "
-        "(default: enabled).",
+        help="Enable/disable debug mode including auto-reloading (default: enabled).",
     ),
 )
 
