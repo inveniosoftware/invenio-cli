@@ -8,7 +8,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import subprocess
 from pathlib import Path
 
 import click
@@ -61,10 +60,12 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
-    def _npm_install_command(self, path):
+    def _npm_install_command(self, path, module_pkg):
         """Run command and return a ProcessResponse."""
-        cmd = self.cli_config.javascript_package_manager.install_local_package(path)
-        status_code = subprocess.call(cmd)
+        install_args = self.cli_config.javascript_package_manager.install_local_package(
+            path
+        )
+        status_code = module_pkg.install(" ".join(install_args))
         if status_code == 0:
             return ProcessResponse(
                 output="Dependent packages installed correctly", status_code=0
@@ -134,7 +135,7 @@ class AssetsCommands(LocalCommands):
         steps = [
             FunctionStep(  # Install dependent packages
                 func=self._npm_install_command,
-                args={"path": path},
+                args={"path": path, "module_pkg": module_pkg},
                 message="Installing dependent packages...",
             ),
             FunctionStep(  # Run build script

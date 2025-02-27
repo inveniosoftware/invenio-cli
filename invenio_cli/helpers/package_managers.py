@@ -207,7 +207,7 @@ class NPM(JavascriptPackageManager):
 
     def install_local_package(self, path):
         """Install the local JS package."""
-        return ["npm", "install", "--prefix", str(path)]
+        return ["--prefix", str(path)]
 
     def env_overrides(self):
         """Provide environment overrides for building Invenio assets."""
@@ -225,7 +225,7 @@ class PNPM(JavascriptPackageManager):
 
     def install_local_package(self, path):
         """Install the local JS package."""
-        raise NotImplementedError()
+        return ["-C", str(path)]
 
     def env_overrides(self):
         """Provide environment overrides for building Invenio assets."""
