@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -34,7 +35,7 @@ class ContainersCommands(ServicesCommands):
         """
         steps = [
             FunctionStep(
-                func=PackagesCommands.is_locked,
+                func=lambda: PackagesCommands(self.cli_config).is_locked(),
                 message="Checking if dependencies are locked.",
             ),
             FunctionStep(
@@ -53,8 +54,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio shell --no-term-title -c "
-                    "\"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\"",  # noqa
+                    "command": "invenio shell --no-term-title -c \"import redis; redis.StrictRedis.from_url(app.config['CACHE_REDIS_URL']).flushall(); print('Cache cleared')\"",  # noqa
                 },
                 message="Flushing redis cache...",
             ),
@@ -106,9 +106,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio files location create --default "
-                    "default-location "
-                    "${INVENIO_INSTANCE_PATH}/data",
+                    "command": "invenio files location create --default default-location ${INVENIO_INSTANCE_PATH}/data",  # noqa
                 },
                 message="Creating files location...",
             ),
@@ -124,7 +122,7 @@ class ContainersCommands(ServicesCommands):
                 func=self.docker_helper.execute_cli_command,
                 args={
                     "project_shortname": project_shortname,
-                    "command": "invenio access allow " "superuser-access role admin",
+                    "command": "invenio access allow superuser-access role admin",
                 },
                 message="Assigning superuser access to admin role...",
             ),
@@ -236,6 +234,7 @@ class ContainersCommands(ServicesCommands):
     def translations(self, project_shortname):
         """Steps to compile translations for the instance."""
         commands = TranslationsCommands(
+            self.cli_config,
             project_path=self.cli_config.get_project_dir(),
             # we use INVENIO_INSTANCE_PATH that is set in the Dockerfile as
             # config.instance_path is set only in development `install` command
@@ -315,7 +314,7 @@ class ContainersCommands(ServicesCommands):
 
         if lock:
             # FIXME: Should this params be accepted? sensible defaults?
-            steps.extend(PackagesCommands.lock(pre=True, dev=True))
+            steps.extend(PackagesCommands(self.cli_config).lock(pre=True, dev=True))
 
         if build:
             steps.extend(self.build())

@@ -3,6 +3,7 @@
 # Copyright (C) 2019-2021 CERN.
 # Copyright (C) 2019 Northwestern University.
 # Copyright (C) 2022 Forschungszentrum Jülich GmbH.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -30,7 +31,12 @@ from .install import install
 from .packages import packages
 from .services import services
 from .translations import translations
-from .utils import handle_process_response, pass_cli_config, run_steps
+from .utils import (
+    combine_decorators,
+    handle_process_response,
+    pass_cli_config,
+    run_steps,
+)
 
 
 @click.group()
@@ -67,9 +73,10 @@ def check_requirements(development):
 
 
 @invenio_cli.command()
-def shell():
+@pass_cli_config
+def shell(cli_config):
     """Shell command."""
-    Commands.shell()
+    Commands(cli_config).shell()
 
 
 @invenio_cli.command()
@@ -80,9 +87,10 @@ def shell():
     is_flag=True,
     help="Enable Flask development mode (default: disabled).",
 )
-def pyshell(debug):
+@pass_cli_config
+def pyshell(cli_config, debug):
     """Python shell command."""
-    Commands.pyshell(debug=debug)
+    Commands(cli_config).pyshell(debug=debug)
 
 
 @invenio_cli.command()
@@ -104,8 +112,7 @@ def pyshell(debug):
 @click.option(
     "--user-input/--no-input",
     default=True,
-    help="If input is disabled, uses the defaults (if --config is"
-    " also passed, uses values from an .invenio config file).",
+    help="If input is disabled, uses the defaults (if --config is also passed, uses values from an .invenio config file).",  # noqa
 )
 @click.option(
     "--config", required=False, help="The .invenio configuration file to use."
@@ -142,34 +149,86 @@ def init(flavour, template, checkout, user_input, config):
         cookiecutter_wrapper.remove_config()
 
 
-@invenio_cli.command()
-@click.option("--host", "-h", default="127.0.0.1", help="The interface to bind to.")
-@click.option("--port", "-p", default=5000, help="The port to bind to.")
-@click.option(
-    "--debug/--no-debug",
-    "-d/",
-    default=True,
-    is_flag=True,
-    help="Enable/disable debug mode including auto-reloading " "(default: enabled).",
-)
-@click.option(
+@invenio_cli.group("run", invoke_without_command=True)
+@click.pass_context
+def run_group(ctx):
+    """Run command group."""
+    # For backward compatibility
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(run_all)
+
+
+services_option = click.option(
     "--services/--no-services",
     "-s/-n",
     default=True,
     is_flag=True,
     help="Enable/disable dockerized services (default: enabled).",
 )
-@click.option(
-    "--celery-log-file",
-    default=None,
-    help="Celery log file (default: None, this means logging to stderr)",
+web_options = combine_decorators(
+    click.option(
+        "--host",
+        "-h",
+        default=None,
+        help="The interface to bind to. The default is defined in the CLIConfig.",
+    ),
+    click.option(
+        "--port",
+        "-p",
+        default=None,
+        help="The port to bind to. The default is defined in the CLIConfig.",
+    ),
+    click.option(
+        "--debug/--no-debug",
+        "-d/",
+        default=True,
+        is_flag=True,
+        help="Enable/disable debug mode including auto-reloading (default: enabled).",
+    ),
 )
-@pass_cli_config
-def run(cli_config, host, port, debug, services, celery_log_file):
-    """Starts the local development server.
 
-    NOTE: this only makes sense locally so no --local option
-    """
+
+@run_group.command("web")
+@services_option
+@web_options
+@pass_cli_config
+def run_web(cli_config, host, port, debug, services):
+    """Starts the local development web server."""
+    if services:
+        cmds = ServicesCommands(cli_config)
+        response = cmds.ensure_containers_running()
+        # fail and exit if containers are not running
+        handle_process_response(response)
+
+    host = host or cli_config.get_web_host()
+    port = port or cli_config.get_web_port()
+
+    commands = LocalCommands(cli_config)
+    processes = commands.run_web(host=host, port=str(port), debug=debug)
+    for proc in processes:
+        proc.wait()
+
+
+worker_options = combine_decorators(
+    click.option(
+        "--celery-log-file",
+        default=None,
+        help="Celery log file (default: None, this means logging to stderr)",
+    ),
+    click.option(
+        "--celery-log-level",
+        default="INFO",
+        help="Celery log level (default: INFO)",
+    ),
+)
+
+
+@run_group.command("worker")
+@services_option
+@worker_options
+@pass_cli_config
+def run_worker(cli_config, services, celery_log_file, celery_log_level):
+    """Starts the local development server."""
     if services:
         cmds = ServicesCommands(cli_config)
         response = cmds.ensure_containers_running()
@@ -177,13 +236,40 @@ def run(cli_config, host, port, debug, services, celery_log_file):
         handle_process_response(response)
 
     commands = LocalCommands(cli_config)
-    commands.run(
+    processes = commands.run_worker(
+        celery_log_file=celery_log_file, celery_log_level=celery_log_level
+    )
+    for proc in processes:
+        proc.wait()
+
+
+@run_group.command("all")
+@services_option
+@web_options
+@worker_options
+@pass_cli_config
+def run_all(cli_config, host, port, debug, services, celery_log_file, celery_log_level):
+    """Starts web and worker development servers."""
+    if services:
+        cmds = ServicesCommands(cli_config)
+        response = cmds.ensure_containers_running()
+        # fail and exit if containers are not running
+        handle_process_response(response)
+
+    host = host or cli_config.get_web_host()
+    port = port or cli_config.get_web_port()
+
+    commands = LocalCommands(cli_config)
+    processes = commands.run_all(
         host=host,
         port=str(port),
         debug=debug,
         services=services,
         celery_log_file=celery_log_file,
+        celery_log_level=celery_log_level,
     )
+    for proc in processes:
+        proc.wait()
 
 
 @invenio_cli.command()
@@ -206,9 +292,10 @@ def destroy(cli_config):
 
 @invenio_cli.command()
 @click.option("--script", required=True, help="The path of custom migration script.")
-def upgrade(script):
+@pass_cli_config
+def upgrade(cli_config, script):
     """Upgrades the current instance to a newer version."""
-    steps = UpgradeCommands.upgrade(script)
+    steps = UpgradeCommands(cli_config).upgrade(script)
     on_fail = "Upgrade failed."
     on_success = "Upgrade sucessfull."
 

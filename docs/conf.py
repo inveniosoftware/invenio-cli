@@ -11,8 +11,6 @@
 
 from __future__ import print_function
 
-import sphinx.environment
-
 from invenio_cli import __version__
 
 # -- General configuration ------------------------------------------------
