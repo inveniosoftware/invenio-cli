@@ -133,22 +133,22 @@ class CLIConfig(object):
 
     def get_search_port(self):
         """Returns the search port."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("search_port", "9200")
+        return self.private_config[CLIConfig.CLI_SECTION].get("search_port", "9200")
 
     def get_search_host(self):
         """Returns the search host."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION].get(
+        return self.private_config[CLIConfig.CLI_SECTION].get(
             "search_host",
             "localhost",
         )
 
     def get_web_port(self):
         """Returns web port."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_port", "5000")
+        return self.private_config[CLIConfig.CLI_SECTION].get("web_port", "5000")
 
     def get_web_host(self):
         """Returns web host."""
-        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("web_host", "127.0.0.1")
+        return self.private_config[CLIConfig.CLI_SECTION].get("web_host", "127.0.0.1")
 
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
