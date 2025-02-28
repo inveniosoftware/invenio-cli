@@ -8,6 +8,14 @@
 Changes
 =======
 
+Version 1.6.0 (released 2025-02-28)
+
+- packages: allow use of either `pipenv` or `uv` as python package manager
+- flask: replace `FLASK_ENV` with `FLASK_DEBUG`
+- celery: allow setting a log level
+- config: make host & port for both web and search configurable via `.invenio.private`
+- run: introduce more fine-granular "web" and "worker" sub-commands
+
 Version 1.5.0 (released 2024-08-01)
 
 - dependencies: update for invenio-app-rdm v12
