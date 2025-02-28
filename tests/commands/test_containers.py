@@ -16,7 +16,6 @@ import pytest
 from invenio_cli.commands import ContainersCommands
 
 
-@pytest.mark.skip()
 @pytest.fixture(scope="function")
 def expected_setup_calls():
     return [
@@ -36,7 +35,6 @@ def expected_setup_calls():
     ]
 
 
-@pytest.mark.skip()
 @pytest.fixture(scope="function")
 def expected_force_calls():
     return [
