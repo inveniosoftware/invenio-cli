@@ -110,6 +110,35 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
+    @staticmethod
+    def _assets_link_single(assets_pkg, module_pkg):
+        try:
+            module_name = module_pkg.package_json["name"]
+            # breakpoint()
+            assets_pkg.link(
+                # TODO this is heavily geared towards invenio pacakges...
+                str(module_pkg.package_json_path.parent / "dist")
+            )
+
+        except FileNotFoundError as e:
+            return ProcessResponse(
+                error="No module found on the specified path. "
+                f"File not found {e.filename}",
+                status_code=1,
+            )
+
+        status_code = assets_pkg.link(module_name)
+        if status_code == 0:
+            return ProcessResponse(
+                output="Global module linked correctly to local folder",
+                status_code=0,
+            )
+        else:
+            return ProcessResponse(
+                error=f"Unable to link module. Got error code {status_code}",
+                status_code=status_code,
+            )
+
     def watch_assets(self):
         """High-level command to watch assets for changes."""
         watch_cmd = self.cli_config.python_package_manager.run_command(
@@ -142,17 +171,31 @@ class AssetsCommands(LocalCommands):
                 args={"module_pkg": module_pkg},
                 message="Building...",
             ),
-            FunctionStep(  # Create link to global folder
-                func=self._run_script,
-                args={"module_pkg": module_pkg},
-                message="Linking module to global dist...",
-            ),
-            FunctionStep(  # Link the global folder to the assets folder.
-                func=self._assets_link,
-                args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
-                message="Linking module to assets...",
-            ),
         ]
+
+        if self.cli_config.javascript_package_manager.name == "npm":
+            link_steps = [
+                FunctionStep(  # Create link to global folder
+                    func=self._run_script,
+                    args={"module_pkg": module_pkg},
+                    message="Linking module to global dist...",
+                ),
+                FunctionStep(  # Link the global folder to the assets folder.
+                    func=self._assets_link,
+                    args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
+                    message="Linking module to assets...",
+                ),
+            ]
+        else:
+            link_steps = [
+                FunctionStep(  # Link the global folder to the assets folder.
+                    func=self._assets_link_single,
+                    args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
+                    message="Linking module to assets...",
+                ),
+            ]
+
+        steps.extend(link_steps)
 
         return steps
 
