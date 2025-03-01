@@ -9,7 +9,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.rdm import rdm_version
+from ..helpers.versions import rdm_version
 from .packages import PackagesCommands
 from .services import ServicesCommands
 from .steps import FunctionStep

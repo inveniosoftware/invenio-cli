@@ -15,9 +15,8 @@ from invenio_cli.commands.translations import TranslationsCommands
 from invenio_cli.helpers.env import env
 
 from ..helpers.docker_helper import DockerHelper
-from ..helpers.ils import ils_version
 from ..helpers.process import ProcessResponse
-from ..helpers.rdm import rdm_version
+from ..helpers.versions import ils_version, rdm_version
 from .commands import Commands
 from .services_health import HEALTHCHECKS, ServicesHealthCommands
 from .steps import CommandStep, FunctionStep
