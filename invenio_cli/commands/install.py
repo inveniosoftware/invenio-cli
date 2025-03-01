@@ -39,7 +39,7 @@ class InstallCommands(LocalCommands):
     def update_instance_path(self):
         """Update path to instance in config."""
         result = run_cmd(
-            self.cli_config.python_package_manager.run_command(
+            self.cli_config.python_package_manager.send_command(
                 "invenio",
                 "shell",
                 "--no-term-title",
