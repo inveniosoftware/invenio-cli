@@ -9,10 +9,14 @@
 
 import os
 from abc import ABC
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Union
 
 from pynpm import NPMPackage, PNPMPackage
+
+from ..helpers.process import ProcessResponse
 
 
 class PythonPackageManager(ABC):
@@ -176,6 +180,14 @@ class UV(PythonPackageManager):
         return [shell, "-c", f"source .venv/bin/activate; exec {shell} -i"]
 
 
+@dataclass
+class AssetsFunction:
+    """Function to run an assets command with `assets_pkg` and `module_pkg`."""
+
+    function: Callable[[NPMPackage, NPMPackage], ProcessResponse]
+    message: str
+
+
 class JavascriptPackageManager(ABC):
     """Interface for creating tool-specific JS package management commands."""
 
@@ -192,6 +204,10 @@ class JavascriptPackageManager(ABC):
     def env_overrides(self) -> Dict[str, str]:
         """Provide environment overrides for building Invenio assets."""
         return {}
+
+    def package_linking_steps(self) -> List[AssetsFunction]:
+        """Generate steps to link the target package to the project."""
+        raise NotImplementedError()
 
 
 class NPM(JavascriptPackageManager):
@@ -211,6 +227,52 @@ class NPM(JavascriptPackageManager):
         """Provide environment overrides for building Invenio assets."""
         return {"INVENIO_WEBPACKEXT_NPM_PKG_CLS": "pynpm:NPMPackage"}
 
+    def package_linking_steps(self):
+        """Generate steps to link the target package to the project."""
+
+        def _link_package_to_global(
+            assets_pkg: NPMPackage, module_pkg: NPMPackage
+        ) -> ProcessResponse:
+            status_code = module_pkg.run_script("link-dist")
+            if status_code == 0:
+                return ProcessResponse(
+                    output="Module linked correctly to global", status_code=0
+                )
+            else:
+                return ProcessResponse(
+                    error=f"Unable to link-dist. Got error code {status_code}",
+                    status_code=status_code,
+                )
+
+        def _link_global_package(
+            assets_pkg: NPMPackage, module_pkg: NPMPackage
+        ) -> ProcessResponse:
+            try:
+                module_name = module_pkg.package_json["name"]
+            except FileNotFoundError as e:
+                return ProcessResponse(
+                    error="No module found on the specified path. "
+                    f"File not found {e.filename}",
+                    status_code=1,
+                )
+
+            status_code = assets_pkg.link(module_name)
+            if status_code == 0:
+                return ProcessResponse(
+                    output="Global module linked correctly to local folder",
+                    status_code=0,
+                )
+            else:
+                return ProcessResponse(
+                    error=f"Unable to link module. Got error code {status_code}",
+                    status_code=status_code,
+                )
+
+        return [
+            AssetsFunction(_link_package_to_global, "Linking module to global dist..."),
+            AssetsFunction(_link_global_package, "Linking module to assets..."),
+        ]
+
 
 class PNPM(JavascriptPackageManager):
     """Generate ``pnpm`` commands for managing JS packages."""
@@ -228,3 +290,74 @@ class PNPM(JavascriptPackageManager):
     def env_overrides(self):
         """Provide environment overrides for building Invenio assets."""
         return {"INVENIO_WEBPACKEXT_NPM_PKG_CLS": "pynpm:PNPMPackage"}
+
+    def package_linking_steps(self):
+        """Generate steps to link the target package to the project."""
+
+        def _prelink_dist(
+            assets_pkg: NPMPackage, module_pkg: NPMPackage
+        ) -> ProcessResponse:
+            """Execute the "prelink-dist" script."""
+            status_code = module_pkg.run_script("prelink-dist")
+            if status_code == 0:
+                return ProcessResponse(
+                    output="Successfully ran prelink-dist script.",
+                    status_code=0,
+                )
+            else:
+                return ProcessResponse(
+                    error=f"Unable to prelink-dist. Got error code {status_code}",
+                    status_code=status_code,
+                )
+
+        def _link_package_single_step(
+            assets_pkg: NPMPackage, module_pkg: NPMPackage
+        ) -> ProcessResponse:
+            """Execute the PNPM single-step package linking."""
+            try:
+                # Accessing `package_json` fails if the file can't be found
+                module_pkg.package_json["name"]
+
+                # This is geared towards Invenio JS packages...
+                # But so are all the other steps
+                status_code = assets_pkg.link(
+                    str(module_pkg.package_json_path.parent / "dist")
+                )
+            except FileNotFoundError as e:
+                return ProcessResponse(
+                    error="No module found on the specified path. "
+                    f"File not found {e.filename}",
+                    status_code=1,
+                )
+            if status_code == 0:
+                return ProcessResponse(
+                    output="Module linked successfully to assets",
+                    status_code=0,
+                )
+            else:
+                return ProcessResponse(
+                    error=f"Unable to link module. Got error code {status_code}",
+                    status_code=status_code,
+                )
+
+        def _postlink_dist(
+            assets_pkg: NPMPackage, module_pkg: NPMPackage
+        ) -> ProcessResponse:
+            """Execute the "postlink-dist" script."""
+            status_code = module_pkg.run_script("postlink-dist")
+            if status_code == 0:
+                return ProcessResponse(
+                    output="Successfully ran postlink-dist script.",
+                    status_code=0,
+                )
+            else:
+                return ProcessResponse(
+                    error=f"Unable to run postlink-dist. Got error code {status_code}",
+                    status_code=status_code,
+                )
+
+        return [
+            AssetsFunction(_prelink_dist, "Executing prelink-dist script..."),
+            AssetsFunction(_link_package_single_step, "Linking module to assets..."),
+            AssetsFunction(_postlink_dist, "Executing postlink-dist script..."),
+        ]
