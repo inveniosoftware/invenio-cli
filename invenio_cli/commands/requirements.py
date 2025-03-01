@@ -15,7 +15,7 @@ import sys
 
 from ..helpers.docker_helper import DockerHelper
 from ..helpers.process import ProcessResponse, run_cmd
-from ..helpers.rdm import rdm_version
+from ..helpers.versions import rdm_version
 from .steps import FunctionStep
 
 
