@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 California Institute of Technology.
 # SPDX-FileCopyrightText: 2020 CERN.
+# SPDX-FileCopyrightText: 2025 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio module to ease the creation and management of applications."""

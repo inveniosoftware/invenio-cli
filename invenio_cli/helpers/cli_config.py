@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2019-2024 CERN.
 # SPDX-FileCopyrightText: 2019-2020 Northwestern University.
 # SPDX-FileCopyrightText: 2021 Esteban J. G. Gabancho.
-# SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2024-2025 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio-cli configuration file."""
@@ -145,6 +145,10 @@ class CLIConfig(object):
     def get_project_shortname(self):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
+
+    def get_rpc_server_port(self):
+        """Returns rpc server port."""
+        return self.private_config[CLIConfig.CLI_SECTION].get("rpc_port", "5001")
 
     def get_search_port(self):
         """Returns the search port."""
