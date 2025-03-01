@@ -1,12 +1,17 @@
 ..
     Copyright (C) 2019-2024 CERN.
     Copyright (C) 2019-2021 Northwestern University.
+    Copyright (C) 2025      TU Wien.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version <next>
+
+- versions: consider `pyproject.toml` when checking `App-{RDM,ILS}` dependency versions
 
 Version 1.6.0 (released 2025-02-28)
 
