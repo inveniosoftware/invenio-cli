@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2026 California Institute of Technology.
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2026 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -109,22 +109,19 @@ class LocalCommands(Commands):
         # Commands
         py_pkg_man = self.cli_config.python_package_manager
         js_pkg_man = self.cli_config.javascript_package_manager
-        ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
+        ops = [py_pkg_man.send_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "clean", "create"))
             # We need to copy the js lock files here, since webpack regenerates
             # package.json and we want the locked version instead.
             ops.append(self._copy_js_lock_files)
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "install"))
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "install"))
         else:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "create"))
-            # We need to copy the js lock files here, since webpack regenerates
-            # package.json and we want the locked version instead.
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "create"))
             ops.append(self._copy_js_lock_files)
         ops.append(self._statics)
-        ops.append(py_pkg_man.run_command("invenio", "webpack", "build"))
-
+        ops.append(py_pkg_man.send_command("invenio", "webpack", "build"))
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
