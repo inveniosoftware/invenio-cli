@@ -45,7 +45,7 @@ class InstallCommands(LocalCommands):
                 "--TerminalInteractiveShell.editing_mode=''",
                 "--no-term-title",
                 "-c",
-                "\"print(app.instance_path, end='')\"",
+                "print(app.instance_path, end='')",
             )
         )
         if result.status_code == 0:
