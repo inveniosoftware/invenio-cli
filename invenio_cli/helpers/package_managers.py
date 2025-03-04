@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2025 TU Wien.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Wrappers around various package managers to be used under the hood."""
 
+import atexit
 import os
 from abc import ABC
+from subprocess import Popen
 from typing import List
+
+from .process import run_cmd
 
 
 class PythonPackageManager(ABC):
@@ -17,6 +22,28 @@ class PythonPackageManager(ABC):
 
     name: str = None
     lock_file_name: str = None
+    rpc_server_is_running: bool = False
+    rpc_server: Popen = None
+    run_prefix: List = []
+
+    def __init__(self):
+        """Construct."""
+        self.rpc_server = Popen(
+            self.run_prefix + ["invenio", "rpc-server", "start", "--port", "5001"]
+        )
+        atexit.register(self.cleanup)
+        while True:
+            response = run_cmd(
+                self.run_prefix + ["rpc-server", "ping", "--port", "5001"]
+            )
+            if "pong" in response.output:
+                self.rpc_server_is_running = True
+                break
+
+    def cleanup(self):
+        """Cleanup."""
+        if self.rpc_server:
+            self.rpc_server.terminate()
 
     def run_command(self, *command: str) -> List[str]:
         """Generate command to run the given command in the managed environment."""
@@ -60,6 +87,24 @@ class Pipenv(PythonPackageManager):
 
     name = "pipenv"
     lock_file_name = "Pipfile.lock"
+    run_prefix = ["pipenv", "run"]
+
+    def send_command(self, *command):
+        """Send command to rpc server, default to run_command."""
+        if self.rpc_server_is_running:
+            # [1:] remove "invenio" from commands
+            return [
+                self.name,
+                "run",
+                "rpc-server",
+                "send",
+                "--port",
+                "5001",
+                "--plain",
+                *command[1:],
+            ]
+        else:
+            self.run_command(*command)
 
     def run_command(self, *command):
         """Generate command to run the given command in the managed environment."""
@@ -117,6 +162,25 @@ class UV(PythonPackageManager):
 
     name = "uv"
     lock_file_name = "uv.lock"
+    run_prefix = ["uv", "run", "--no-sync"]
+
+    def send_command(self, *command):
+        """Send command to rpc server, default to run_command."""
+        if self.rpc_server_is_running:
+            # [1:] remove "invenio" from commands
+            return [
+                self.name,
+                "run",
+                "--no-sync",
+                "rpc-server",
+                "send",
+                "--port",
+                "5001",
+                "--plain",
+                *command[1:],
+            ]
+        else:
+            return self.run_command(*command)
 
     def run_command(self, *command):
         """Generate command to run the given command in the managed environment."""
