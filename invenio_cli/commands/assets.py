@@ -7,11 +7,9 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-import subprocess
 from pathlib import Path
 
 import click
-from pynpm import NPMPackage
 
 from ..helpers import env
 from ..helpers.process import ProcessResponse, run_interactive
@@ -26,17 +24,16 @@ class AssetsCommands(LocalCommands):
         """Constructor."""
         super().__init__(cli_config)
 
-    @staticmethod
-    def _module_pkg(path):
+    def _module_pkg(self, path):
         """NPM package for the given path."""
-        return NPMPackage(Path(path) / "package.json")
+        path = Path(path) / "package.json"
+        return self.cli_config.javascript_package_manager.create_pynpm_package(path)
 
     def _assets_pkg(self):
         """NPM package for the instance's webpack project."""
         return self._module_pkg(self.cli_config.get_instance_path() / "assets")
 
-    @staticmethod
-    def _watch_js_module(pkg):
+    def _watch_js_module(self, pkg):
         """Watch the JS module for changes."""
         click.secho("Starting watching module...", fg="green")
         status_code = pkg.run_script("watch")
@@ -48,24 +45,12 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
-    @staticmethod
-    def _run_script(module_pkg):
-        """Run script and return a ProcessResponse."""
-        status_code = module_pkg.run_script("link-dist")
-        if status_code == 0:
-            return ProcessResponse(
-                output="Module linked correctly to global", status_code=0
-            )
-        else:
-            return ProcessResponse(
-                error=f"Unable to link-dist. Got error code {status_code}",
-                status_code=status_code,
-            )
-
-    @staticmethod
-    def _npm_install_command(path):
+    def _npm_install_command(self, path, module_pkg):
         """Run command and return a ProcessResponse."""
-        status_code = subprocess.call(["npm", "install", "--prefix", path])
+        install_args = self.cli_config.javascript_package_manager.install_local_package(
+            path
+        )
+        status_code = module_pkg.install(" ".join(install_args))
         if status_code == 0:
             return ProcessResponse(
                 output="Dependent packages installed correctly", status_code=0
@@ -86,28 +71,6 @@ class AssetsCommands(LocalCommands):
         else:
             return ProcessResponse(
                 error=f"Unable to build. Got error code {status_code}",
-                status_code=status_code,
-            )
-
-    @staticmethod
-    def _assets_link(assets_pkg, module_pkg):
-        try:
-            module_name = module_pkg.package_json["name"]
-        except FileNotFoundError as e:
-            return ProcessResponse(
-                error="No module found on the specified path. "
-                f"File not found {e.filename}",
-                status_code=1,
-            )
-
-        status_code = assets_pkg.link(module_name)
-        if status_code == 0:
-            return ProcessResponse(
-                output="Global module linked correctly to local folder", status_code=0
-            )
-        else:
-            return ProcessResponse(
-                error=f"Unable to link module. Got error code {status_code}",
                 status_code=status_code,
             )
 
@@ -135,7 +98,7 @@ class AssetsCommands(LocalCommands):
         steps = [
             FunctionStep(  # Install dependent packages
                 func=self._npm_install_command,
-                args={"path": path},
+                args={"path": path, "module_pkg": module_pkg},
                 message="Installing dependent packages...",
             ),
             FunctionStep(  # Run build script
@@ -143,17 +106,19 @@ class AssetsCommands(LocalCommands):
                 args={"module_pkg": module_pkg},
                 message="Building...",
             ),
-            FunctionStep(  # Create link to global folder
-                func=self._run_script,
-                args={"module_pkg": module_pkg},
-                message="Linking module to global dist...",
-            ),
-            FunctionStep(  # Link the global folder to the assets folder.
-                func=self._assets_link,
-                args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
-                message="Linking module to assets...",
-            ),
         ]
+
+        # The commands necessary for linking local JS packages vary by package manager
+        js_package_manager = self.cli_config.javascript_package_manager
+        link_steps = [
+            FunctionStep(
+                func=step.function,
+                args={"assets_pkg": assets_pkg, "module_pkg": module_pkg},
+                message=step.message,
+            )
+            for step in js_package_manager.package_linking_steps()
+        ]
+        steps.extend(link_steps)
 
         return steps
 

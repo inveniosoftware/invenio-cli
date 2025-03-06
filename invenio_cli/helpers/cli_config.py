@@ -11,11 +11,19 @@
 """Invenio-cli configuration file."""
 
 from configparser import ConfigParser
+from functools import cached_property
 from pathlib import Path
 
 from ..errors import InvenioCLIConfigError
 from .filesystem import get_created_files
-from .package_managers import UV, Pipenv, PythonPackageManager
+from .package_managers import (
+    NPM,
+    PNPM,
+    UV,
+    JavascriptPackageManager,
+    Pipenv,
+    PythonPackageManager,
+)
 from .process import ProcessResponse
 
 
@@ -62,12 +70,10 @@ class CLIConfig(object):
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
 
-    @property
+    @cached_property
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
-        manager_name = self.config[CLIConfig.CLI_SECTION].get(
-            "python_package_manager", None
-        )
+        manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
         if manager_name == Pipenv.name:
             return Pipenv()
         elif manager_name == UV.name:
@@ -81,6 +87,19 @@ class CLIConfig(object):
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."
             )
+
+    @cached_property
+    def javascript_package_manager(self) -> JavascriptPackageManager:
+        """Get javascript packages manager."""
+        manager_name = self.config[CLIConfig.CLI_SECTION].get(
+            "javascript_package_manager"
+        )
+        if manager_name == NPM.name:
+            return NPM()
+        elif manager_name == PNPM.name:
+            return PNPM()
+
+        return NPM()
 
     def get_project_dir(self):
         """Returns path to project directory."""
