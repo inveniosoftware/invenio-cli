@@ -12,7 +12,11 @@
 import os
 import re
 
-import tomli
+try:
+    import tomli as tomllib
+except ModuleNotFoundError:
+    import tomllib
+
 from packaging.requirements import Requirement
 from pipfile import Pipfile
 
@@ -38,7 +42,7 @@ def _from_pipfile(dep_name):
 def _from_pyproject_toml(dep_name):
     """Parse the stated dependency from ``pyproject.toml``."""
     with open("./pyproject.toml", "rb") as toml_file:
-        parsed = tomli.load(toml_file)
+        parsed = tomllib.load(toml_file)
 
     dependencies = [Requirement(d) for d in parsed["project"]["dependencies"]]
     app_rdms = [d for d in dependencies if d.name == "invenio-app-rdm"]
