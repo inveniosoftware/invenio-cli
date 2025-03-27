@@ -3,7 +3,7 @@
 # Copyright (C) 2019-2024 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
-# Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -11,6 +11,7 @@
 """Invenio-cli configuration file."""
 
 from configparser import ConfigParser
+from functools import cached_property
 from pathlib import Path
 
 from ..errors import InvenioCLIConfigError
@@ -62,7 +63,7 @@ class CLIConfig(object):
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
 
-    @property
+    @cached_property
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get(
