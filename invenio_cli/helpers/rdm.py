@@ -21,22 +21,17 @@ def rdm_version():
     elif (cliConfig.project_path / "pyproject.toml").is_file():
         depfile = cliConfig.project_path / "pyproject.toml"
 
-    match = re.search(
-        r"invenio-app-rdm.*?==([\d.]+(?:b\d+)?(?:\.dev\d+)?)",
-        depfile.read_text(),
-    )
+    # find invenio-app-rdm line in either file
+    matchline = re.search(r"^.?invenio-app-rdm.*$", depfile.read_text(), re.MULTILINE)
+
+    # extract the version number of invenio-app-rdm
+    if matchline:
+        match = re.search(
+            r"[0-9]*\.[0-9]*\.[0-9]*",
+            matchline.group(0),
+        )
 
     if match:
-        print(match.group(1))
-        apprdmversion = []
-        for v in match.group(1).split("."):
-
-            try:
-                vs = int(v)
-                apprdmversion.append(vs)
-            except ValueError:
-                apprdmversion.append(v)
-        print("Invenio RDM version: ", apprdmversion)
-        return apprdmversion
+        return [int(v) for v in match.group(0).split(".")]
     else:
         return None
