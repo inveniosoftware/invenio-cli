@@ -9,7 +9,7 @@
 Changes
 =======
 
-Version <next>
+Version 1.6.1 (released 2025-03-27)
 
 - versions: consider `pyproject.toml` when checking `App-{RDM,ILS}` dependency versions
 
