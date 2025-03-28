@@ -9,6 +9,10 @@
 Changes
 =======
 
+Version 1.7.0 (released 2025-03-28)
+
+- build: allow use of either `npm` or `pnpm` as JS package manager (via `.invenio`)
+
 Version 1.6.1 (released 2025-03-27)
 
 - versions: consider `pyproject.toml` when checking `App-{RDM,ILS}` dependency versions
