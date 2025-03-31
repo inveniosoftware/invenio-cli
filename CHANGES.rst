@@ -9,7 +9,7 @@
 Changes
 =======
 
-Version <next>
+Version 1.7.1 (released 2025-03-31)
 
 - versions: fix accidental creation of a tuple from the version string
 
