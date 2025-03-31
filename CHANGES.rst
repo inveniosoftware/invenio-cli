@@ -9,6 +9,10 @@
 Changes
 =======
 
+Version <next>
+
+- versions: fix accidental creation of a tuple from the version string
+
 Version 1.7.0 (released 2025-03-28)
 
 - build: allow use of either `npm` or `pnpm` as JS package manager (via `.invenio`)

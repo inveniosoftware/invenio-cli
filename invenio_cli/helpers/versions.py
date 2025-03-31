@@ -35,7 +35,7 @@ def _parse_version(version):
 def _from_pipfile(dep_name):
     """Parse the stated dependency from the ``Pipfile``."""
     parsed = Pipfile.load(filename="./Pipfile")
-    version = (parsed.data["default"].get(dep_name, {}).get("version", ""),)
+    version = parsed.data["default"].get(dep_name, {}).get("version", "")
     return _parse_version(version)
 
 
