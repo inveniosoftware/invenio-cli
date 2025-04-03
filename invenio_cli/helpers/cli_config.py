@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2019-2020 Northwestern University.
 # SPDX-FileCopyrightText: 2021 Esteban J. G. Gabancho.
 # SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2025-2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio-cli configuration file."""
@@ -223,11 +224,18 @@ class CLIConfig(object):
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]["flavour"] = flavour
         config_parser[cls.CLI_SECTION]["logfile"] = "/logs/invenio-cli.log"
-
+        custom_package_managers = {
+            "javascript_package_manager": replay.get("cookiecutter").get(
+                "javascript_package_manager", None
+            ),
+        }
         # Cookiecutter user input section
         config_parser[cls.COOKIECUTTER_SECTION] = {}
         for key, value in replay[cls.COOKIECUTTER_SECTION].items():
             config_parser[cls.COOKIECUTTER_SECTION][key] = str(value)
+            # Set the package managers in the CLI section
+            if custom_package_managers.get(key) == "pnpm":
+                config_parser[cls.CLI_SECTION][key] = value
 
         # Generated files section
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)
