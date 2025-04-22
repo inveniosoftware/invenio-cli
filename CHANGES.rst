@@ -9,7 +9,7 @@
 Changes
 =======
 
-Version <next>
+Version 1.7.2 (released 2025-04-22)
 
 - setup: bump minimum version of `pipenv` to pull in the `packaging` dependency
 
