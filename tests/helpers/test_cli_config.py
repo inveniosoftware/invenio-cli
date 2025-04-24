@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2019-2020 CERN.
 # Copyright (C) 2019-2021 Northwestern University.
+# Copyright (C) 2025 KTH Royal Institute of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -9,6 +10,7 @@
 """Module config_file tests."""
 import os
 import tempfile
+from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
@@ -119,3 +121,48 @@ def test_cli_config_get_project_shortname(config_dir):
     cli_config = CLIConfig(config_dir)
 
     assert cli_config.get_project_shortname() == "my-site"
+
+
+@pytest.mark.parametrize(
+    "package_manager, expected_in_cli",
+    [
+        ("pnpm", True),
+        ("npm", False),
+        (None, False),
+    ],
+)
+def test_javascript_package_manager_config(package_manager, expected_in_cli, tmpdir):
+    """Test JavaScript package manager is correctly set in CLI config."""
+    project_dir = tmpdir.mkdir("test-project")
+    flavour = "RDM"
+    replay = {
+        "cookiecutter": {
+            "project_name": "My Site",
+            "project_shortname": "my-site",
+            "project_site": "my-site.com",
+            "github_repo": "my-site/my-site",
+            "description": "Invenio RDM My Site Instance",
+            "author_name": "CERN",
+            "author_email": "info@my-site.com",
+            "year": "2022",
+            "database": "postgresql",
+            "search": "opensearch1",
+            "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
+        }
+    }
+    if package_manager is not None:
+        replay["cookiecutter"]["javascript_package_manager"] = package_manager
+
+    CLIConfig.write(str(project_dir), flavour, replay)
+
+    config = ConfigParser()
+    config_path = project_dir.join(CLIConfig.CONFIG_FILENAME)
+    config.read(str(config_path))
+
+    if expected_in_cli:
+        assert config.has_option(CLIConfig.CLI_SECTION, "javascript_package_manager")
+        assert config.get(CLIConfig.CLI_SECTION, "javascript_package_manager") == "pnpm"
+    else:
+        assert not config.has_option(
+            CLIConfig.CLI_SECTION, "javascript_package_manager"
+        )
