@@ -42,6 +42,8 @@ class InstallCommands(LocalCommands):
             self.cli_config.python_package_manager.run_command(
                 "invenio",
                 "shell",
+                # make sure the shell does not append cursor if editing_mode is set to `vi` in config
+                "--TerminalInteractiveShell.editing_mode=''",
                 "--no-term-title",
                 "-c",
                 "\"print(app.instance_path, end='')\"",
