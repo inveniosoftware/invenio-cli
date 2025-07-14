@@ -2,7 +2,8 @@ Contributing
 ============
 
 Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given. Additional documentation can be found in the Invenio `maintainers guide <https://inveniordm.docs.cern.ch/maintenance/newcomers/#tools>`_.
+little bit helps, and credit will always be given. Additional documentation
+can be found in the `InvenioRDM community contribution guide <https://inveniordm.docs.cern.ch/community/>`_.
 
 Types of Contributions
 ----------------------
@@ -62,15 +63,18 @@ Ready to contribute? Here's how to set up `invenio-cli` for local development.
 
       $ git clone git@github.com:your_name_here/invenio-cli.git
 
-3. Install your local copy into a virtualenv. Assuming you have
-   virtualenvwrapper installed, this is how you set up your fork for local
-   development:
+3. Install your local copy into a virtualenv. Here we present two alternatives to do so:
+   the [`uv`](https://docs.astral.sh/uv/) or [pipenv](https://pipenv.pypa.io/en/latest/) tools.
+   The equivalent with any other tool is perfectly fine as well.
 
    .. code-block:: console
 
-      $ mkvirtualenv invenio-cli
       $ cd invenio-cli/
-      $ pip install -e .[all]
+      # with uv
+      $ uv venv
+      $ uv pip install -e ".[tests]"
+      # with pipenv
+      $ pipenv run pip install -e ".[tests]"
 
 4. Create a branch for local development:
 
@@ -84,7 +88,7 @@ Ready to contribute? Here's how to set up `invenio-cli` for local development.
 
    .. code-block:: console
 
-      $ ./run-tests.sh
+      $ (venv) ./run-tests.sh
 
    The tests will provide you with test coverage and also check PEP8
    (code style), PEP257 (documentation), flake8 as well as build the Sphinx
@@ -113,6 +117,6 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests and must not decrease test coverage.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring.
-3. The pull request should work for Python 2.7, 3.5 and 3.6. Check
-   https://travis-ci.org/inveniosoftware/invenio-cli/pull_requests
+3. The pull request should work for the supported Python versions. Check
+   https://github.com/inveniosoftware/workflows/blob/master/.github/workflows/tests-python.yml
    and make sure that the tests pass for all supported Python versions.
