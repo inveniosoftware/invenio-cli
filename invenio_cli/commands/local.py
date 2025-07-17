@@ -159,7 +159,9 @@ class LocalCommands(Commands):
         click.secho(f"Instance running!\nVisit https://{host}:{port}", fg="green")
         return [proc]
 
-    def run_worker(self, celery_log_file=None, celery_log_level="INFO"):
+    def run_worker(
+        self, celery_log_file=None, celery_log_level="INFO", jobs_scheduler=True
+    ):
         """Run Celery worker."""
         click.secho("Starting celery worker...", fg="green")
 
@@ -183,9 +185,43 @@ class LocalCommands(Commands):
                 celery_log_file,
             ]
 
+        processes = []
         proc = popen(celery_command)
         self._handle_sigint("Celery worker", proc)
         click.secho("Worker running!", fg="green")
+        processes.append(proc)
+
+        # Add jobs scheduler if requested
+        if jobs_scheduler:
+            processes.extend(self.run_jobs_scheduler(celery_log_file, celery_log_level))
+
+        return processes
+
+    def run_jobs_scheduler(self, celery_log_file=None, celery_log_level="INFO"):
+        """Run Celery beat scheduler for jobs."""
+        click.secho("Starting jobs scheduler...", fg="green")
+
+        pkg_man = self.cli_config.python_package_manager
+        beat_command = pkg_man.run_command(
+            "celery",
+            "--app",
+            "invenio_app.celery",
+            "beat",
+            "--scheduler",
+            "invenio_jobs.services.scheduler:RunScheduler",
+            "--loglevel",
+            celery_log_level,
+        )
+
+        if celery_log_file:
+            beat_command += [
+                "--logfile",
+                celery_log_file,
+            ]
+
+        proc = popen(beat_command)
+        self._handle_sigint("Jobs scheduler", proc)
+        click.secho("Jobs scheduler running!", fg="green")
         return [proc]
 
     def run_all(
@@ -198,7 +234,10 @@ class LocalCommands(Commands):
         celery_log_level="INFO",
     ):
         """Run all services."""
-        return [
+        processes = [
             *self.run_web(host, port, debug),
-            *self.run_worker(celery_log_file, celery_log_level),
+            *self.run_worker(celery_log_file, celery_log_level, jobs_scheduler=False),
+            *self.run_jobs_scheduler(celery_log_file, celery_log_level),
         ]
+
+        return processes
