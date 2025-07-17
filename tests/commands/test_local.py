@@ -393,12 +393,15 @@ def test_install_modules(p_run_cmd, mock_cli_config):
     """
 
 
+@patch("invenio_cli.commands.local.rdm_version")
 @patch("invenio_cli.commands.local.popen")
-def test_run_worker_with_jobs_scheduler(p_popen, mock_cli_config):
+def test_run_worker_with_jobs_scheduler(p_popen, p_rdm_version, mock_cli_config):
     """Test run_worker with jobs scheduler enabled."""
     commands = LocalCommands(mock_cli_config)
     mock_proc = MagicMock()
     p_popen.return_value = mock_proc
+    # Mock RDM version 13+
+    p_rdm_version.return_value = [13, 0, 0]
 
     # Test worker with jobs scheduler enabled
     result = commands.run_worker(jobs_scheduler=True)
@@ -425,49 +428,20 @@ def test_run_worker_with_jobs_scheduler(p_popen, mock_cli_config):
     assert "invenio_jobs.services.scheduler:RunScheduler" in jobs_scheduler_commands[0]
 
 
+@patch("invenio_cli.commands.local.rdm_version")
 @patch("invenio_cli.commands.local.popen")
-def test_run_worker_default_behavior(p_popen, mock_cli_config):
-    """Test run_worker default behavior (jobs scheduler enabled)."""
+def test_run_worker_version_below_13(p_popen, p_rdm_version, mock_cli_config):
+    """Test run_worker with RDM version < 13."""
     commands = LocalCommands(mock_cli_config)
     mock_proc = MagicMock()
     p_popen.return_value = mock_proc
+    # Mock RDM version 12
+    p_rdm_version.return_value = [12, 0, 0]
 
-    # Test worker with default behavior (jobs scheduler enabled)
-    result = commands.run_worker()
+    # Test worker with jobs scheduler enabled (but version < 13)
+    result = commands.run_worker(jobs_scheduler=True)
 
-    # Should have 2 processes: worker and jobs scheduler (default)
-    assert len(result) == 2
-    # popen should be called twice (worker, jobs scheduler)
-    assert p_popen.call_count == 2
-
-    # Verify both worker and jobs scheduler commands are called
-    all_commands = [call[0][0] for call in p_popen.call_args_list]
-
-    # Should have one worker command with --beat
-    worker_commands = [
-        cmd for cmd in all_commands if "worker" in cmd and "--beat" in cmd
-    ]
-    assert len(worker_commands) == 1
-
-    # Should have one jobs scheduler command
-    jobs_scheduler_commands = [
-        cmd for cmd in all_commands if "beat" in cmd and "--scheduler" in cmd
-    ]
-    assert len(jobs_scheduler_commands) == 1
-    assert "invenio_jobs.services.scheduler:RunScheduler" in jobs_scheduler_commands[0]
-
-
-@patch("invenio_cli.commands.local.popen")
-def test_run_worker_without_jobs_scheduler(p_popen, mock_cli_config):
-    """Test run_worker with jobs scheduler explicitly disabled."""
-    commands = LocalCommands(mock_cli_config)
-    mock_proc = MagicMock()
-    p_popen.return_value = mock_proc
-
-    # Test worker without jobs scheduler (explicitly disabled)
-    result = commands.run_worker(jobs_scheduler=False)
-
-    # Should have 1 process: worker only
+    # Should have 1 process only: worker (no jobs scheduler for v12)
     assert len(result) == 1
     # popen should be called once (worker only)
     assert p_popen.call_count == 1
@@ -475,53 +449,5 @@ def test_run_worker_without_jobs_scheduler(p_popen, mock_cli_config):
     # Verify only worker command is called
     called_command = p_popen.call_args[0][0]
     assert "worker" in called_command
-    assert "--beat" in called_command  # worker still has --beat
-    assert "--scheduler" not in called_command  # no separate scheduler
-
-
-@patch("invenio_cli.commands.local.popen")
-def test_run_jobs_scheduler(p_popen, mock_cli_config):
-    """Test run_jobs_scheduler method."""
-    commands = LocalCommands(mock_cli_config)
-    mock_proc = MagicMock()
-    p_popen.return_value = mock_proc
-
-    # Test jobs scheduler
-    result = commands.run_jobs_scheduler()
-
-    # Check that the process was created and returned
-    p_popen.assert_called_once()
-    assert result == [mock_proc]
-
-    # Verify the command includes beat and scheduler
-    called_command = p_popen.call_args[0][0]
-    assert "beat" in called_command
-    assert "--scheduler" in called_command
-    assert "invenio_jobs.services.scheduler:RunScheduler" in called_command
-    assert "--loglevel" in called_command
-
-
-@patch("invenio_cli.commands.local.popen")
-def test_run_all_includes_separate_jobs_scheduler(p_popen, mock_cli_config):
-    """Test run_all includes separate jobs scheduler process."""
-    commands = LocalCommands(mock_cli_config)
-    mock_proc = MagicMock()
-    p_popen.return_value = mock_proc
-
-    # Test run_all includes separate jobs scheduler process
-    result = commands.run_all("127.0.0.1", "5000")
-
-    # Should have 3 processes: web, worker (with --beat), and separate jobs scheduler
-    assert len(result) == 3
-    # popen should be called 3 times (web, worker, jobs scheduler)
-    assert p_popen.call_count == 3
-
-    # Verify the separate jobs scheduler command is called
-    all_commands = [call[0][0] for call in p_popen.call_args_list]
-
-    # Should have one command with jobs scheduler
-    jobs_scheduler_commands = [
-        cmd for cmd in all_commands if "beat" in cmd and "--scheduler" in cmd
-    ]
-    assert len(jobs_scheduler_commands) == 1
-    assert "invenio_jobs.services.scheduler:RunScheduler" in jobs_scheduler_commands[0]
+    assert "--beat" in called_command
+    assert "--scheduler" not in called_command

@@ -19,6 +19,7 @@ import click
 
 from ..helpers import env, filesystem
 from ..helpers.process import ProcessResponse, run_interactive
+from ..helpers.versions import rdm_version
 from .commands import Commands
 
 
@@ -191,7 +192,6 @@ class LocalCommands(Commands):
         click.secho("Worker running!", fg="green")
         processes.append(proc)
 
-        # Add jobs scheduler if requested
         if jobs_scheduler:
             processes.extend(self.run_jobs_scheduler(celery_log_file, celery_log_level))
 
@@ -199,6 +199,11 @@ class LocalCommands(Commands):
 
     def run_jobs_scheduler(self, celery_log_file=None, celery_log_level="INFO"):
         """Run Celery beat scheduler for jobs."""
+        # Jobs scheduler is only available in RDM v13+
+        version = rdm_version()
+        if not version or version[0] < 13:
+            return []
+
         click.secho("Starting jobs scheduler...", fg="green")
 
         pkg_man = self.cli_config.python_package_manager
