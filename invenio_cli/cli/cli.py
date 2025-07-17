@@ -255,7 +255,16 @@ def run_worker(cli_config, services, celery_log_file, celery_log_level, jobs_sch
 @web_options
 @worker_options
 @pass_cli_config
-def run_all(cli_config, host, port, debug, services, celery_log_file, celery_log_level):
+def run_all(
+    cli_config,
+    host,
+    port,
+    debug,
+    services,
+    celery_log_file,
+    celery_log_level,
+    jobs_scheduler,
+):
     """Starts web and worker development servers."""
     if services:
         cmds = ServicesCommands(cli_config)
@@ -274,6 +283,7 @@ def run_all(cli_config, host, port, debug, services, celery_log_file, celery_log
         services=services,
         celery_log_file=celery_log_file,
         celery_log_level=celery_log_level,
+        jobs_scheduler=jobs_scheduler,
     )
     for proc in processes:
         proc.wait()

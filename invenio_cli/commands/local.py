@@ -232,12 +232,14 @@ class LocalCommands(Commands):
         services=True,
         celery_log_file=None,
         celery_log_level="INFO",
+        jobs_scheduler=True,
     ):
         """Run all services."""
         processes = [
             *self.run_web(host, port, debug),
-            *self.run_worker(celery_log_file, celery_log_level, jobs_scheduler=False),
-            *self.run_jobs_scheduler(celery_log_file, celery_log_level),
+            *self.run_worker(
+                celery_log_file, celery_log_level, jobs_scheduler=jobs_scheduler
+            ),
         ]
 
         return processes
