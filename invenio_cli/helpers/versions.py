@@ -35,9 +35,9 @@ def _parse_version(version):
 def _from_pipfile(dep_name):
     """Parse the stated dependency from the ``Pipfile``."""
     parsed = Pipfile.load(filename="./Pipfile")
-    version = parsed.data["default"].get(dep_name, {}).get("version", "")
+    version = parsed.data.get("default", {}).get(dep_name, {}).get("version", "")
     if version == "":
-        version = parsed.data["default"].get(dep_name, {}).get("ref", "")
+        version = parsed.data.get("default", {}).get(dep_name, {}).get("ref", "")
     return _parse_version(version)
 
 
@@ -46,7 +46,9 @@ def _from_pyproject_toml(dep_name):
     with open("./pyproject.toml", "rb") as toml_file:
         parsed = tomllib.load(toml_file)
 
-    dependencies = [Requirement(d) for d in parsed["project"]["dependencies"]]
+    dependencies = [
+        Requirement(d) for d in parsed.get("project", {}).get("dependencies", [])
+    ]
     app_rdms = [d for d in dependencies if d.name == "invenio-app-rdm"]
     if not app_rdms:
         return None
