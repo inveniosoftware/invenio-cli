@@ -22,6 +22,13 @@ def mock_cli_config():
     class MockCLIConfig(object):
         def __init__(self):
             self.services_setup = False
+            # Mock python package manager
+            self.python_package_manager = Mock()
+
+            def mock_run_command(*args):
+                return ["pipenv", "run"] + list(args)
+
+            self.python_package_manager.run_command.side_effect = mock_run_command
 
         def get_project_dir(self):
             return Path("project_dir")

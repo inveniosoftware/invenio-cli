@@ -220,6 +220,11 @@ worker_options = combine_decorators(
         default="INFO",
         help="Celery log level (default: INFO)",
     ),
+    click.option(
+        "--jobs-scheduler/--no-jobs-scheduler",
+        default=True,
+        help="Enable/disable separate jobs scheduler (default: enabled)",
+    ),
 )
 
 
@@ -227,7 +232,7 @@ worker_options = combine_decorators(
 @services_option
 @worker_options
 @pass_cli_config
-def run_worker(cli_config, services, celery_log_file, celery_log_level):
+def run_worker(cli_config, services, celery_log_file, celery_log_level, jobs_scheduler):
     """Starts the local development server."""
     if services:
         cmds = ServicesCommands(cli_config)
@@ -237,7 +242,9 @@ def run_worker(cli_config, services, celery_log_file, celery_log_level):
 
     commands = LocalCommands(cli_config)
     processes = commands.run_worker(
-        celery_log_file=celery_log_file, celery_log_level=celery_log_level
+        celery_log_file=celery_log_file,
+        celery_log_level=celery_log_level,
+        jobs_scheduler=jobs_scheduler,
     )
     for proc in processes:
         proc.wait()
