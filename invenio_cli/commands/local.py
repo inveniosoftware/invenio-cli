@@ -201,7 +201,14 @@ class LocalCommands(Commands):
         """Run Celery beat scheduler for jobs."""
         # Jobs scheduler is only available in RDM v13+
         version = rdm_version()
-        if not version or version[0] < 13:
+        if version is None:
+            click.secho(
+                "RDM version couldn't be determined. Not running jobs scheduler.",
+                fg="yellow",
+                err=True,
+            )
+            return []
+        elif version[0] < 13:
             return []
 
         click.secho("Starting jobs scheduler...", fg="green")
