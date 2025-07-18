@@ -228,7 +228,14 @@ class ServicesCommands(Commands):
             steps.extend(self.fixtures())
             if demo_data:
                 steps.extend(self.demo())
-        elif ils_version():
+        else:
+            click.secho(
+                "RDM version couldn't be determined. RDM-specific steps will not be executed.",
+                fg="yellow",
+                err=True,
+            )
+
+        if ils_version():
             cmd = pkg_man.run_command("invenio", "setup", "--verbose")
             if not demo_data:
                 cmd.append("--skip-demo-data")
