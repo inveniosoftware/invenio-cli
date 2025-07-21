@@ -11,6 +11,7 @@
 import click
 
 from ..commands import AssetsCommands, PackagesCommands
+from ..helpers.versions import _parse_version
 from .utils import pass_cli_config, run_steps
 
 
@@ -91,9 +92,14 @@ def outdated(cli_config):
 def update(cli_config, version=None):
     """Update all or some Python python packages."""
     if version:
-        db = cli_config.get_db_type()
+        parsed_version = _parse_version(version)
         search = cli_config.get_search_type()
-        package = f"invenio-app-rdm[{db},{search}]~="
+        if parsed_version[0] >= 13:
+            # starting with v13, the `db` extra has been removed
+            package = f"invenio-app-rdm[{search}]~="
+        else:
+            db = cli_config.get_db_type()
+            package = f"invenio-app-rdm[{db},{search}]~="
         steps = PackagesCommands(cli_config).update_package_new_version(
             package, version
         )
