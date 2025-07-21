@@ -9,8 +9,8 @@
  Invenio-Cli
 =================
 
-.. image:: https://img.shields.io/travis/inveniosoftware/invenio-cli.svg
-        :target: https://travis-ci.org/inveniosoftware/invenio-cli
+.. image:: https://github.com/inveniosoftware/invenio-cli/workflows/CI/badge.svg
+        :target: https://github.com/inveniosoftware/invenio-cli/actions?query=workflow%3ACI
 
 .. image:: https://img.shields.io/coveralls/inveniosoftware/invenio-cli.svg
         :target: https://coveralls.io/r/inveniosoftware/invenio-cli
