@@ -9,6 +9,13 @@
 Changes
 =======
 
+Version 1.8.0 (released 2025-07-21)
+
+- update: remove db extra for v13
+- local: add custom Jobs Celery Beat scheduler to run commands
+- versions: support ref in pipfile
+- fix: vi editing_mode when updating instance path
+
 Version 1.7.2 (released 2025-04-22)
 
 - setup: bump minimum version of `pipenv` to pull in the `packaging` dependency
