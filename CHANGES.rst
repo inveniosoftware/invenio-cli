@@ -2,12 +2,19 @@
     Copyright (C) 2019-2024 CERN.
     Copyright (C) 2019-2021 Northwestern University.
     Copyright (C) 2025      TU Wien.
+    Copyright (C) 2025 Graz University of Technology.
 
     Invenio-Cli is free software; you can redistribute it and/or modify
     it under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version 1.9.0 (released 2025-07-23)
+
+- cookiecutter: make v13 the default
+- readme: fix ci badge
+- docs: update CONTRIBUTING.rst w/ modern links/process
 
 Version 1.8.0 (released 2025-07-21)
 
