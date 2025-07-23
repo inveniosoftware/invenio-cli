@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2020 CERN.
 # Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2025 TUBITAK ULAKBIM
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -88,6 +89,17 @@ class LocalCommands(Commands):
         py_pkg_man = self.cli_config.python_package_manager
         js_pkg_man = self.cli_config.javascript_package_manager
         ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
+
+        js_translations_bundle_path = self.cli_config.get_js_translations_bundle_path()
+        ops.append(
+            pkg_man.run_command(
+                "invenio",
+                "i18n",
+                "distribute-js-translations",
+                "-i",
+                js_translations_bundle_path,
+            )
+        )
 
         if force:
             ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
