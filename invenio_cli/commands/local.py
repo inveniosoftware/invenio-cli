@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2020 CERN.
-# Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2022-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -11,8 +11,9 @@
 import os
 import signal
 from distutils.dir_util import copy_tree
-from os import environ
+from os import environ, symlink
 from pathlib import Path
+from shutil import copyfile
 from subprocess import Popen as popen
 
 import click
@@ -79,6 +80,41 @@ class LocalCommands(Commands):
             status_code=0,
         )
 
+    def _symlink_locked_file(self):
+        """Symlink locked file."""
+        instance_path = self.cli_config.get_instance_path()
+        project_dir = self.cli_config.get_project_dir()
+
+        if self.cli_config.javascript_package_manager.name == "npm":
+            lock_file = "packages-lock.json"
+        elif self.cli_config.javascript_package_manager.name == "pnpm":
+            lock_file = "pnpm-lock.yaml"
+
+        source_path = project_dir / lock_file
+        target_path = instance_path / "assets" / lock_file
+
+        if Path(source_path).exists():
+            symlink(source_path, target_path)
+
+        return ProcessResponse(output="Symlinked locked file.", status_code=0)
+
+    def _cache_locked_file(self):
+        """Cache locked file."""
+        instance_path = self.cli_config.get_instance_path()
+        project_dir = self.cli_config.get_project_dir()
+
+        if self.cli_config.javascript_package_manager.name == "npm":
+            lock_file = "packages-lock.json"
+        elif self.cli_config.javascript_package_manager.name == "pnpm":
+            lock_file = "pnpm-lock.yaml"
+
+        target_path = project_dir / lock_file
+        source_path = instance_path / "assets" / lock_file
+        if not source_path.is_symlink():
+            copyfile(source_path, target_path)
+
+        return ProcessResponse(output="Cached locked file.", status_code=0)
+
     def update_statics_and_assets(self, force, debug=False, log_file=None):
         """High-level command to update less/js/images/... files.
 
@@ -87,15 +123,18 @@ class LocalCommands(Commands):
         # Commands
         py_pkg_man = self.cli_config.python_package_manager
         js_pkg_man = self.cli_config.javascript_package_manager
-        ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
+        ops = [py_pkg_man.send_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "install"))
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "clean", "create"))
+            ops.append(self._symlink_locked_file)
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "install"))
         else:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "create"))
+            ops.append(py_pkg_man.send_command("invenio", "webpack", "create"))
         ops.append(self._statics)
-        ops.append(py_pkg_man.run_command("invenio", "webpack", "build"))
+        ops.append(py_pkg_man.send_command("invenio", "webpack", "build"))
+        ops.append(self._cache_locked_file)
+
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
