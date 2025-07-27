@@ -49,12 +49,12 @@ def _from_pyproject_toml(dep_name):
     dependencies = [
         Requirement(d) for d in parsed.get("project", {}).get("dependencies", [])
     ]
-    app_rdms = [d for d in dependencies if d.name == "invenio-app-rdm"]
-    if not app_rdms:
+    matched_deps = [d for d in dependencies if d.name == dep_name]
+    if not matched_deps:
         return None
 
     # Get the first concrete positive version specifier
-    v, *_ = [s for s in app_rdms[0].specifier if not s.operator.startswith("!")]
+    v, *_ = [s for s in matched_deps[0].specifier if not s.operator.startswith("!")]
     return _parse_version(v.version)
 
 
