@@ -10,6 +10,10 @@
 Changes
 =======
 
+Version v1.9.1 (released 2025-07-28)
+
+- versions: fix pyproject.toml app dependency version detection
+
 Version 1.9.0 (released 2025-07-23)
 
 - cookiecutter: make v13 the default
