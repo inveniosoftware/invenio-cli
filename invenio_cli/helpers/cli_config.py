@@ -231,7 +231,7 @@ class CLIConfig(object):
         # Cookiecutter user input section
         config_parser[cls.COOKIECUTTER_SECTION] = {}
         for key, value in replay[cls.COOKIECUTTER_SECTION].items():
-            config_parser[cls.COOKIECUTTER_SECTION][key] = value
+            config_parser[cls.COOKIECUTTER_SECTION][key] = str(value)
 
         # Generated files section
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)
