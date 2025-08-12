@@ -10,6 +10,10 @@
 Changes
 =======
 
+Version v1.9.2 (released 2025-08-12)
+
+- cli: pass all values to config_parser as strings
+
 Version v1.9.1 (released 2025-07-28)
 
 - versions: fix pyproject.toml app dependency version detection
