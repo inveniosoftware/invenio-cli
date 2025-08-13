@@ -152,7 +152,7 @@ class UV(PythonPackageManager):
 
     def install_locked_deps(self, prereleases, devtools):
         """Install the packages according to the lock file."""
-        cmd = [self.name, "sync"]
+        cmd = [self.name, "sync", "--reinstall"]
         if prereleases:
             cmd += ["--prerelease", "allow"]
         if not devtools:
