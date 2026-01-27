@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module config_file tests."""
+
 import os
 import tempfile
 from pathlib import Path

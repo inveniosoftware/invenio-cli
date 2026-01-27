@@ -7,7 +7,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 import click
 
 from ..commands import ServicesCommands

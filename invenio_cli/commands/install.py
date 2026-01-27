@@ -8,7 +8,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 from ..helpers import filesystem
 from ..helpers.process import run_cmd
 from .local import LocalCommands

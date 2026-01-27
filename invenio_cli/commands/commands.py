@@ -7,7 +7,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 from ..helpers.cli_config import CLIConfig
 from ..helpers.env import env
 from ..helpers.process import run_interactive

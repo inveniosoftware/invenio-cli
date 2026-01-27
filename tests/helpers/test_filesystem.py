@@ -7,6 +7,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Module docker_helper tests."""
+
 import tempfile
 from pathlib import Path
 

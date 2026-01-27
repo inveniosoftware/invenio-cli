@@ -7,7 +7,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-
 from ..commands import Commands
 from ..helpers.cli_config import CLIConfig
 from ..helpers.filesystem import force_symlink
