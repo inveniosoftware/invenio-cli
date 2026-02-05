@@ -136,7 +136,7 @@ class ServicesCommands(Commands):
         """Build default location path based on file storage selection."""
         file_storage = self.cli_config.get_file_storage()
         if file_storage == "local":
-            return "{}/data".format(self.cli_config.get_instance_path())
+            return "{}/data".format(self.cli_config.get_data_path())
         return "{}://default".format(self.cli_config.get_file_storage().lower())
 
     def _setup(self, demo_data=False):

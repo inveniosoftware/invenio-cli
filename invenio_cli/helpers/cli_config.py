@@ -105,6 +105,14 @@ class CLIConfig(object):
         """Returns path to project directory."""
         return self.config_path.parent.resolve()
 
+    def get_data_path(self):
+        """Return path to data."""
+        path = self.private_config[CLIConfig.CLI_SECTION].get("data_path")
+        if path:
+            return Path(path)
+        else:
+            return self.get_instance_path()
+
     def get_instance_path(self, throw=True):
         """Returns path to application instance directory.
 
