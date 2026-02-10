@@ -3,6 +3,8 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+from pathlib import Path
+
 from ..commands import Commands
 from ..helpers.cli_config import CLIConfig
 from ..helpers.filesystem import force_symlink
@@ -45,8 +47,28 @@ class TranslationsCommands(Commands):
                 cmd=cmd,
                 env={"PIPENV_VERBOSITY": "-1"},
                 message=f"Extracting i18n messages from {input_dirs}...",
-            )
+            ),
+            FunctionStep(
+                func=self._normalize_paths,
+                args={
+                    "output_file": output_file,
+                    "project_path": self.project_path,
+                },
+                message="Normalizing paths in extracted messages...",
+            ),
         ]
+
+    def _normalize_paths(self, output_file: str, project_path: Path):
+        """Normalize absolute paths to relative paths in the extracted .pot file."""
+        output_path = Path(output_file)
+        if not output_path.exists():
+            return
+
+        content = output_path.read_text()
+        # Replace absolute paths with relative paths
+        if project_path and str(project_path) in content:
+            normalized_content = content.replace(str(project_path) + "/", "")
+            output_path.write_text(normalized_content)
 
     def init(self, output_dir, input_file, locale):
         """Initialize a new language catalog."""
