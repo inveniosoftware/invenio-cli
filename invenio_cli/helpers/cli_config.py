@@ -96,7 +96,7 @@ class CLIConfig(object):
         elif manager_name == PNPM.name:
             return PNPM()
 
-        return NPM()
+        return PNPM()
 
     def get_project_dir(self):
         """Returns path to project directory."""
@@ -224,18 +224,12 @@ class CLIConfig(object):
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]["flavour"] = flavour
         config_parser[cls.CLI_SECTION]["logfile"] = "/logs/invenio-cli.log"
-        custom_package_managers = {
-            "javascript_package_manager": replay.get("cookiecutter").get(
-                "javascript_package_manager", None
-            ),
-        }
+        config_parser[cls.CLI_SECTION]["javascript_package_manager"] = PNPM.name
+
         # Cookiecutter user input section
         config_parser[cls.COOKIECUTTER_SECTION] = {}
         for key, value in replay[cls.COOKIECUTTER_SECTION].items():
             config_parser[cls.COOKIECUTTER_SECTION][key] = str(value)
-            # Set the package managers in the CLI section
-            if custom_package_managers.get(key) == "pnpm":
-                config_parser[cls.CLI_SECTION][key] = value
 
         # Generated files section
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)

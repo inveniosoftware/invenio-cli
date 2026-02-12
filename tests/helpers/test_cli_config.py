@@ -120,16 +120,8 @@ def test_cli_config_get_project_shortname(config_dir):
     assert cli_config.get_project_shortname() == "my-site"
 
 
-@pytest.mark.parametrize(
-    "package_manager, expected_in_cli",
-    [
-        ("pnpm", True),
-        ("npm", False),
-        (None, False),
-    ],
-)
-def test_javascript_package_manager_config(package_manager, expected_in_cli, tmpdir):
-    """Test JavaScript package manager is correctly set in CLI config."""
+def test_javascript_package_manager_config(tmpdir):
+    """Test JavaScript package manager defaults to pnpm in CLI config."""
     project_dir = tmpdir.mkdir("test-project")
     flavour = "RDM"
     replay = {
@@ -147,19 +139,11 @@ def test_javascript_package_manager_config(package_manager, expected_in_cli, tmp
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
-    if package_manager is not None:
-        replay["cookiecutter"]["javascript_package_manager"] = package_manager
-
     CLIConfig.write(str(project_dir), flavour, replay)
 
     config = ConfigParser()
     config_path = project_dir.join(CLIConfig.CONFIG_FILENAME)
     config.read(str(config_path))
 
-    if expected_in_cli:
-        assert config.has_option(CLIConfig.CLI_SECTION, "javascript_package_manager")
-        assert config.get(CLIConfig.CLI_SECTION, "javascript_package_manager") == "pnpm"
-    else:
-        assert not config.has_option(
-            CLIConfig.CLI_SECTION, "javascript_package_manager"
-        )
+    assert config.has_option(CLIConfig.CLI_SECTION, "javascript_package_manager")
+    assert config.get(CLIConfig.CLI_SECTION, "javascript_package_manager") == "pnpm"
