@@ -171,7 +171,7 @@ class CLIConfig(object):
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]
 
     def get_search_type(self):
-        """Returns the search type (opensearch1, elasticsearch7)."""
+        """Returns the search type."""
         sections = self.config[CLIConfig.COOKIECUTTER_SECTION]
         if "elasticsearch" in sections:
             # cookiecutter < v10
@@ -181,9 +181,7 @@ class CLIConfig(object):
             # cookiecutter >= v10
             return sections["search"]
         else:
-            raise InvenioCLIConfigError(
-                "`search` or `elasticsearch` field not set in .invenio file"
-            )
+            return "opensearch2"
 
     def get_file_storage(self):
         """Returns the file storage (local, s3, etc.)."""

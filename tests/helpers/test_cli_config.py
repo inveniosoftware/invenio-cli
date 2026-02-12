@@ -32,7 +32,6 @@ def test_cli_config_write():
             "author_email": "info@my-site.com",
             "year": "2022",
             "database": "postgresql",
-            "search": "opensearch1",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -65,7 +64,6 @@ def config_dir():
             "author_email": "info@my-site.com",
             "year": "2022",
             "database": "postgresql",
-            "search": "opensearch1",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -135,7 +133,6 @@ def test_javascript_package_manager_config(tmpdir):
             "author_email": "info@my-site.com",
             "year": "2022",
             "database": "postgresql",
-            "search": "opensearch1",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
