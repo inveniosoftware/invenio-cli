@@ -170,18 +170,10 @@ class CLIConfig(object):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]
 
-    def get_search_type(self):
+    @staticmethod
+    def get_search_type():
         """Returns the search type."""
-        sections = self.config[CLIConfig.COOKIECUTTER_SECTION]
-        if "elasticsearch" in sections:
-            # cookiecutter < v10
-            version = sections["elasticsearch"]
-            return f"elasticsearch{version}"
-        elif "search" in sections:
-            # cookiecutter >= v10
-            return sections["search"]
-        else:
-            return "opensearch2"
+        return "opensearch2"
 
     def get_file_storage(self):
         """Returns the file storage (local, s3, etc.)."""
@@ -228,6 +220,9 @@ class CLIConfig(object):
         config_parser[cls.COOKIECUTTER_SECTION] = {}
         for key, value in replay[cls.COOKIECUTTER_SECTION].items():
             config_parser[cls.COOKIECUTTER_SECTION][key] = str(value)
+        # Keep compatibility with older tooling that expects `search` to exist.
+        # Search backend choice has been removed and opensearch2 is fixed.
+        config_parser[cls.COOKIECUTTER_SECTION]["search"] = cls.get_search_type()
 
         # Generated files section
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)

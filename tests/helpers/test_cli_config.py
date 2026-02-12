@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2019-2020 CERN.
 # SPDX-FileCopyrightText: 2019-2021 Northwestern University.
-# SPDX-FileCopyrightText: 2025-2026 KTH Royal Institute of Technology.
+# SPDX-FileCopyrightText: 2025-2026-2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
 """Module config_file tests."""
@@ -144,3 +144,4 @@ def test_javascript_package_manager_config(tmpdir):
 
     assert config.has_option(CLIConfig.CLI_SECTION, "javascript_package_manager")
     assert config.get(CLIConfig.CLI_SECTION, "javascript_package_manager") == "pnpm"
+    assert config.get(CLIConfig.COOKIECUTTER_SECTION, "search") == "opensearch2"
