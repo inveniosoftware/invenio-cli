@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+# Copyright (C) 2026 California Institute of Technology.
 # Copyright (C) 2020 CERN.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
@@ -8,6 +9,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from pathlib import Path
+from shutil import copyfile
 
 import click
 
@@ -74,6 +76,24 @@ class AssetsCommands(LocalCommands):
                 status_code=status_code,
             )
 
+    def _cache_js_lock_files(self):
+        """Cache js lock files."""
+        instance_path = self.cli_config.get_instance_path()
+        project_dir = self.cli_config.get_project_dir()
+
+        lock_file = self.cli_config.javascript_package_manager.lock_file_name
+        target_path = project_dir / lock_file
+        source_path = instance_path / "assets" / lock_file
+        if not source_path.is_symlink():
+            copyfile(source_path, target_path)
+
+        target_path = project_dir / "package.json"
+        source_path = instance_path / "assets" / "package.json"
+        if not source_path.is_symlink():
+            copyfile(source_path, target_path)
+
+        return ProcessResponse(output="Cached js lock files.", status_code=0)
+
     def watch_assets(self):
         """High-level command to watch assets for changes."""
         watch_cmd = self.cli_config.python_package_manager.run_command(
@@ -137,3 +157,35 @@ class AssetsCommands(LocalCommands):
         )
 
         return steps
+
+    def lock(self, debug=True, log_file=None):
+        """Lock assets."""
+        py_pkg_man = self.cli_config.python_package_manager
+        js_pkg_man = self.cli_config.javascript_package_manager
+
+        lock_arg = self.cli_config.javascript_package_manager.lock_dependencies()
+
+        ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
+        ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
+        lock_args = ["invenio", "webpack", "install"] + lock_arg
+        ops.append(py_pkg_man.run_command(*lock_args))
+        ops.append(self._cache_js_lock_files)
+        messages = {
+            "build": "Locking assets...",
+        }
+
+        with env(FLASK_DEBUG="1" if debug else "0"):
+            for op in ops:
+                if callable(op):
+                    response = op()
+                else:
+                    if op[-1] in messages:
+                        click.secho(messages[op[-1]], fg="green")
+                    response = run_interactive(
+                        op,
+                        env={"PIPENV_VERBOSITY": "-1", **js_pkg_man.env_overrides()},
+                        log_file=log_file,
+                    )
+                if response.status_code != 0:
+                    break
+        return response
