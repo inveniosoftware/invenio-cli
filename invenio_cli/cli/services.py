@@ -62,10 +62,13 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
     """Setup local services."""
     # no_demo_data = False (default) means "YES to demo_data"
     demo_data = not no_demo_data
-    if not services:
-        docker_helper = NoOpDockerHelper()
-    else:
+    if services:
+        # use the default docker helper
         docker_helper = None
+    else:
+        # create a no-op docker helper as services are disabled
+        docker_helper = NoOpDockerHelper()
+
     commands = ServicesCommands(cli_config, docker_helper=docker_helper)
     steps = commands.setup(force, demo_data, stop_services, services)
     on_fail = "Failed to setup services."
