@@ -10,6 +10,12 @@
 Changes
 =======
 
+Version v1.10.0 (released 2026-04-21)
+
+- assets: add lock command
+- assets: add package lock file
+- chore: black 26.1.0 formatting
+
 Version v1.9.2 (released 2025-08-12)
 
 - cli: pass all values to config_parser as strings
