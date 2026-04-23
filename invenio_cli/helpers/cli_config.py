@@ -4,12 +4,14 @@
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
 # Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2025 TUBITAK ULAKBIM
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Invenio-cli configuration file."""
 
+import os
 from configparser import ConfigParser
 from functools import cached_property
 from pathlib import Path
@@ -67,6 +69,8 @@ class CLIConfig(object):
                 self.private_config.read_file(cfg_file)
         except FileNotFoundError:
             CLIConfig._write_private_config(Path(project_dir))
+            # TODO: change js translations directory
+            os.mkdir(f"{project_dir}/js_translations")
             with open(self.private_config_path) as cfg_file:
                 self.private_config.read_file(cfg_file)
 
@@ -115,6 +119,20 @@ class CLIConfig(object):
             return Path(path)
         elif throw:
             raise InvenioCLIConfigError("Accessing unset 'instance_path'")
+
+    def get_js_translations_bundle_path(self, throw=True):
+        """Returns path to translation bundle directory.
+
+        If not set yet, raises an InvenioCLIConfigError.
+        """
+        # TODO: config name may change
+        path = self.private_config[CLIConfig.CLI_SECTION].get(
+            "js_translations_bundle_path"
+        )
+        if path:
+            return Path(path)
+        elif throw:
+            raise InvenioCLIConfigError("Accessing unset 'js_translations_bundle_path'")
 
     def update_instance_path(self, new_instance_path):
         """Updates path to application instance directory."""
@@ -206,6 +224,10 @@ class CLIConfig(object):
         config_parser = ConfigParser()
         config_parser[cls.CLI_SECTION] = {}
         config_parser[cls.CLI_SECTION]["services_setup"] = str(False)
+        # TODO: change js translations directory
+        config_parser[cls.CLI_SECTION][
+            "js_translations_bundle_path"
+        ] = f"{project_dir}/js_translations"
         private_config_path = project_dir / cls.PRIVATE_CONFIG_FILENAME
         with open(private_config_path, "w") as configfile:
             config_parser.write(configfile)
@@ -242,5 +264,9 @@ class CLIConfig(object):
 
         # Custom to machine (not version controlled)
         cls._write_private_config(project_dir)
+
+        # Create js translations directory
+        # TODO: change js translations directory
+        os.mkdir(f"{project_dir}/js_translations")
 
         return project_dir
