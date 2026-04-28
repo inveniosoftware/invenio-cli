@@ -177,6 +177,10 @@ class CLIConfig(object):
         """Returns web host."""
         return self.private_config[CLIConfig.CLI_SECTION].get("web_host", "127.0.0.1")
 
+    def get_app_rdm_version(self):
+        """Returns app rdm version."""
+        return self.private_config[CLIConfig.CLI_SECTION].get("app_rdm", None)
+
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["database"]

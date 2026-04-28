@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2020-2024 CERN.
 # SPDX-FileCopyrightText: 2021 Esteban J. G. Gabancho.
-# SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2024-2025 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio module to ease the creation and management of applications."""
@@ -186,7 +186,7 @@ class ServicesCommands(Commands):
             ),
         ]
 
-        rdm_version_value = rdm_version()
+        rdm_version_value = rdm_version(self.cli_config)
         if rdm_version_value:
             if rdm_version_value[0] >= 10:
                 steps.extend(
