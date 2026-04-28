@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2020-2024 CERN.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
-# Copyright (C) 2024 Graz University of Technology.
+# Copyright (C) 2024-2025 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -190,7 +190,7 @@ class ServicesCommands(Commands):
             ),
         ]
 
-        rdm_version_value = rdm_version()
+        rdm_version_value = rdm_version(self.cli_config)
         if rdm_version_value:
             if rdm_version_value[0] >= 10:
                 steps.extend(
