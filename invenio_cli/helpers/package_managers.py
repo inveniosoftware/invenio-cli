@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2025 TU Wien.
-# Copyright (C) 2025 Graz University of Technology.
+# Copyright (C) 2025-2026 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -32,8 +32,15 @@ class PythonPackageManager(ABC):
     rpc_server: Popen = None
     run_prefix: List = []
 
+    def __init__(self, use_rpc=False):
+        """Construct."""
+        self.use_rpc = use_rpc
+
     def ensure_rpc_server_is_running(self):
         """Ensure rpc server is running."""
+        if not self.use_rpc:
+            return
+
         if self.rpc_server_is_running:
             return
 

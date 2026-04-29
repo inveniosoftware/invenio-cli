@@ -3,7 +3,7 @@
 # Copyright (C) 2019-2024 CERN.
 # Copyright (C) 2019-2020 Northwestern University.
 # Copyright (C) 2021 Esteban J. G. Gabancho.
-# Copyright (C) 2024-2025 Graz University of Technology.
+# Copyright (C) 2024-2026 Graz University of Technology.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -74,15 +74,17 @@ class CLIConfig(object):
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
+        use_rpc = self.config[CLIConfig.CLI_SECTION].get("use_rpc", False)
+
         if manager_name == Pipenv.name:
-            return Pipenv()
+            return Pipenv(use_rpc=use_rpc)
         elif manager_name == UV.name:
-            return UV()
+            return UV(use_rpc=use_rpc)
 
         if (self.project_path / "Pipfile").is_file():
-            return Pipenv()
+            return Pipenv(use_rpc=use_rpc)
         elif (self.project_path / "pyproject.toml").is_file():
-            return UV()
+            return UV(use_rpc=use_rpc)
         else:
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."
