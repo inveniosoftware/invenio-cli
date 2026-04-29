@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2025 TU Wien.
-# SPDX-FileCopyrightText: 2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2025-2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Wrappers around various package managers to be used under the hood."""
@@ -28,8 +28,15 @@ class PythonPackageManager(ABC):
     rpc_server: Popen = None
     run_prefix: List = []
 
+    def __init__(self, use_rpc=False):
+        """Construct."""
+        self.use_rpc = use_rpc
+
     def ensure_rpc_server_is_running(self):
         """Ensure rpc server is running."""
+        if not self.use_rpc:
+            return
+
         if self.rpc_server_is_running:
             return
 
