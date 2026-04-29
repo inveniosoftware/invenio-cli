@@ -3,6 +3,7 @@
 # Copyright (C) 2026 California Institute of Technology.
 # Copyright (C) 2020 CERN.
 # Copyright (C) 2022 Graz University of Technology.
+# Copyright (C) 2026 Northwestern University.
 #
 # Invenio-Cli is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -165,8 +166,6 @@ class LocalCommands(Commands):
         click.secho("Starting up local (development) server...", fg="green")
         run_env = environ.copy()
         run_env["FLASK_DEBUG"] = "1" if debug else "0"
-        run_env["INVENIO_SITE_UI_URL"] = f"https://{host}:{port}"
-        run_env["INVENIO_SITE_API_URL"] = f"https://{host}:{port}/api"
         pkg_man = self.cli_config.python_package_manager
         proc = popen(
             pkg_man.run_command(
