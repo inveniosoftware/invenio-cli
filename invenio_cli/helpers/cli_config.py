@@ -71,15 +71,17 @@ class CLIConfig(object):
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
+        use_rpc = self.config[CLIConfig.CLI_SECTION].get("use_rpc", False)
+
         if manager_name == Pipenv.name:
-            return Pipenv()
+            return Pipenv(use_rpc=use_rpc)
         elif manager_name == UV.name:
-            return UV()
+            return UV(use_rpc=use_rpc)
 
         if (self.project_path / "Pipfile").is_file():
-            return Pipenv()
+            return Pipenv(use_rpc=use_rpc)
         elif (self.project_path / "pyproject.toml").is_file():
-            return UV()
+            return UV(use_rpc=use_rpc)
         else:
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."
