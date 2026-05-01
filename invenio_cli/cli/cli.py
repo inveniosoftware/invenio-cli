@@ -149,22 +149,6 @@ def init(flavour, template, checkout, user_input, config):
         cookiecutter_wrapper.remove_config()
 
 
-@invenio_cli.group("run", invoke_without_command=True)
-@click.pass_context
-def run_group(ctx):
-    """Run command group."""
-    # For backward compatibility
-    if ctx.invoked_subcommand is None:
-        ctx.invoke(run_all)
-
-
-services_option = click.option(
-    "--services/--no-services",
-    "-s/-n",
-    default=True,
-    is_flag=True,
-    help="Enable/disable dockerized services (default: enabled).",
-)
 web_options = combine_decorators(
     click.option(
         "--host",
@@ -188,25 +172,13 @@ web_options = combine_decorators(
 )
 
 
-@run_group.command("web")
-@services_option
-@web_options
-@pass_cli_config
-def run_web(cli_config, host, port, debug, services):
-    """Starts the local development web server."""
-    if services:
-        cmds = ServicesCommands(cli_config)
-        response = cmds.ensure_containers_running()
-        # fail and exit if containers are not running
-        handle_process_response(response)
-
-    host = host or cli_config.get_web_host()
-    port = port or cli_config.get_web_port()
-
-    commands = LocalCommands(cli_config)
-    processes = commands.run_web(host=host, port=str(port), debug=debug)
-    for proc in processes:
-        proc.wait()
+services_option = click.option(
+    "--services/--no-services",
+    "-s/-n",
+    default=True,
+    is_flag=True,
+    help="Enable/disable dockerized services (default: enabled).",
+)
 
 
 worker_options = combine_decorators(
@@ -226,6 +198,40 @@ worker_options = combine_decorators(
         help="Enable/disable separate jobs scheduler (default: enabled)",
     ),
 )
+
+
+@invenio_cli.group("run", invoke_without_command=True)
+@web_options  # this and below for backwards-compatibility
+@services_option
+@worker_options
+@pass_cli_config
+@click.pass_context
+def run_group(ctx, *args, **kwargs):
+    """Run command group."""
+    # For backward compatibility
+    if ctx.invoked_subcommand is None:
+        ctx.forward(run_all)
+
+
+@run_group.command("web")
+@services_option
+@web_options
+@pass_cli_config
+def run_web(cli_config, host, port, debug, services):
+    """Starts the local development web server."""
+    if services:
+        cmds = ServicesCommands(cli_config)
+        response = cmds.ensure_containers_running()
+        # fail and exit if containers are not running
+        handle_process_response(response)
+
+    host = host or cli_config.get_web_host()
+    port = port or cli_config.get_web_port()
+
+    commands = LocalCommands(cli_config)
+    processes = commands.run_web(host=host, port=str(port), debug=debug)
+    for proc in processes:
+        proc.wait()
 
 
 @run_group.command("worker")
