@@ -1,6 +1,6 @@
 ..
     Copyright (C) 2019-2024 CERN.
-    Copyright (C) 2019-2021 Northwestern University.
+    Copyright (C) 2019-2026 Northwestern University.
     Copyright (C) 2025      TU Wien.
     Copyright (C) 2025 Graz University of Technology.
 
@@ -9,6 +9,12 @@
 
 Changes
 =======
+
+Version v1.11.0 (released 2026-05-06)
+
+- feat: introduced no-op service helper.
+- fix(run): keep invenio-cli run [OPTIONS] backwards compatibility
+- fix(run): don't override SITE_API/UI_URL settings with listening hosts/port
 
 Version v1.10.0 (released 2026-04-21)
 
