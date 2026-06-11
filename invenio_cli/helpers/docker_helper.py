@@ -90,7 +90,8 @@ class DockerHelper(object):
         if app_only:
             command.extend(["web-ui", "web-api"])
 
-        return run_cmd(command)
+        # interactive so image pulls and container creation stream live
+        return run_interactive(command)
 
     def stop_containers(self):
         """Stop currently running containers."""

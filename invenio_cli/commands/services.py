@@ -38,7 +38,12 @@ class ServicesCommands(Commands):
             cmd_env = {"INSTANCE_PATH": str(instance_path)}
         # Set environment variable for the instance path, it might be needed by docker services
         with env(**cmd_env):
-            self.docker_helper.start_containers()
+            response = self.docker_helper.start_containers()
+        if response.status_code != 0:
+            return ProcessResponse(
+                error="Failed to start containers (see docker compose output above).",
+                status_code=1,
+            )
 
         services = ["redis", self.cli_config.get_db_type(), "search"]
         for service in services:
