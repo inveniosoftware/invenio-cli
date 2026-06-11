@@ -5,6 +5,7 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers.process import run_interactive
+from ..helpers.rpc import RPCCall, echo_output
 
 
 class Step(object):
@@ -57,5 +58,12 @@ class CommandStep(Step):
         self.log_file = log_file
 
     def execute(self):
-        """Execute the function with the given arguments."""
+        """Execute the command, either over RPC or as a subprocess."""
+        if isinstance(self.cmd, RPCCall):
+            response = self.cmd()
+            echo_output(response, log_file=self.log_file)
+            if response.status_code > 0 and self.skippable:
+                response.warning = True
+                response.status_code = 0
+            return response
         return run_interactive(self.cmd, self.env, self.skippable, self.log_file)

@@ -18,7 +18,7 @@ import click
 
 from ..helpers import env, filesystem
 from ..helpers.process import ProcessResponse, run_interactive
-from ..helpers.rpc import RPCCall
+from ..helpers.rpc import RPCCall, echo_output
 from ..helpers.versions import rdm_version
 from .commands import Commands
 
@@ -132,17 +132,7 @@ class LocalCommands(Commands):
                     if op.label in messages:
                         click.secho(messages[op.label], fg="green")
                     response = op()
-                    # the server buffers Python-level output; surface it the
-                    # same way a locally run command would
-                    if log_file:
-                        with open(log_file, "a") as f:
-                            f.write(response.output or "")
-                            f.write(response.error or "")
-                    else:
-                        if response.output:
-                            click.echo(response.output, nl=False)
-                        if response.error:
-                            click.echo(response.error, nl=False, err=True)
+                    echo_output(response, log_file=log_file)
                 elif callable(op):
                     response = op()
                 else:

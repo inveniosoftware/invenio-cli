@@ -17,11 +17,26 @@ import socket
 import time
 from subprocess import Popen, TimeoutExpired
 
+import click
+
 from .process import ProcessResponse
 
 CONNECT_TIMEOUT = 5
 PING_TIMEOUT = 2
 STARTUP_TIMEOUT = 120  # starting the server includes a full app creation
+
+
+def echo_output(response, log_file=None):
+    """Surface buffered RPC output like a locally run command would."""
+    if log_file:
+        with open(log_file, "a") as f:
+            f.write(response.output or "")
+            f.write(response.error or "")
+    else:
+        if response.output:
+            click.echo(response.output, nl=False)
+        if response.error:
+            click.echo(response.error, nl=False, err=True)
 
 
 class RPCClient:
