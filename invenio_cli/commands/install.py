@@ -33,17 +33,16 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        result = run_cmd(
-            self.cli_config.python_package_manager.send_command(
-                "invenio",
-                "shell",
-                # make sure the shell does not append cursor if editing_mode is set to `vi` in config
-                "--TerminalInteractiveShell.editing_mode=''",
-                "--no-term-title",
-                "-c",
-                "print(app.instance_path, end='')",
-            )
+        op = self.cli_config.python_package_manager.send_command(
+            "invenio",
+            "shell",
+            # make sure the shell does not append cursor if editing_mode is set to `vi` in config
+            "--TerminalInteractiveShell.editing_mode=''",
+            "--no-term-title",
+            "-c",
+            "print(app.instance_path, end='')",
         )
+        result = op() if callable(op) else run_cmd(op)
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
             result.output = "Instance path updated successfully."

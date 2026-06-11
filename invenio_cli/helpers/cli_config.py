@@ -71,16 +71,19 @@ class CLIConfig(object):
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
         use_rpc = self.config[CLIConfig.CLI_SECTION].get("use_rpc", False)
+        # the socket lives in the instance directory, so RPC only kicks in
+        # once the instance path is known (i.e. after the first install)
+        rpc_socket_path = self.get_rpc_socket_path() if use_rpc else None
 
         if manager_name == Pipenv.name:
-            return Pipenv(use_rpc=use_rpc)
+            return Pipenv(rpc_socket_path=rpc_socket_path)
         elif manager_name == UV.name:
-            return UV(use_rpc=use_rpc)
+            return UV(rpc_socket_path=rpc_socket_path)
 
         if (self.project_path / "Pipfile").is_file():
-            return Pipenv(use_rpc=use_rpc)
+            return Pipenv(rpc_socket_path=rpc_socket_path)
         elif (self.project_path / "pyproject.toml").is_file():
-            return UV(use_rpc=use_rpc)
+            return UV(rpc_socket_path=rpc_socket_path)
         else:
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."
@@ -159,6 +162,12 @@ class CLIConfig(object):
     def get_rpc_server_port(self):
         """Returns rpc server port."""
         return self.private_config[CLIConfig.CLI_SECTION].get("rpc_port", "5001")
+
+    def get_rpc_socket_path(self):
+        """Returns the RPC socket path (None until the instance path is set)."""
+        instance_path = self.get_instance_path(throw=False)
+        if instance_path:
+            return instance_path / "rpc.sock"
 
     def get_search_port(self):
         """Returns the search port."""
