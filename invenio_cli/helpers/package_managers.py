@@ -4,19 +4,17 @@
 
 """Wrappers around various package managers to be used under the hood."""
 
-import atexit
 import os
 from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from subprocess import Popen
 from typing import Dict, List, Union
 
 from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers.process import ProcessResponse
-from .process import run_cmd
+from .rpc import RPCCall, RPCClient
 
 
 class PythonPackageManager(ABC):
@@ -24,47 +22,24 @@ class PythonPackageManager(ABC):
 
     name: str = None
     lock_file_name: str = None
-    rpc_server_is_running: bool = False
-    rpc_server: Popen = None
-    run_prefix: List = []
 
-    def __init__(self, use_rpc=False):
+    def __init__(self, rpc_socket_path=None):
         """Construct."""
-        self.use_rpc = use_rpc
-
-    def ensure_rpc_server_is_running(self):
-        """Ensure rpc server is running."""
-        if not self.use_rpc:
-            return
-
-        if self.rpc_server_is_running:
-            return
-
-        # first check if a server is already running. so to use long running rpc server
-        response = run_cmd(self.run_prefix + ["rpc-server", "ping", "--port", "5001"])
-        if "pong" in response.output:
-            self.rpc_server_is_running = True
-            return
-
-        # open if not
-        self.rpc_server = Popen(
-            self.run_prefix + ["invenio", "rpc-server", "start", "--port", "5001"]
-        )
-
-        atexit.register(self.cleanup)
-        # check until the server is up and running
-        while True:
-            response = run_cmd(
-                self.run_prefix + ["rpc-server", "ping", "--port", "5001"]
+        self.rpc = None
+        if rpc_socket_path:
+            self.rpc = RPCClient(
+                rpc_socket_path,
+                self.run_command(
+                    "invenio", "rpc-server", "start", "--socket", str(rpc_socket_path)
+                ),
             )
-            if "pong" in response.output:
-                self.rpc_server_is_running = True
-                break
 
-    def cleanup(self):
-        """Cleanup."""
-        if self.rpc_server:
-            self.rpc_server.terminate()
+    def send_command(self, *command):
+        """Build an executable op for the command, preferring the RPC server."""
+        if self.rpc:
+            # drop the leading "invenio"; the server routes the argv itself
+            return RPCCall(self.rpc, command[1:])
+        return self.run_command(*command)
 
     def run_command(self, *command: str) -> List[str]:
         """Generate command to run the given command in the managed environment."""
@@ -108,26 +83,6 @@ class Pipenv(PythonPackageManager):
 
     name = "pipenv"
     lock_file_name = "Pipfile.lock"
-    run_prefix = ["pipenv", "run"]
-
-    def send_command(self, *command):
-        """Send command to rpc server, default to run_command."""
-        self.ensure_rpc_server_is_running()
-
-        if self.rpc_server_is_running:
-            # [1:] remove "invenio" from commands
-            return [
-                self.name,
-                "run",
-                "rpc-server",
-                "send",
-                "--port",
-                "5001",
-                "--plain",
-                *command[1:],
-            ]
-        else:
-            self.run_command(*command)
 
     def run_command(self, *command):
         """Generate command to run the given command in the managed environment."""
@@ -185,27 +140,6 @@ class UV(PythonPackageManager):
 
     name = "uv"
     lock_file_name = "uv.lock"
-    run_prefix = ["uv", "run", "--no-sync"]
-
-    def send_command(self, *command):
-        """Send command to rpc server, default to run_command."""
-        self.ensure_rpc_server_is_running()
-
-        if self.rpc_server_is_running:
-            # [1:] remove "invenio" from commands
-            return [
-                self.name,
-                "run",
-                "--no-sync",
-                "rpc-server",
-                "send",
-                "--port",
-                "5001",
-                "--plain",
-                *command[1:],
-            ]
-        else:
-            return self.run_command(*command)
 
     def run_command(self, *command):
         """Generate command to run the given command in the managed environment."""
