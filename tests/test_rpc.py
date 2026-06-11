@@ -122,8 +122,9 @@ def test_call_captures_output_on_request(rpc_socket):
 
 # A stand-in for "invenio rpc-server start": serves the captured-output
 # protocol on the socket given as first argument until it is terminated.
+# Echoes RPC_TEST_VAR so tests can check the environment it was spawned with.
 SERVER_SCRIPT = """
-import json, socketserver, sys
+import json, os, socketserver, sys
 
 class Handler(socketserver.StreamRequestHandler):
     def handle(self):
@@ -131,7 +132,11 @@ class Handler(socketserver.StreamRequestHandler):
         if request.get("ping"):
             response = {"pong": True}
         else:
-            response = {"exit_code": 0, "stdout": "ok", "stderr": ""}
+            response = {
+                "exit_code": 0,
+                "stdout": os.environ.get("RPC_TEST_VAR", "ok"),
+                "stderr": "",
+            }
         self.wfile.write(json.dumps(response).encode("utf-8") + b"\\n")
 
 with socketserver.UnixStreamServer(sys.argv[1], Handler) as server:
@@ -150,6 +155,17 @@ def test_call_spawns_and_terminates_a_server(short_tmp_path):
     assert response.output == "ok"
     client.shutdown()
     assert client.server.poll() is not None
+
+
+def test_call_passes_env_to_the_spawned_server(short_tmp_path):
+    """env reaches the server's environment when this call spawns it."""
+    socket_path = short_tmp_path / "rpc.sock"
+    client = RPCClient(
+        socket_path, [sys.executable, "-c", SERVER_SCRIPT, str(socket_path)]
+    )
+    response = client.call(["collect"], env={"RPC_TEST_VAR": "hello"}, capture=True)
+    assert response.output == "hello"
+    client.shutdown()
 
 
 def test_call_reports_a_server_that_dies_during_startup(short_tmp_path):
