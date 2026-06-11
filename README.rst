@@ -79,12 +79,11 @@ It is possible to choose between two assets builders: `webpack` and `rspack`.
 `webpack` is the default one. To use `rspack` add `WEBPACKEXT_PROJECT =
 "invenio_assets.webpack:rspack_project"` to the `invenio.cfg` file.
 
-It is possible to use a long running invenio rpc-server by starting it with
-`invenio rpc-server start --port 5001`. This should only be done if you know the
-drawbacks. The server has to be restarted if code which the server uses has been
-updated. Further it is not necessary to use a long running invenio rpc-server
-since it will be started on every invenio-cli command a new rpc-server
-nevertheless if no rpc-server runs already.
+It is possible to send `invenio` commands to a long running RPC server instead
+of starting a new Python process for each command. To enable this add the line
+`use_rpc = true` to the `[cli]` section of the `.invenio` file. The server
+listens on a Unix domain socket at `<instance_path>/rpc.sock` and is started
+automatically when needed; invenio-cli stops it again on exit.
 
 The javascript package manager uses a lock file like the python package manager.
 This file `pnpm-lock.yaml` for `pnpm` and `packages-lock.json` for `npm` will be
@@ -110,7 +109,7 @@ existing in the same directory as the `pyproject.toml` file.
 
 UV uses a `pyproject.toml` file.
 
-`rcp-server`
+`rpc-server`
 
 To use `pnpm` with the `rpc-server` it is necessary to add
 `WEBPACKEXT_NPM_PKG_CLS = "pynpm:PNPMPackage"` to the `invenio.cfg` file.
