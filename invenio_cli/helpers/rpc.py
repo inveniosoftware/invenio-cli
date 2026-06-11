@@ -43,7 +43,6 @@ class RPCClient:
         self.socket_path = str(socket_path)
         self.start_command = start_command
         self.server = None
-        self.available = False
 
     def request(self, payload, fds=None, read_timeout=None):
         """Send one JSON line (and fds) and read back one JSON-line response."""
@@ -71,31 +70,44 @@ class RPCClient:
             return False
         return response.get("pong") is True
 
-    def ensure_running(self, env=None):
-        """Start a server if none answers; return an error message or None.
+    def listening(self):
+        """Return whether something accepts connections on the socket.
 
-        ``env`` is added to the spawned server's environment, so it lands in
-        the app config the server builds at startup (e.g. ``INVENIO_*``
-        variables). It cannot be applied to an already running server.
+        Unlike ``ping`` this does not need the server to respond, so it
+        also recognizes a server that is busy running a long command.
         """
-        if self.available:
-            return None
-        if self.ping():
-            self.available = True
-            return None
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                s.settimeout(CONNECT_TIMEOUT)
+                s.connect(self.socket_path)
+            return True
+        except OSError:
+            return False
 
+    def ensure_running(self, env=None):
+        """Spawn a server and wait until its socket accepts connections.
+
+        Returns an error message, or None on success. The server binds the
+        socket only after its app is fully created, so accepting
+        connections means ready. ``env`` is added to the spawned server's
+        environment, so it lands in the app config the server builds at
+        startup (e.g. ``INVENIO_*`` variables).
+        """
         self.server = Popen(self.start_command, env={**os.environ, **(env or {})})
         atexit.register(self.shutdown)
         deadline = time.monotonic() + STARTUP_TIMEOUT
         while time.monotonic() < deadline:
+            if self.listening():
+                return None
             if self.server.poll() is not None:
+                # our spawn may have lost a race against another invenio-cli
+                # whose server now owns the socket — that is still a success
+                if self.listening():
+                    return None
                 return (
                     "RPC server exited with code "
                     f"{self.server.returncode} during startup."
                 )
-            if self.ping():
-                self.available = True
-                return None
             time.sleep(0.2)
 
         self.shutdown()
@@ -104,42 +116,51 @@ class RPCClient:
     def call(self, argv, env=None, log_file=None, capture=False):
         """Run an invenio CLI command on the server.
 
-        By default the command's output streams live to this process'
-        stdout/stderr (or into ``log_file``) via the passed descriptors.
-        With ``capture`` the output is returned on the response instead.
-        ``env`` only takes effect if this call spawns the server.
+        The request is sent directly: a busy single-threaded server queues
+        the connection until it is free, and only a refused or missing
+        socket makes the client spawn a server (with ``env`` applied to it)
+        and retry once. By default the command's output streams live to
+        this process' stdout/stderr (or into ``log_file``) via the passed
+        descriptors; with ``capture`` it is returned on the response.
         """
-        error = self.ensure_running(env=env)
-        if error:
-            return ProcessResponse(error=error, status_code=1)
-
-        payload = {"argv": list(argv)}
         try:
-            if capture:
-                response = self.request(payload)
-                return ProcessResponse(
-                    output=response["stdout"],
-                    error=response["stderr"],
-                    status_code=response["exit_code"],
-                )
-
-            # flush so our own pending output stays ordered with the
-            # command output the server writes to the same descriptors
-            sys.stdout.flush()
-            sys.stderr.flush()
-            if log_file:
-                with open(log_file, "ab") as f:
-                    response = self.request(payload, fds=[f.fileno(), f.fileno()])
-            else:
-                response = self.request(
-                    payload, fds=[sys.stdout.fileno(), sys.stderr.fileno()]
-                )
-            return ProcessResponse(
-                error=response.get("stderr"),
-                status_code=response["exit_code"],
-            )
+            try:
+                return self.request_command(argv, log_file, capture)
+            except (FileNotFoundError, ConnectionRefusedError):
+                # nothing is listening on the socket
+                error = self.ensure_running(env=env)
+                if error:
+                    return ProcessResponse(error=error, status_code=1)
+                return self.request_command(argv, log_file, capture)
         except (OSError, ValueError) as e:
             return ProcessResponse(error=f"RPC request failed: {e}", status_code=1)
+
+    def request_command(self, argv, log_file=None, capture=False):
+        """Send one command request to a listening server."""
+        payload = {"argv": list(argv)}
+        if capture:
+            response = self.request(payload)
+            return ProcessResponse(
+                output=response["stdout"],
+                error=response["stderr"],
+                status_code=response["exit_code"],
+            )
+
+        # flush so our own pending output stays ordered with the
+        # command output the server writes to the same descriptors
+        sys.stdout.flush()
+        sys.stderr.flush()
+        if log_file:
+            with open(log_file, "ab") as f:
+                response = self.request(payload, fds=[f.fileno(), f.fileno()])
+        else:
+            response = self.request(
+                payload, fds=[sys.stdout.fileno(), sys.stderr.fileno()]
+            )
+        return ProcessResponse(
+            error=response.get("stderr"),
+            status_code=response["exit_code"],
+        )
 
     def shutdown(self):
         """Terminate the server if this process spawned it."""
