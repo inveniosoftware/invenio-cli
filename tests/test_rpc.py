@@ -3,7 +3,10 @@
 
 """RPC client tests."""
 
+import array
 import json
+import os
+import socket
 import socketserver
 import sys
 import tempfile
@@ -13,25 +16,50 @@ from pathlib import Path
 import pytest
 
 from invenio_cli.commands.steps import CommandStep
-from invenio_cli.helpers.package_managers import UV
-from invenio_cli.helpers.rpc import RPCCall, RPCClient
+from invenio_cli.helpers.package_managers import UV, LocalOp
+from invenio_cli.helpers.rpc import RPCClient, RPCOp
 
 
-class FakeInvenioHandler(socketserver.StreamRequestHandler):
+def _recv_request(sock):
+    """Read one JSON line plus any file descriptors sent with it."""
+    buf = b""
+    fds = []
+    fd_size = array.array("i").itemsize
+    while b"\n" not in buf:
+        data, ancdata, _, _ = sock.recvmsg(4096, socket.CMSG_SPACE(2 * fd_size))
+        if not data:
+            break
+        for level, ctype, cdata in ancdata:
+            if level == socket.SOL_SOCKET and ctype == socket.SCM_RIGHTS:
+                received = array.array("i")
+                received.frombytes(cdata[: len(cdata) - (len(cdata) % fd_size)])
+                fds.extend(received)
+        buf += data
+    return buf, fds
+
+
+class FakeInvenioHandler(socketserver.BaseRequestHandler):
     """Respond to the RPC protocol like the invenio RPC server."""
 
     def handle(self):
         """Answer one JSON-line request with one JSON-line response."""
-        request = json.loads(self.rfile.readline())
+        line, fds = _recv_request(self.request)
+        request = json.loads(line)
         if request.get("ping"):
             response = {"pong": True}
+        elif fds:
+            os.write(fds[0], b"streamed out\n")
+            os.write(fds[1], b"streamed err\n")
+            for fd in fds:
+                os.close(fd)
+            response = {"exit_code": 7}
         else:
             response = {
                 "exit_code": 7,
                 "stdout": " ".join(request["argv"]),
                 "stderr": "warning\n",
             }
-        self.wfile.write(json.dumps(response).encode("utf-8") + b"\n")
+        self.request.sendall(json.dumps(response).encode("utf-8") + b"\n")
 
 
 @pytest.fixture()
@@ -64,17 +92,36 @@ def test_ping_without_server(short_tmp_path):
     assert client.ping() is False
 
 
-def test_call_maps_the_response_to_a_process_response(rpc_socket):
-    """Exit code, stdout and stderr come back as a ProcessResponse."""
+def test_call_forwards_output_to_our_descriptors(rpc_socket, capfd):
+    """By default the command output streams to our stdout/stderr."""
     client = RPCClient(rpc_socket, start_command=None)
     response = client.call(["webpack", "build"])
+    assert response.status_code == 7
+    captured = capfd.readouterr()
+    assert captured.out == "streamed out\n"
+    assert captured.err == "streamed err\n"
+
+
+def test_call_forwards_output_to_a_log_file(rpc_socket, short_tmp_path):
+    """With a log file, the command output lands there instead."""
+    log_file = short_tmp_path / "build.log"
+    client = RPCClient(rpc_socket, start_command=None)
+    response = client.call(["webpack", "build"], log_file=str(log_file))
+    assert response.status_code == 7
+    assert log_file.read_text() == "streamed out\nstreamed err\n"
+
+
+def test_call_captures_output_on_request(rpc_socket):
+    """With capture, output comes back on the ProcessResponse."""
+    client = RPCClient(rpc_socket, start_command=None)
+    response = client.call(["webpack", "build"], capture=True)
     assert response.output == "webpack build"
     assert response.error == "warning\n"
     assert response.status_code == 7
 
 
-# A stand-in for "invenio rpc-server start": serves the protocol on the
-# socket given as first argument until it is terminated.
+# A stand-in for "invenio rpc-server start": serves the captured-output
+# protocol on the socket given as first argument until it is terminated.
 SERVER_SCRIPT = """
 import json, socketserver, sys
 
@@ -98,7 +145,7 @@ def test_call_spawns_and_terminates_a_server(short_tmp_path):
     client = RPCClient(
         socket_path, [sys.executable, "-c", SERVER_SCRIPT, str(socket_path)]
     )
-    response = client.call(["collect"])
+    response = client.call(["collect"], capture=True)
     assert response.status_code == 0
     assert response.output == "ok"
     client.shutdown()
@@ -115,41 +162,42 @@ def test_call_reports_a_server_that_dies_during_startup(short_tmp_path):
     assert "exited with code 3" in response.error
 
 
-def test_send_command_builds_an_rpc_call(short_tmp_path):
-    """With a socket path, send_command defers to the RPC server."""
+def test_invenio_command_builds_an_rpc_op(short_tmp_path):
+    """With a socket path, invenio_command defers to the RPC server."""
     manager = UV(rpc_socket_path=short_tmp_path / "rpc.sock")
-    op = manager.send_command("invenio", "webpack", "build")
-    assert isinstance(op, RPCCall)
+    op = manager.invenio_command("invenio", "webpack", "build")
+    assert isinstance(op, RPCOp)
     assert op.argv == ["webpack", "build"]
     assert op.label == "build"
 
 
-def test_send_command_without_rpc_is_the_plain_command():
-    """Without a socket path, send_command falls back to run_command."""
-    assert UV().send_command("invenio", "collect") == [
-        "uv",
-        "run",
-        "--no-sync",
-        "invenio",
-        "collect",
-    ]
+def test_invenio_command_without_rpc_builds_a_local_op():
+    """Without a socket path, invenio_command wraps the plain command."""
+    op = UV().invenio_command("invenio", "collect")
+    assert isinstance(op, LocalOp)
+    assert op.argv == ["uv", "run", "--no-sync", "invenio", "collect"]
+    assert op.label == "collect"
 
 
-def test_command_step_executes_an_rpc_call(rpc_socket, capsys):
-    """CommandStep runs an RPCCall, surfaces output and the exit code."""
+def test_local_op_runs_a_subprocess():
+    """LocalOp runs the argv and reports the real exit code."""
+    assert LocalOp(["sh", "-c", "exit 3"])().status_code == 3
+    assert LocalOp(["sh", "-c", "echo hi"])(capture=True).output == "hi\n"
+
+
+def test_command_step_executes_an_op(rpc_socket, capfd):
+    """CommandStep runs an op, with output forwarded and the exit code kept."""
     client = RPCClient(rpc_socket, start_command=None)
-    step = CommandStep(cmd=RPCCall(client, ["db", "init", "create"]))
+    step = CommandStep(cmd=RPCOp(client, ["db", "init", "create"]))
     response = step.execute()
     assert response.status_code == 7
-    captured = capsys.readouterr()
-    assert captured.out == "db init create"
-    assert captured.err == "warning\n"
+    assert capfd.readouterr().out == "streamed out\n"
 
 
-def test_command_step_skippable_turns_rpc_failure_into_warning(rpc_socket):
+def test_command_step_skippable_turns_op_failure_into_warning(rpc_socket, capfd):
     """A skippable step reports a failed RPC command as a warning."""
     client = RPCClient(rpc_socket, start_command=None)
-    step = CommandStep(cmd=RPCCall(client, ["db", "destroy"]), skippable=True)
+    step = CommandStep(cmd=RPCOp(client, ["db", "destroy"]), skippable=True)
     response = step.execute()
     assert response.status_code == 0
     assert response.warning is True

@@ -7,36 +7,26 @@
 The server (``invenio rpc-server start``) listens on a Unix domain socket
 and runs invenio CLI commands in a long-lived process, so each command
 skips the Python startup and app creation cost. The protocol is one JSON
-line per request (``{"argv": [...]}``) answered by one JSON line
-(``{"exit_code": ..., "stdout": ..., "stderr": ...}``).
+line per request (``{"argv": [...]}``) answered by one JSON line. By
+default the client passes its stdout/stderr file descriptors with the
+request (SCM_RIGHTS), the server streams the command output straight to
+them, and the response carries only the exit code; without descriptors
+the response carries the captured output instead.
 """
 
+import array
 import atexit
 import json
 import socket
+import sys
 import time
 from subprocess import Popen, TimeoutExpired
-
-import click
 
 from .process import ProcessResponse
 
 CONNECT_TIMEOUT = 5
 PING_TIMEOUT = 2
 STARTUP_TIMEOUT = 120  # starting the server includes a full app creation
-
-
-def echo_output(response, log_file=None):
-    """Surface buffered RPC output like a locally run command would."""
-    if log_file:
-        with open(log_file, "a") as f:
-            f.write(response.output or "")
-            f.write(response.error or "")
-    else:
-        if response.output:
-            click.echo(response.output, nl=False)
-        if response.error:
-            click.echo(response.error, nl=False, err=True)
 
 
 class RPCClient:
@@ -54,12 +44,19 @@ class RPCClient:
         self.server = None
         self.available = False
 
-    def request(self, payload, read_timeout=None):
-        """Send one JSON line and read back one JSON-line response."""
+    def request(self, payload, fds=None, read_timeout=None):
+        """Send one JSON line (and fds) and read back one JSON-line response."""
+        line = json.dumps(payload).encode("utf-8") + b"\n"
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.settimeout(CONNECT_TIMEOUT)
             s.connect(self.socket_path)
-            s.sendall(json.dumps(payload).encode("utf-8") + b"\n")
+            if fds:
+                s.sendmsg(
+                    [line],
+                    [(socket.SOL_SOCKET, socket.SCM_RIGHTS, array.array("i", fds))],
+                )
+            else:
+                s.sendall(line)
             # commands may run for a long time (e.g. webpack builds)
             s.settimeout(read_timeout)
             with s.makefile("rb") as f:
@@ -98,22 +95,44 @@ class RPCClient:
         self.shutdown()
         return f"RPC server did not start within {STARTUP_TIMEOUT} seconds."
 
-    def call(self, argv):
-        """Run an invenio CLI command on the server."""
+    def call(self, argv, log_file=None, capture=False):
+        """Run an invenio CLI command on the server.
+
+        By default the command's output streams live to this process'
+        stdout/stderr (or into ``log_file``) via the passed descriptors.
+        With ``capture`` the output is returned on the response instead.
+        """
         error = self.ensure_running()
         if error:
             return ProcessResponse(error=error, status_code=1)
 
+        payload = {"argv": list(argv)}
         try:
-            response = self.request({"argv": list(argv)})
+            if capture:
+                response = self.request(payload)
+                return ProcessResponse(
+                    output=response["stdout"],
+                    error=response["stderr"],
+                    status_code=response["exit_code"],
+                )
+
+            # flush so our own pending output stays ordered with the
+            # command output the server writes to the same descriptors
+            sys.stdout.flush()
+            sys.stderr.flush()
+            if log_file:
+                with open(log_file, "ab") as f:
+                    response = self.request(payload, fds=[f.fileno(), f.fileno()])
+            else:
+                response = self.request(
+                    payload, fds=[sys.stdout.fileno(), sys.stderr.fileno()]
+                )
+            return ProcessResponse(
+                error=response.get("stderr"),
+                status_code=response["exit_code"],
+            )
         except (OSError, ValueError) as e:
             return ProcessResponse(error=f"RPC request failed: {e}", status_code=1)
-
-        return ProcessResponse(
-            output=response["stdout"],
-            error=response["stderr"],
-            status_code=response["exit_code"],
-        )
 
     def shutdown(self):
         """Terminate the server if this process spawned it."""
@@ -126,8 +145,12 @@ class RPCClient:
             self.server.kill()
 
 
-class RPCCall:
-    """Deferred RPC command that can be executed like a function step."""
+class RPCOp:
+    """Executable invenio command op that runs on the RPC server.
+
+    Has the same call shape as ``LocalOp`` so callers never branch on
+    which one they got.
+    """
 
     def __init__(self, client, argv):
         """Construct."""
@@ -139,6 +162,6 @@ class RPCCall:
         """Subcommand name, used for progress messages."""
         return self.argv[-1]
 
-    def __call__(self):
-        """Execute the command on the RPC server."""
-        return self.client.call(self.argv)
+    def __call__(self, env=None, log_file=None, capture=False):
+        """Execute on the RPC server; ``env`` is ignored (the server's applies)."""
+        return self.client.call(self.argv, log_file=log_file, capture=capture)

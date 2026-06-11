@@ -84,7 +84,7 @@ class ServicesCommands(Commands):
         pkg_man = self.cli_config.python_package_manager
         steps = [
             CommandStep(
-                cmd=pkg_man.send_command(
+                cmd=pkg_man.invenio_command(
                     "invenio",
                     "shell",
                     "--no-term-title",
@@ -96,13 +96,13 @@ class ServicesCommands(Commands):
                 skippable=True,
             ),
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "db", "destroy", "--yes-i-know"),
+                cmd=pkg_man.invenio_command("invenio", "db", "destroy", "--yes-i-know"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Destroying database...",
                 skippable=True,
             ),
             CommandStep(
-                cmd=pkg_man.send_command(
+                cmd=pkg_man.invenio_command(
                     "invenio",
                     "index",
                     "destroy",
@@ -114,7 +114,9 @@ class ServicesCommands(Commands):
                 skippable=True,
             ),
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "index", "queue", "init", "purge"),
+                cmd=pkg_man.invenio_command(
+                    "invenio", "index", "queue", "init", "purge"
+                ),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Purging queues...",
                 skippable=True,
@@ -145,12 +147,12 @@ class ServicesCommands(Commands):
                 message="Checking services are not setup...",
             ),
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "db", "init", "create"),
+                cmd=pkg_man.invenio_command("invenio", "db", "init", "create"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating database...",
             ),
             CommandStep(
-                cmd=pkg_man.send_command(
+                cmd=pkg_man.invenio_command(
                     "invenio",
                     "files",
                     "location",
@@ -163,12 +165,12 @@ class ServicesCommands(Commands):
                 message="Creating files location...",
             ),
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "roles", "create", "admin"),
+                cmd=pkg_man.invenio_command("invenio", "roles", "create", "admin"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating admin role...",
             ),
             CommandStep(
-                cmd=pkg_man.send_command(
+                cmd=pkg_man.invenio_command(
                     "invenio",
                     "access",
                     "allow",
@@ -180,7 +182,7 @@ class ServicesCommands(Commands):
                 message="Allowing superuser access to admin role...",
             ),
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "index", "init"),
+                cmd=pkg_man.invenio_command("invenio", "index", "init"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating indices...",
             ),
@@ -192,7 +194,7 @@ class ServicesCommands(Commands):
                 steps.extend(
                     [
                         CommandStep(
-                            cmd=pkg_man.send_command(
+                            cmd=pkg_man.invenio_command(
                                 "invenio",
                                 "rdm-records",
                                 "custom-fields",
@@ -202,7 +204,7 @@ class ServicesCommands(Commands):
                             message="Creating custom fields for records...",
                         ),
                         CommandStep(
-                            cmd=pkg_man.send_command(
+                            cmd=pkg_man.invenio_command(
                                 "invenio",
                                 "communities",
                                 "custom-fields",
@@ -235,7 +237,7 @@ class ServicesCommands(Commands):
             args = ["invenio", "setup", "--verbose"]
             if not demo_data:
                 args.append("--skip-demo-data")
-            cmd = pkg_man.send_command(*args)
+            cmd = pkg_man.invenio_command(*args)
             steps.extend(
                 [
                     CommandStep(
@@ -261,7 +263,7 @@ class ServicesCommands(Commands):
         pkg_man = self.cli_config.python_package_manager
         steps = [
             CommandStep(
-                cmd=pkg_man.send_command("invenio", "rdm-records", "demo"),
+                cmd=pkg_man.invenio_command("invenio", "rdm-records", "demo"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating demo records...",
             )
@@ -272,14 +274,14 @@ class ServicesCommands(Commands):
     def declare_queues(self):
         """Steps to declare the MQ queues required for statistics, etc."""
         pkg_man = self.cli_config.python_package_manager
-        command = pkg_man.send_command("invenio", "queues", "declare")
+        command = pkg_man.invenio_command("invenio", "queues", "declare")
         steps = [CommandStep(cmd=command, message="Declaring queues...")]
         return steps
 
     def fixtures(self):
         """Steps to set up the required fixtures for the instance."""
         pkg_man = self.cli_config.python_package_manager
-        command = pkg_man.send_command("invenio", "rdm-records", "fixtures")
+        command = pkg_man.invenio_command("invenio", "rdm-records", "fixtures")
         steps = [
             CommandStep(
                 cmd=command,
@@ -293,7 +295,7 @@ class ServicesCommands(Commands):
     def rdm_fixtures(self):
         """Steps to set up the rdm fixtures for the instance."""
         pkg_man = self.cli_config.python_package_manager
-        command = pkg_man.send_command("invenio", "rdm", "fixtures")
+        command = pkg_man.invenio_command("invenio", "rdm", "fixtures")
         steps = [
             CommandStep(
                 cmd=command,
