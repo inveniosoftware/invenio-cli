@@ -70,7 +70,9 @@ class CLIConfig(object):
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
-        use_rpc = self.config[CLIConfig.CLI_SECTION].get("use_rpc", False)
+        use_rpc = self.config[CLIConfig.CLI_SECTION].getboolean(
+            "use_rpc", fallback=False
+        )
         # the socket lives in the instance directory, so RPC only kicks in
         # once the instance path is known (i.e. after the first install)
         rpc_socket_path = self.get_rpc_socket_path() if use_rpc else None
@@ -158,10 +160,6 @@ class CLIConfig(object):
     def get_project_shortname(self):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
-
-    def get_rpc_server_port(self):
-        """Returns rpc server port."""
-        return self.private_config[CLIConfig.CLI_SECTION].get("rpc_port", "5001")
 
     def get_rpc_socket_path(self):
         """Returns the RPC socket path (None until the instance path is set)."""
