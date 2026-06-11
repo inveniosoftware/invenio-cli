@@ -14,7 +14,30 @@ from typing import Dict, List, Union
 from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers.process import ProcessResponse
-from .rpc import RPCCall, RPCClient
+from .process import run_cmd, run_interactive
+from .rpc import RPCClient, RPCOp
+
+
+class LocalOp:
+    """Executable invenio command op that runs as a subprocess.
+
+    The RPC-less counterpart of ``RPCOp``, with the same call shape.
+    """
+
+    def __init__(self, argv):
+        """Construct."""
+        self.argv = list(argv)
+
+    @property
+    def label(self):
+        """Subcommand name, used for progress messages."""
+        return self.argv[-1]
+
+    def __call__(self, env=None, log_file=None, capture=False):
+        """Run the command and return a ProcessResponse."""
+        if capture:
+            return run_cmd(self.argv)
+        return run_interactive(self.argv, env=env, log_file=log_file)
 
 
 class PythonPackageManager(ABC):
@@ -34,12 +57,18 @@ class PythonPackageManager(ABC):
                 ),
             )
 
-    def send_command(self, *command):
-        """Build an executable op for the command, preferring the RPC server."""
+    def invenio_command(self, *command):
+        """Build an executable op for the given invenio CLI command.
+
+        Returns an ``RPCOp`` when the RPC server is enabled, otherwise a
+        ``LocalOp`` running the command as a subprocess — both with the
+        same call shape. Only use this for short-lived, non-interactive
+        ``invenio`` commands; anything else goes through ``run_command``.
+        """
         if self.rpc:
             # drop the leading "invenio"; the server routes the argv itself
-            return RPCCall(self.rpc, command[1:])
-        return self.run_command(*command)
+            return RPCOp(self.rpc, command[1:])
+        return LocalOp(self.run_command(*command))
 
     def run_command(self, *command: str) -> List[str]:
         """Generate command to run the given command in the managed environment."""

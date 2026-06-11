@@ -5,7 +5,6 @@
 """Invenio module to ease the creation and management of applications."""
 
 from ..helpers import filesystem
-from ..helpers.process import run_cmd
 from .local import LocalCommands
 from .packages import PackagesCommands
 from .steps import FunctionStep
@@ -33,7 +32,7 @@ class InstallCommands(LocalCommands):
 
     def update_instance_path(self):
         """Update path to instance in config."""
-        op = self.cli_config.python_package_manager.send_command(
+        op = self.cli_config.python_package_manager.invenio_command(
             "invenio",
             "shell",
             # make sure the shell does not append cursor if editing_mode is set to `vi` in config
@@ -42,7 +41,7 @@ class InstallCommands(LocalCommands):
             "-c",
             "print(app.instance_path, end='')",
         )
-        result = op() if callable(op) else run_cmd(op)
+        result = op(capture=True)
         if result.status_code == 0:
             self.cli_config.update_instance_path(result.output.strip())
             result.output = "Instance path updated successfully."
