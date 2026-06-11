@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from invenio_cli.commands.steps import CommandStep
 from invenio_cli.helpers.package_managers import UV
 from invenio_cli.helpers.rpc import RPCCall, RPCClient
 
@@ -132,3 +133,23 @@ def test_send_command_without_rpc_is_the_plain_command():
         "invenio",
         "collect",
     ]
+
+
+def test_command_step_executes_an_rpc_call(rpc_socket, capsys):
+    """CommandStep runs an RPCCall, surfaces output and the exit code."""
+    client = RPCClient(rpc_socket, start_command=None)
+    step = CommandStep(cmd=RPCCall(client, ["db", "init", "create"]))
+    response = step.execute()
+    assert response.status_code == 7
+    captured = capsys.readouterr()
+    assert captured.out == "db init create"
+    assert captured.err == "warning\n"
+
+
+def test_command_step_skippable_turns_rpc_failure_into_warning(rpc_socket):
+    """A skippable step reports a failed RPC command as a warning."""
+    client = RPCClient(rpc_socket, start_command=None)
+    step = CommandStep(cmd=RPCCall(client, ["db", "destroy"]), skippable=True)
+    response = step.execute()
+    assert response.status_code == 0
+    assert response.warning is True
