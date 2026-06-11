@@ -17,6 +17,7 @@ the response carries the captured output instead.
 import array
 import atexit
 import json
+import os
 import socket
 import sys
 import time
@@ -70,15 +71,20 @@ class RPCClient:
             return False
         return response.get("pong") is True
 
-    def ensure_running(self):
-        """Start a server if none answers; return an error message or None."""
+    def ensure_running(self, env=None):
+        """Start a server if none answers; return an error message or None.
+
+        ``env`` is added to the spawned server's environment, so it lands in
+        the app config the server builds at startup (e.g. ``INVENIO_*``
+        variables). It cannot be applied to an already running server.
+        """
         if self.available:
             return None
         if self.ping():
             self.available = True
             return None
 
-        self.server = Popen(self.start_command)
+        self.server = Popen(self.start_command, env={**os.environ, **(env or {})})
         atexit.register(self.shutdown)
         deadline = time.monotonic() + STARTUP_TIMEOUT
         while time.monotonic() < deadline:
@@ -95,14 +101,15 @@ class RPCClient:
         self.shutdown()
         return f"RPC server did not start within {STARTUP_TIMEOUT} seconds."
 
-    def call(self, argv, log_file=None, capture=False):
+    def call(self, argv, env=None, log_file=None, capture=False):
         """Run an invenio CLI command on the server.
 
         By default the command's output streams live to this process'
         stdout/stderr (or into ``log_file``) via the passed descriptors.
         With ``capture`` the output is returned on the response instead.
+        ``env`` only takes effect if this call spawns the server.
         """
-        error = self.ensure_running()
+        error = self.ensure_running(env=env)
         if error:
             return ProcessResponse(error=error, status_code=1)
 
@@ -163,5 +170,10 @@ class RPCOp:
         return self.argv[-1]
 
     def __call__(self, env=None, log_file=None, capture=False):
-        """Execute on the RPC server; ``env`` is ignored (the server's applies)."""
-        return self.client.call(self.argv, log_file=log_file, capture=capture)
+        """Execute on the RPC server.
+
+        ``env`` reaches the server's environment (and thus its app config)
+        only when this call is the one that spawns it; a server that is
+        already running keeps the environment it was started with.
+        """
+        return self.client.call(self.argv, env=env, log_file=log_file, capture=capture)
