@@ -11,6 +11,7 @@ import socketserver
 import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -45,6 +46,8 @@ class FakeInvenioHandler(socketserver.BaseRequestHandler):
         """Answer one JSON-line request with one JSON-line response."""
         line, fds = _recv_request(self.request)
         request = json.loads(line)
+        if request.get("argv") == ["slow"]:
+            time.sleep(0.3)  # simulate a long-running command
         if request.get("ping"):
             response = {"pong": True}
         elif fds:
@@ -176,6 +179,29 @@ def test_call_reports_a_server_that_dies_during_startup(short_tmp_path):
     response = client.call(["collect"])
     assert response.status_code == 1
     assert "exited with code 3" in response.error
+
+
+def test_spawn_race_loser_uses_the_listening_server(rpc_socket):
+    """A dead spawn is fine when another server owns the socket."""
+    client = RPCClient(rpc_socket, ["sh", "-c", "exit 9"])
+    assert client.ensure_running() is None
+
+
+def test_concurrent_calls_queue_behind_a_busy_server(rpc_socket):
+    """Calls connect directly and wait their turn instead of respawning."""
+    client = RPCClient(rpc_socket, start_command=None)
+    results = []
+
+    def run():
+        """Issue one slow captured call."""
+        results.append(client.call(["slow"], capture=True).status_code)
+
+    threads = [threading.Thread(target=run) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert results == [7, 7]
 
 
 def test_invenio_command_builds_an_rpc_op(short_tmp_path):
