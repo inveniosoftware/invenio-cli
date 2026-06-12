@@ -73,19 +73,20 @@ class CLIConfig(object):
         use_rpc = self.config[CLIConfig.CLI_SECTION].getboolean(
             "use_rpc", fallback=False
         )
-        # the socket lives in the instance directory, so RPC only kicks in
-        # once the instance path is known (i.e. after the first install)
-        rpc_socket_path = self.get_rpc_socket_path() if use_rpc else None
+        # passed as a callable: the socket lives in the instance directory,
+        # which install only discovers partway through, and RPC should kick
+        # in from that moment on
+        get_socket_path = self.get_rpc_socket_path if use_rpc else None
 
         if manager_name == Pipenv.name:
-            return Pipenv(rpc_socket_path=rpc_socket_path)
+            return Pipenv(get_rpc_socket_path=get_socket_path)
         elif manager_name == UV.name:
-            return UV(rpc_socket_path=rpc_socket_path)
+            return UV(get_rpc_socket_path=get_socket_path)
 
         if (self.project_path / "Pipfile").is_file():
-            return Pipenv(rpc_socket_path=rpc_socket_path)
+            return Pipenv(get_rpc_socket_path=get_socket_path)
         elif (self.project_path / "pyproject.toml").is_file():
-            return UV(rpc_socket_path=rpc_socket_path)
+            return UV(get_rpc_socket_path=get_socket_path)
         else:
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."

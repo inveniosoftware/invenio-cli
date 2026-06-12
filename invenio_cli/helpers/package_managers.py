@@ -46,25 +46,35 @@ class PythonPackageManager(ABC):
     name: str = None
     lock_file_name: str = None
 
-    def __init__(self, rpc_socket_path=None):
-        """Construct."""
+    def __init__(self, get_rpc_socket_path=None):
+        """Construct.
+
+        ``get_rpc_socket_path`` is a zero-argument callable returning the
+        RPC socket path, or None while it is unknown. A callable because
+        the socket lives in the instance directory, which is only
+        discovered partway through the first install.
+        """
+        self._get_rpc_socket_path = get_rpc_socket_path
         self.rpc = None
-        if rpc_socket_path:
-            self.rpc = RPCClient(
-                rpc_socket_path,
-                self.run_command(
-                    "invenio", "rpc-server", "start", "--socket", str(rpc_socket_path)
-                ),
-            )
 
     def invenio_command(self, *command):
         """Build an executable op for the given invenio CLI command.
 
-        Returns an ``RPCOp`` when the RPC server is enabled, otherwise a
-        ``LocalOp`` running the command as a subprocess — both with the
-        same call shape. Only use this for short-lived, non-interactive
-        ``invenio`` commands; anything else goes through ``run_command``.
+        Returns an ``RPCOp`` when the RPC server is enabled and its socket
+        path is known, otherwise a ``LocalOp`` running the command as a
+        subprocess, both with the same call shape. Only use this for
+        short-lived, non-interactive ``invenio`` commands; anything else
+        goes through ``run_command``.
         """
+        if self.rpc is None and self._get_rpc_socket_path:
+            socket_path = self._get_rpc_socket_path()
+            if socket_path:
+                self.rpc = RPCClient(
+                    socket_path,
+                    self.run_command(
+                        "invenio", "rpc-server", "start", "--socket", str(socket_path)
+                    ),
+                )
         if self.rpc:
             # drop the leading "invenio"; the server routes the argv itself
             return RPCOp(self.rpc, command[1:])

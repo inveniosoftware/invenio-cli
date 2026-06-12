@@ -194,11 +194,20 @@ def test_concurrent_calls_queue_behind_a_busy_server(rpc_socket):
 
 def test_invenio_command_builds_an_rpc_op(short_tmp_path):
     """With a socket path, invenio_command defers to the RPC server."""
-    manager = UV(rpc_socket_path=short_tmp_path / "rpc.sock")
+    manager = UV(get_rpc_socket_path=lambda: short_tmp_path / "rpc.sock")
     op = manager.invenio_command("invenio", "webpack", "build")
     assert isinstance(op, RPCOp)
     assert op.argv == ["webpack", "build"]
     assert op.label == "build"
+
+
+def test_invenio_command_picks_up_a_late_socket_path(short_tmp_path):
+    """RPC kicks in once install discovers the instance path."""
+    socket_path = None
+    manager = UV(get_rpc_socket_path=lambda: socket_path)
+    assert isinstance(manager.invenio_command("invenio", "collect"), LocalOp)
+    socket_path = short_tmp_path / "rpc.sock"
+    assert isinstance(manager.invenio_command("invenio", "collect"), RPCOp)
 
 
 def test_invenio_command_without_rpc_builds_a_local_op():
