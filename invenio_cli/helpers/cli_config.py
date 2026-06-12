@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2019-2024 CERN.
 # SPDX-FileCopyrightText: 2019-2020 Northwestern University.
 # SPDX-FileCopyrightText: 2021 Esteban J. G. Gabancho.
-# SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2024-2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio-cli configuration file."""
@@ -70,15 +70,23 @@ class CLIConfig(object):
     def python_package_manager(self) -> PythonPackageManager:
         """Get python packages manager."""
         manager_name = self.config[CLIConfig.CLI_SECTION].get("python_package_manager")
+        use_rpc = self.config[CLIConfig.CLI_SECTION].getboolean(
+            "use_rpc", fallback=False
+        )
+        # passed as a callable: the socket lives in the instance directory,
+        # which install only discovers partway through, and RPC should kick
+        # in from that moment on
+        get_socket_path = self.get_rpc_socket_path if use_rpc else None
+
         if manager_name == Pipenv.name:
-            return Pipenv()
+            return Pipenv(get_rpc_socket_path=get_socket_path)
         elif manager_name == UV.name:
-            return UV()
+            return UV(get_rpc_socket_path=get_socket_path)
 
         if (self.project_path / "Pipfile").is_file():
-            return Pipenv()
+            return Pipenv(get_rpc_socket_path=get_socket_path)
         elif (self.project_path / "pyproject.toml").is_file():
-            return UV()
+            return UV(get_rpc_socket_path=get_socket_path)
         else:
             raise RuntimeError(
                 "Could not determine the Python package manager, please configure it."
@@ -100,6 +108,14 @@ class CLIConfig(object):
     def get_project_dir(self):
         """Returns path to project directory."""
         return self.config_path.parent.resolve()
+
+    def get_data_path(self):
+        """Return path to data."""
+        path = self.private_config[CLIConfig.CLI_SECTION].get("data_path")
+        if path:
+            return Path(path)
+        else:
+            return self.get_instance_path()
 
     def get_instance_path(self, throw=True):
         """Returns path to application instance directory.
@@ -146,6 +162,12 @@ class CLIConfig(object):
         """Returns the project's shortname."""
         return self.config[CLIConfig.COOKIECUTTER_SECTION]["project_shortname"]
 
+    def get_rpc_socket_path(self):
+        """Returns the RPC socket path (None until the instance path is set)."""
+        instance_path = self.get_instance_path(throw=False)
+        if instance_path:
+            return instance_path / "rpc.sock"
+
     def get_search_port(self):
         """Returns the search port."""
         return self.private_config[CLIConfig.CLI_SECTION].get("search_port", "9200")
@@ -164,6 +186,10 @@ class CLIConfig(object):
     def get_web_host(self):
         """Returns web host."""
         return self.private_config[CLIConfig.CLI_SECTION].get("web_host", "127.0.0.1")
+
+    def get_app_rdm_version(self):
+        """Returns app rdm version."""
+        return self.private_config[CLIConfig.CLI_SECTION].get("app_rdm", None)
 
     def get_db_type(self):
         """Returns the database type (mysql, postgresql)."""

@@ -57,5 +57,11 @@ class CommandStep(Step):
         self.log_file = log_file
 
     def execute(self):
-        """Execute the function with the given arguments."""
+        """Execute the command, an op (RPCOp/LocalOp) or a plain argv list."""
+        if callable(self.cmd):
+            response = self.cmd(env=self.env, log_file=self.log_file)
+            if response.status_code > 0 and self.skippable:
+                response.warning = True
+                response.status_code = 0
+            return response
         return run_interactive(self.cmd, self.env, self.skippable, self.log_file)

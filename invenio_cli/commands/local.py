@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 California Institute of Technology.
 # SPDX-FileCopyrightText: 2020 CERN.
-# SPDX-FileCopyrightText: 2022 Graz University of Technology.
+# SPDX-FileCopyrightText: 2022-2026 Graz University of Technology.
 # SPDX-FileCopyrightText: 2026 Northwestern University.
 # SPDX-License-Identifier: MIT
 
@@ -17,7 +17,9 @@ from subprocess import Popen as popen
 import click
 
 from ..helpers import env, filesystem
-from ..helpers.process import ProcessResponse, run_interactive
+from ..helpers.package_managers import LocalOp
+from ..helpers.process import ProcessResponse
+from ..helpers.rpc import RPCOp
 from ..helpers.versions import rdm_version
 from .commands import Commands
 
@@ -106,22 +108,21 @@ class LocalCommands(Commands):
         # Commands
         py_pkg_man = self.cli_config.python_package_manager
         js_pkg_man = self.cli_config.javascript_package_manager
-        ops = [py_pkg_man.run_command("invenio", "collect", "--verbose")]
+        ops = [py_pkg_man.invenio_command("invenio", "collect", "--verbose")]
 
         if force:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "clean", "create"))
+            ops.append(
+                py_pkg_man.invenio_command("invenio", "webpack", "clean", "create")
+            )
             # We need to copy the js lock files here, since webpack regenerates
             # package.json and we want the locked version instead.
             ops.append(self._copy_js_lock_files)
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "install"))
+            ops.append(py_pkg_man.invenio_command("invenio", "webpack", "install"))
         else:
-            ops.append(py_pkg_man.run_command("invenio", "webpack", "create"))
-            # We need to copy the js lock files here, since webpack regenerates
-            # package.json and we want the locked version instead.
+            ops.append(py_pkg_man.invenio_command("invenio", "webpack", "create"))
             ops.append(self._copy_js_lock_files)
         ops.append(self._statics)
-        ops.append(py_pkg_man.run_command("invenio", "webpack", "build"))
-
+        ops.append(py_pkg_man.invenio_command("invenio", "webpack", "build"))
         # Keep the same messages for some of the operations for backward compatibility
         messages = {
             "build": "Building assets...",
@@ -130,16 +131,15 @@ class LocalCommands(Commands):
 
         with env(FLASK_DEBUG="1" if debug else "0"):
             for op in ops:
-                if callable(op):
-                    response = op()
-                else:
-                    if op[-1] in messages:
-                        click.secho(messages[op[-1]], fg="green")
-                    response = run_interactive(
-                        op,
+                if isinstance(op, (LocalOp, RPCOp)):
+                    if op.label in messages:
+                        click.secho(messages[op.label], fg="green")
+                    response = op(
                         env={"PIPENV_VERBOSITY": "-1", **js_pkg_man.env_overrides()},
                         log_file=log_file,
                     )
+                else:
+                    response = op()
                 if response.status_code != 0:
                     break
         return response
@@ -224,7 +224,7 @@ class LocalCommands(Commands):
     def run_jobs_scheduler(self, celery_log_file=None, celery_log_level="INFO"):
         """Run Celery beat scheduler for jobs."""
         # Jobs scheduler is only available in RDM v13+
-        version = rdm_version()
+        version = rdm_version(self.cli_config)
         if version is None:
             click.secho(
                 "RDM version couldn't be determined. Not running jobs scheduler.",

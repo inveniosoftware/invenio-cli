@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 TU Wien.
+# SPDX-FileCopyrightText: 2025-2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Wrappers around various package managers to be used under the hood."""
@@ -13,6 +14,30 @@ from typing import Dict, List, Union
 from pynpm import NPMPackage, PNPMPackage
 
 from ..helpers.process import ProcessResponse
+from .process import run_cmd, run_interactive
+from .rpc import RPCClient, RPCOp
+
+
+class LocalOp:
+    """Executable invenio command op that runs as a subprocess.
+
+    The RPC-less counterpart of ``RPCOp``, with the same call shape.
+    """
+
+    def __init__(self, argv):
+        """Construct."""
+        self.argv = list(argv)
+
+    @property
+    def label(self):
+        """Subcommand name, used for progress messages."""
+        return self.argv[-1]
+
+    def __call__(self, env=None, log_file=None, capture=False):
+        """Run the command and return a ProcessResponse."""
+        if capture:
+            return run_cmd(self.argv)
+        return run_interactive(self.argv, env=env, log_file=log_file)
 
 
 class PythonPackageManager(ABC):
@@ -20,6 +45,40 @@ class PythonPackageManager(ABC):
 
     name: str = None
     lock_file_name: str = None
+
+    def __init__(self, get_rpc_socket_path=None):
+        """Construct.
+
+        ``get_rpc_socket_path`` is a zero-argument callable returning the
+        RPC socket path, or None while it is unknown. A callable because
+        the socket lives in the instance directory, which is only
+        discovered partway through the first install.
+        """
+        self._get_rpc_socket_path = get_rpc_socket_path
+        self.rpc = None
+
+    def invenio_command(self, *command):
+        """Build an executable op for the given invenio CLI command.
+
+        Returns an ``RPCOp`` when the RPC server is enabled and its socket
+        path is known, otherwise a ``LocalOp`` running the command as a
+        subprocess, both with the same call shape. Only use this for
+        short-lived, non-interactive ``invenio`` commands; anything else
+        goes through ``run_command``.
+        """
+        if self.rpc is None and self._get_rpc_socket_path:
+            socket_path = self._get_rpc_socket_path()
+            if socket_path:
+                self.rpc = RPCClient(
+                    socket_path,
+                    self.run_command(
+                        "invenio", "rpc-server", "start", "--socket", str(socket_path)
+                    ),
+                )
+        if self.rpc:
+            # drop the leading "invenio"; the server routes the argv itself
+            return RPCOp(self.rpc, command[1:])
+        return LocalOp(self.run_command(*command))
 
     def run_command(self, *command: str) -> List[str]:
         """Generate command to run the given command in the managed environment."""

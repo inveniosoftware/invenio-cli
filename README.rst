@@ -1,6 +1,7 @@
 ..
     SPDX-FileCopyrightText: 2019-2020 CERN.
     SPDX-FileCopyrightText: 2019-2020 Northwestern University.
+    SPDX-FileCopyrightText: 2025 Graz University of Technology.
     SPDX-License-Identifier: MIT
 
 =================
@@ -60,6 +61,58 @@ Local Development environment
 
     # Update assets or statics
     $ invenio-cli update
+
+Customizations
+==============
+
+It is possible to choose between two python package managers: `pipenv` and `uv`.
+`pipenv` is the default one. To customize the python package manager it is
+necessary to add the line `python_package_manager = VALUE` to the `.invenio`
+file. `VALUE` is `uv` or `pipenv`.
+
+It is possible to choose between two javascript package managers: `npm` and
+`pnpm`. `npm` is the default one. To customize the python package manager it is
+necessary to add the line `javascript_package_manager = VALUE` to the `.invenio`
+file. `VALUE` is `npm` or `pnpm`.
+
+It is possible to choose between two assets builders: `webpack` and `rspack`.
+`webpack` is the default one. To use `rspack` add `WEBPACKEXT_PROJECT =
+"invenio_assets.webpack:rspack_project"` to the `invenio.cfg` file.
+
+It is possible to send `invenio` commands to a long running RPC server instead
+of starting a new Python process for each command. To enable this add the line
+`use_rpc = true` to the `[cli]` section of the `.invenio` file. The server
+listens on a Unix domain socket at `<instance_path>/rpc.sock` and is started
+automatically when needed; invenio-cli stops it again on exit.
+
+The javascript package manager uses a lock file like the python package manager.
+This file `pnpm-lock.yaml` for `pnpm` and `packages-lock.json` for `npm` will be
+symlinked to the `var/instance/assets/` directory.
+
+Hints
+=====
+
+`uv`
+
+The development with `uv` is a little bit different than with `pipenv`. If there
+is a `uv.lock` file packages have to be updated manually or by removing the
+`uv.lock` file. The absence of the `uv.lock` file triggeres a new dependency
+resolving call which takes into account of new released packages. It would also
+be possible to use the `uv sync --upgrade` feature of `uv` but this installs
+also beta versions of packages which is not recommended. It may sound strange to
+remove the `uv.lock` file, but `uv` is that fast that deleting the `.venv`
+directory and the `uv.lock` file is the easiest and fastest and safest way to
+upgrade the packages.
+
+UV uses a local `.venv` directory. This will be created automatically, if not
+existing in the same directory as the `pyproject.toml` file.
+
+UV uses a `pyproject.toml` file.
+
+`rpc-server`
+
+To use `pnpm` with the `rpc-server` it is necessary to add
+`WEBPACKEXT_NPM_PKG_CLS = "pynpm:PNPMPackage"` to the `invenio.cfg` file.
 
 
 Containerized 'Production' environment

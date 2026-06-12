@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2022-2025 CERN.
 # SPDX-FileCopyrightText: 2025 TU Wien.
+# SPDX-FileCopyrightText: 2025 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio CLI dependencies helper."""
@@ -53,9 +54,17 @@ def _from_pyproject_toml(dep_name):
     return _parse_version(v.version)
 
 
-def rdm_version():
-    """Return the latest RDM version."""
-    if os.path.isfile("./Pipfile"):
+def rdm_version(cli_config=None):
+    """Return the latest RDM version.
+
+    A version pinned via the ``app_rdm`` option takes precedence, but
+    ``cli_config`` is optional: callers without a project context (e.g.
+    ``check-requirements``) fall back to the dependency files.
+    """
+    if cli_config and (app_rdm_version := cli_config.get_app_rdm_version()):
+        return [int(v) for v in app_rdm_version.split(".")]
+
+    elif os.path.isfile("./Pipfile"):
         return _from_pipfile("invenio-app-rdm")
 
     elif os.path.isfile("./pyproject.toml"):
