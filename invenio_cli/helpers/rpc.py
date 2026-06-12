@@ -26,7 +26,6 @@ from subprocess import Popen, TimeoutExpired
 from .process import ProcessResponse
 
 CONNECT_TIMEOUT = 5
-PING_TIMEOUT = 2
 STARTUP_TIMEOUT = 120  # starting the server includes a full app creation
 
 
@@ -44,7 +43,7 @@ class RPCClient:
         self.start_command = start_command
         self.server = None
 
-    def request(self, payload, fds=None, read_timeout=None):
+    def request(self, payload, fds=None):
         """Send one JSON line (and fds) and read back one JSON-line response."""
         line = json.dumps(payload).encode("utf-8") + b"\n"
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
@@ -58,22 +57,14 @@ class RPCClient:
             else:
                 s.sendall(line)
             # commands may run for a long time (e.g. webpack builds)
-            s.settimeout(read_timeout)
+            s.settimeout(None)
             with s.makefile("rb") as f:
                 return json.loads(f.readline())
-
-    def ping(self):
-        """Return whether a server answers on the socket."""
-        try:
-            response = self.request({"ping": True}, read_timeout=PING_TIMEOUT)
-        except (OSError, ValueError):
-            return False
-        return response.get("pong") is True
 
     def listening(self):
         """Return whether something accepts connections on the socket.
 
-        Unlike ``ping`` this does not need the server to respond, so it
+        A connect-only probe does not need the server to respond, so it
         also recognizes a server that is busy running a long command.
         """
         try:

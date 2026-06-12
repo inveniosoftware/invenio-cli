@@ -45,12 +45,12 @@ class FakeInvenioHandler(socketserver.BaseRequestHandler):
     def handle(self):
         """Answer one JSON-line request with one JSON-line response."""
         line, fds = _recv_request(self.request)
+        if not line:
+            return  # connect-only liveness probe
         request = json.loads(line)
         if request.get("argv") == ["slow"]:
             time.sleep(0.3)  # simulate a long-running command
-        if request.get("ping"):
-            response = {"pong": True}
-        elif fds:
+        if fds:
             os.write(fds[0], b"streamed out\n")
             os.write(fds[1], b"streamed err\n")
             for fd in fds:
@@ -82,17 +82,6 @@ def rpc_socket(short_tmp_path):
     yield socket_path
     server.shutdown()
     server.server_close()
-
-
-def test_ping(rpc_socket):
-    """Ping detects a running server."""
-    assert RPCClient(rpc_socket, start_command=None).ping() is True
-
-
-def test_ping_without_server(short_tmp_path):
-    """Ping without a server is False, not an error."""
-    client = RPCClient(short_tmp_path / "nope.sock", start_command=None)
-    assert client.ping() is False
 
 
 def test_call_forwards_output_to_our_descriptors(rpc_socket, capfd):
@@ -131,15 +120,14 @@ import json, os, socketserver, sys
 
 class Handler(socketserver.StreamRequestHandler):
     def handle(self):
-        request = json.loads(self.rfile.readline())
-        if request.get("ping"):
-            response = {"pong": True}
-        else:
-            response = {
-                "exit_code": 0,
-                "stdout": os.environ.get("RPC_TEST_VAR", "ok"),
-                "stderr": "",
-            }
+        line = self.rfile.readline()
+        if not line:
+            return  # connect-only liveness probe
+        response = {
+            "exit_code": 0,
+            "stdout": os.environ.get("RPC_TEST_VAR", "ok"),
+            "stderr": "",
+        }
         self.wfile.write(json.dumps(response).encode("utf-8") + b"\\n")
 
 with socketserver.UnixStreamServer(sys.argv[1], Handler) as server:
