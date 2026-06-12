@@ -137,7 +137,7 @@ class ContainersCommands(ServicesCommands):
             ),
         ]
 
-        if rdm_version()[0] >= 10:
+        if rdm_version(self.cli_config)[0] >= 10:
             steps.extend(
                 [
                     FunctionStep(
@@ -159,11 +159,11 @@ class ContainersCommands(ServicesCommands):
                 ]
             )
 
-        if rdm_version()[0] >= 11:
+        if rdm_version(self.cli_config)[0] >= 11:
             steps.extend(self.rdm_fixtures(project_shortname))
             steps.extend(self.translations(project_shortname))
 
-        if rdm_version()[0] >= 12:
+        if rdm_version(self.cli_config)[0] >= 12:
             steps.extend(self.declare_queues(project_shortname))
 
         return steps
