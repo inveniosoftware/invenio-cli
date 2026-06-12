@@ -54,9 +54,14 @@ def _from_pyproject_toml(dep_name):
     return _parse_version(v.version)
 
 
-def rdm_version(cli_config):
-    """Return the latest RDM version."""
-    if app_rdm_version := cli_config.get_app_rdm_version():
+def rdm_version(cli_config=None):
+    """Return the latest RDM version.
+
+    A version pinned via the ``app_rdm`` option takes precedence, but
+    ``cli_config`` is optional: callers without a project context (e.g.
+    ``check-requirements``) fall back to the dependency files.
+    """
+    if cli_config and (app_rdm_version := cli_config.get_app_rdm_version()):
         return [int(v) for v in app_rdm_version.split(".")]
 
     elif os.path.isfile("./Pipfile"):
