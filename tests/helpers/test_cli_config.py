@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2019-2020 CERN.
 # SPDX-FileCopyrightText: 2019-2021 Northwestern University.
-# SPDX-FileCopyrightText: 2025-2026-2026 KTH Royal Institute of Technology.
+# SPDX-FileCopyrightText: 2025-2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
 """Module config_file tests."""
@@ -31,7 +31,6 @@ def test_cli_config_write():
             "author_name": "CERN",
             "author_email": "info@my-site.com",
             "year": "2022",
-            "database": "postgresql",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -63,7 +62,6 @@ def config_dir():
             "author_name": "CERN",
             "author_email": "info@my-site.com",
             "year": "2022",
-            "database": "postgresql",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -118,8 +116,8 @@ def test_cli_config_get_project_shortname(config_dir):
     assert cli_config.get_project_shortname() == "my-site"
 
 
-def test_javascript_package_manager_config(tmpdir):
-    """Test JavaScript package manager defaults to pnpm in CLI config."""
+def test_package_manager_and_service_defaults(tmpdir):
+    """Test package manager, database, and search defaults in CLI config."""
     project_dir = tmpdir.mkdir("test-project")
     flavour = "RDM"
     replay = {
@@ -132,7 +130,6 @@ def test_javascript_package_manager_config(tmpdir):
             "author_name": "CERN",
             "author_email": "info@my-site.com",
             "year": "2022",
-            "database": "postgresql",
             "_template": "https://github.com/inveniosoftware/cookiecutter-invenio-rdm.git",  # noqa
         }
     }
@@ -144,4 +141,5 @@ def test_javascript_package_manager_config(tmpdir):
 
     assert config.has_option(CLIConfig.CLI_SECTION, "javascript_package_manager")
     assert config.get(CLIConfig.CLI_SECTION, "javascript_package_manager") == "pnpm"
+    assert config.get(CLIConfig.COOKIECUTTER_SECTION, "database") == "postgresql"
     assert config.get(CLIConfig.COOKIECUTTER_SECTION, "search") == "opensearch2"

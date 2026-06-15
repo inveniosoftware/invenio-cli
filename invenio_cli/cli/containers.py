@@ -100,7 +100,7 @@ def setup(cli_config, force, no_demo_data, stop_services, services):
 def status(ctx, verbose):
     """Checks if the services are up and running.
 
-    NOTE: currently only search, DB (postgresql/mysql) and redis are supported.
+    NOTE: currently only search (opensearch2), DB (postgresql) and redis are supported.
     """
     ctx.invoke(services_status_cmd, verbose=verbose)
 
