@@ -166,15 +166,13 @@ class CLIConfig(object):
         """Returns web host."""
         return self.private_config[CLIConfig.CLI_SECTION].get("web_host", "127.0.0.1")
 
-    @staticmethod
-    def get_db_type():
+    def get_db_type(self):
         """Returns the database type."""
-        return "postgresql"
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("database", "postgresql")
 
-    @staticmethod
-    def get_search_type():
+    def get_search_type(self):
         """Returns the search type."""
-        return "opensearch2"
+        return self.config[CLIConfig.COOKIECUTTER_SECTION].get("search", "opensearch2")
 
     def get_file_storage(self):
         """Returns the file storage (local, s3, etc.)."""
@@ -223,8 +221,8 @@ class CLIConfig(object):
             config_parser[cls.COOKIECUTTER_SECTION][key] = str(value)
         # Keep compatibility with older tooling that expects `database` and `search` to exist.
         # Backend choice has been removed; PostgreSQL and OpenSearch2 are fixed.
-        config_parser[cls.COOKIECUTTER_SECTION]["database"] = cls.get_db_type()
-        config_parser[cls.COOKIECUTTER_SECTION]["search"] = cls.get_search_type()
+        config_parser[cls.COOKIECUTTER_SECTION]["database"] = "postgresql"
+        config_parser[cls.COOKIECUTTER_SECTION]["search"] = "opensearch2"
 
         # Generated files section
         config_parser[cls.FILES_SECTION] = get_created_files(project_dir)
