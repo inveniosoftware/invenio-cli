@@ -1,4 +1,71 @@
-[build-system]
-requires = ["setuptools", "wheel", "babel>2.8"]
-build-backend = "setuptools.build_meta"
+# SPDX-FileCopyrightText: 2019-2020 CERN.
+# SPDX-FileCopyrightText: 2019-2020 Northwestern University.
+# SPDX-FileCopyrightText: 2021-2026 TU Wien.
+# SPDX-FileCopyrightText: 2022-2025 Graz University of Technology.
+# SPDX-License-Identifier: MIT
 
+[project]
+name = "invenio-cli"
+description = "Invenio module to ease the creation and management of applications."
+readme = "README.rst"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+  { name = "CERN & Northwestern University", email = "info@inveniosoftware.org" },
+]
+keywords = [
+  "invenio-cli",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+]
+dependencies = [
+  "babel>=2.8",
+  "click>=7.1.1",
+  "click-default-group>=1.2.2",
+  "cookiecutter>=2.0.0",
+  "docker>=7.1.0",
+  "pipenv>=2024.0.3",
+  "pipfile>=0.0.2",
+  "pynpm>=0.3.0",
+  "pyyaml>=5.1.2",
+  "tomli>=1.1.0;python_version<\"3.11\"",
+  "virtualenv>=20.0.35",
+]
+dynamic = ["version"]
+
+[project.urls]
+Repository = "https://github.com/inveniosoftware/invenio-cli"
+
+[project.scripts]
+invenio-cli = "invenio_cli.cli.cli:invenio_cli"
+
+[project.optional-dependencies]
+tests = [
+  "pytest-black>=0.6.0",
+  "pytest-invenio>=1.4.0",
+  "sphinx>=4.2.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "invenio_cli/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/invenio_cli",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pydocstyle]
+add_ignore = "D401"
+
+[tool.pytest.ini_options]
+addopts = '--black --isort --pydocstyle --doctest-glob="*.rst" --doctest-modules --cov=invenio_cli --cov-report=term-missing'
+testpaths = "tests invenio_cli"
+live_server_scope = "module"
