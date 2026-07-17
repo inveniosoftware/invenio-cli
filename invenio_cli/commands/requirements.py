@@ -164,6 +164,39 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def check_python_pkg_manager_installed(cls):
+        """Check for uv or pipenv being available."""
+        response = cls.check_uv_installed()
+        if response.status_code != 0:
+            response = cls.check_pipenv_installed()
+
+        return response
+
+    @classmethod
+    def check_uv_installed(cls):
+        """Check the uv version."""
+        # Output comes in the form of:
+        # 'uv 0.11.29 (901092ee1 2026-07-15 x86_64-unknown-linux-gnu)\n'
+        try:
+            result = run_cmd(["uv", "--version"])
+            tool, version, *_ = result.output.split(" ", 2)
+            if tool != "uv":
+                return ProcessResponse(
+                    error=f"UV not found. Got {tool}.", status_code=1
+                )
+            else:
+                return ProcessResponse(
+                    output=f"UV OK. Got version {version}.", status_code=0
+                )
+
+        except FileNotFoundError:
+            return ProcessResponse(error=f"UV not found.", status_code=1)
+        except Exception as e:
+            return ProcessResponse(
+                error=f"Could not check for UV. Reason: {e}", status_code=1
+            )
+
+    @classmethod
     def check_pipenv_installed(cls):
         """Check the pipenv version."""
         # Output comes in the form of 'pipenv, version 2020.11.15\n'
@@ -183,9 +216,7 @@ class RequirementsCommands(object):
                 output=f"Pipenv OK. Got version {version}.", status_code=0
             )
         except FileNotFoundError:
-            return ProcessResponse(
-                error=f"Pipenv not found.", status_code=1
-            )
+            return ProcessResponse(error=f"Pipenv not found.", status_code=1)
         except Exception as e:
             return ProcessResponse(
                 error=f"Could not check for pipenv. Reason: {e}", status_code=1
@@ -240,8 +271,8 @@ class RequirementsCommands(object):
                 message="Checking Python version...",
             ),
             FunctionStep(
-                func=cls.check_pipenv_installed,
-                message="Checking Pipenv is installed...",
+                func=cls.check_python_pkg_manager_installed,
+                message="Checking if either UV or Pipenv are installed...",
             ),
             FunctionStep(
                 func=cls.check_docker_version,
