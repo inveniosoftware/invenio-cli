@@ -218,7 +218,7 @@ class RequirementsCommands(object):
                 )
 
         except FileNotFoundError:
-            return ProcessResponse(error=f"UV not found.", status_code=1)
+            return ProcessResponse(error="UV not found.", status_code=1)
         except Exception as e:
             return ProcessResponse(
                 error=f"Could not check for UV. Reason: {e}", status_code=1
@@ -244,7 +244,7 @@ class RequirementsCommands(object):
                 output=f"Pipenv OK. Got version {version}.", status_code=0
             )
         except FileNotFoundError:
-            return ProcessResponse(error=f"Pipenv not found.", status_code=1)
+            return ProcessResponse(error="Pipenv not found.", status_code=1)
         except Exception as e:
             return ProcessResponse(
                 error=f"Could not check for pipenv. Reason: {e}", status_code=1
