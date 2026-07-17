@@ -182,9 +182,13 @@ class RequirementsCommands(object):
             return ProcessResponse(
                 output=f"Pipenv OK. Got version {version}.", status_code=0
             )
-        except Exception:
+        except FileNotFoundError:
             return ProcessResponse(
-                error=f"Pipenv not found. Got {result.error}.", status_code=1
+                error=f"Pipenv not found.", status_code=1
+            )
+        except Exception as e:
+            return ProcessResponse(
+                error=f"Could not check for pipenv. Reason: {e}", status_code=1
             )
 
     @classmethod
