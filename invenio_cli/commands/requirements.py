@@ -16,7 +16,7 @@ from .steps import FunctionStep
 
 
 class RequirementsCommands(object):
-    """Pre-requirements check."""
+    """Requirements check."""
 
     @classmethod
     def _version_from_string(cls, string):
