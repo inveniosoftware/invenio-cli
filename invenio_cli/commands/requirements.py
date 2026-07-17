@@ -280,7 +280,10 @@ class RequirementsCommands(object):
                 )
             ]
 
-        if rdm_major_version >= 12:
+        if rdm_major_version >= 14:
+            node_version = 22
+            npm_version = 10
+        elif rdm_major_version >= 12:
             node_version = 18
             npm_version = 10
         elif rdm_major_version >= 11:
