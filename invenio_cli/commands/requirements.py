@@ -79,13 +79,41 @@ class RequirementsCommands(object):
             return ProcessResponse(error=f"Node not found. Got {err}.", status_code=1)
 
     @classmethod
-    def check_npm_version(cls, major, minor=-1, patch=-1, exact=False):
+    def check_js_pkg_manager_version(cls, **kwargs):
+        """Check the available version of pnpm or npm."""
+        response = cls.check_pnpm_version(**kwargs)
+        if response.status_code != 0:
+            response = cls.check_npm_version(**kwargs)
+
+        return response
+
+    @classmethod
+    def check_pnpm_version(
+        cls, pnpm_major, pnpm_minor=-1, pnpm_patch=-1, pnpm_exact=False, **kwargs
+    ):
+        """Check the pnpm version."""
+        # Output comes in the form of '11.3.0\n'
+        try:
+            result = run_cmd(["pnpm", "--version"])
+            version = cls._version_from_string(result.output.strip())
+            return cls._check_version(
+                "PNPM", version, pnpm_major, pnpm_minor, pnpm_patch, pnpm_exact
+            )
+        except Exception as err:
+            return ProcessResponse(error=f"PNPM not found. Got {err}.", status_code=1)
+
+    @classmethod
+    def check_npm_version(
+        cls, npm_major, npm_minor=-1, npm_patch=-1, npm_exact=False, **kwargs
+    ):
         """Check the npm version."""
         # Output comes in the form of '6.14.13\n'
         try:
             result = run_cmd(["npm", "--version"])
             version = cls._version_from_string(result.output.strip())
-            return cls._check_version("NPM", version, major, minor, patch, exact)
+            return cls._check_version(
+                "NPM", version, npm_major, npm_minor, npm_patch, npm_exact
+            )
         except Exception as err:
             return ProcessResponse(error=f"NPM not found. Got {err}.", status_code=1)
 
@@ -243,9 +271,9 @@ class RequirementsCommands(object):
                 message="Checking Node version...",
             ),
             FunctionStep(
-                func=cls.check_npm_version,
-                args={"major": npm_version},
-                message="Checking NPM version...",
+                func=cls.check_js_pkg_manager_version,
+                args={"npm_major": npm_version, "pnpm_major": 10},
+                message="Checking if either PNPM or NPM are installed...",
             ),
             FunctionStep(
                 func=cls.check_imagemagick_version,
