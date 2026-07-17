@@ -63,7 +63,7 @@ class RequirementsCommands(object):
                 expected_version = f"{major}.{minor}.{patch}"
 
         return ProcessResponse(
-            error=f"{binary} wrong version." f"Got {parts} expected {expected_version}",
+            error=f"{binary} wrong version. Got {version}, expected {expected_version}",
             status_code=1,
         )
 
