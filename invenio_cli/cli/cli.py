@@ -189,6 +189,14 @@ worker_options = combine_decorators(
         help="Celery log level (default: INFO)",
     ),
     click.option(
+        "--celery-pool",
+        type=click.Choice(
+            ["prefork", "eventlet", "gevent", "solo", "processes", "threads", "custom"]
+        ),
+        default="prefork",
+        help="Celery pool implementation (default: prefork, use solo for debugging)",
+    ),
+    click.option(
         "--jobs-scheduler/--no-jobs-scheduler",
         default=True,
         help="Enable/disable separate jobs scheduler (default: enabled)",
@@ -234,7 +242,9 @@ def run_web(cli_config, host, port, debug, services):
 @services_option
 @worker_options
 @pass_cli_config
-def run_worker(cli_config, services, celery_log_file, celery_log_level, jobs_scheduler):
+def run_worker(
+    cli_config, services, celery_log_file, celery_log_level, celery_pool, jobs_scheduler
+):
     """Starts the local development server."""
     if services:
         cmds = ServicesCommands(cli_config)
@@ -246,6 +256,7 @@ def run_worker(cli_config, services, celery_log_file, celery_log_level, jobs_sch
     processes = commands.run_worker(
         celery_log_file=celery_log_file,
         celery_log_level=celery_log_level,
+        celery_pool=celery_pool,
         jobs_scheduler=jobs_scheduler,
     )
     for proc in processes:
@@ -265,6 +276,7 @@ def run_all(
     services,
     celery_log_file,
     celery_log_level,
+    celery_pool,
     jobs_scheduler,
 ):
     """Starts web and worker development servers."""
@@ -285,6 +297,7 @@ def run_all(
         services=services,
         celery_log_file=celery_log_file,
         celery_log_level=celery_log_level,
+        celery_pool=celery_pool,
         jobs_scheduler=jobs_scheduler,
     )
     for proc in processes:
