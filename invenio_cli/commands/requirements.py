@@ -251,12 +251,39 @@ class RequirementsCommands(object):
             )
 
     @classmethod
+    def report_error(cls, message):
+        """Function step that always fails with the specified message."""
+        return lambda: ProcessResponse(error=message, status_code=1)
+
+    @classmethod
     def check_dev(cls):
         """Steps to check the development pre-requisites."""
-        if rdm_version()[0] >= 12:
+        rdm_major_version = None
+        try:
+            if (version := rdm_version()) is not None:
+                rdm_major_version = version[0]
+            else:
+                return [
+                    FunctionStep(
+                        func=cls.report_error(
+                            "Could not find Invenio-App-RDM as dependency in the project definition."
+                        )
+                    )
+                ]
+
+        except FileNotFoundError as e:
+            return [
+                FunctionStep(
+                    func=cls.report_error(
+                        f"Could not determine the version of Invenio-App-RDM: {e}"
+                    )
+                )
+            ]
+
+        if rdm_major_version >= 12:
             node_version = 18
             npm_version = 10
-        elif rdm_version()[0] >= 11:
+        elif rdm_major_version >= 11:
             node_version = 16
             npm_version = 7
         else:
