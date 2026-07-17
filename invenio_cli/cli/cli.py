@@ -59,11 +59,11 @@ invenio_cli.add_command(translations)
     help="Check requirements for a local development installation.",
 )
 def check_requirements(development):
-    """Checks the system fulfills the pre-requirements."""
-    click.secho("Checking pre-requirements...", fg="green")
+    """Checks the system fulfills the requirements."""
+    click.secho("Checking requirements...", fg="green")
     steps = RequirementsCommands.check(development)
-    on_fail = "Pre requisites not met."
-    on_success = "All requisites are fulfilled."
+    on_fail = "Requirements not met."
+    on_success = "All requirements are fulfilled."
 
     run_steps(steps, on_fail, on_success)
 
