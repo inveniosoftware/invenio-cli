@@ -185,7 +185,11 @@ class LocalCommands(Commands):
         return [proc]
 
     def run_worker(
-        self, celery_log_file=None, celery_log_level="INFO", jobs_scheduler=True
+        self,
+        celery_log_file=None,
+        celery_log_level="INFO",
+        celery_pool="prefork",
+        jobs_scheduler=True,
     ):
         """Run Celery worker."""
         click.secho("Starting celery worker...", fg="green")
@@ -200,6 +204,8 @@ class LocalCommands(Commands):
             "--events",
             "--loglevel",
             celery_log_level,
+            "--pool",
+            celery_pool,
             "--queues",
             "celery,low",
         )
@@ -217,11 +223,15 @@ class LocalCommands(Commands):
         processes.append(proc)
 
         if jobs_scheduler:
-            processes.extend(self.run_jobs_scheduler(celery_log_file, celery_log_level))
+            processes.extend(
+                self.run_jobs_scheduler(celery_log_file, celery_log_level, celery_pool)
+            )
 
         return processes
 
-    def run_jobs_scheduler(self, celery_log_file=None, celery_log_level="INFO"):
+    def run_jobs_scheduler(
+        self, celery_log_file=None, celery_log_level="INFO", celery_pool="prefork"
+    ):
         """Run Celery beat scheduler for jobs."""
         # Jobs scheduler is only available in RDM v13+
         version = rdm_version()
@@ -247,6 +257,8 @@ class LocalCommands(Commands):
             "invenio_jobs.services.scheduler:RunScheduler",
             "--loglevel",
             celery_log_level,
+            "--pool",
+            celery_pool,
         )
 
         if celery_log_file:
@@ -268,13 +280,17 @@ class LocalCommands(Commands):
         services=True,
         celery_log_file=None,
         celery_log_level="INFO",
+        celery_pool="prefork",
         jobs_scheduler=True,
     ):
         """Run all services."""
         processes = [
             *self.run_web(host, port, debug),
             *self.run_worker(
-                celery_log_file, celery_log_level, jobs_scheduler=jobs_scheduler
+                celery_log_file=celery_log_file,
+                celery_log_level=celery_log_level,
+                celery_pool=celery_pool,
+                jobs_scheduler=jobs_scheduler,
             ),
         ]
 
