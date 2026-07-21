@@ -2,11 +2,32 @@
     SPDX-FileCopyrightText: 2019-2024 CERN.
     SPDX-FileCopyrightText: 2019-2026 Northwestern University.
     SPDX-FileCopyrightText: 2025 TU Wien.
-    SPDX-FileCopyrightText: 2025 Graz University of Technology.
+    SPDX-FileCopyrightText: 2025-2026 Graz University of Technology.
     SPDX-License-Identifier: MIT
 
 Changes
 =======
+
+Version v1.12.0 (released 2026-07-29)
+
+- chore: require node v24 for InvenioRDM v14
+- fix: show available version as string instead of integer array
+- chore: add node/npm minimum requirements for InvenioRDM v14
+- chore: fix linter complaints about f-strings without placeholders
+- fix: gracefully handle not finding a valid InvenioRDM project
+- feat: extend `check-requirements -d` to also consider PNPM
+- feat: extend `check-requirements` to also accept uv
+- fix: handle `FileNotFoundError` if `pipenv` is not installed
+- chore: fix some messages
+- chore(setup): migrate from setuptools to hatchling
+- fix: update get_db_type and get_search_type methods
+- cli: fix db type to 'postgresql' in config
+- fix: simplify get_search_type method
+- fix: update search type handling in CLI config
+- feat: default js package manager to PNPM
+- config: add support for custom package managers in CLI configuration
+- chore(git-blame): ignore the SPDX license header commit
+- chore(licenses): update license headers to use SPDX
 
 Version v1.11.0 (released 2026-05-06)
 
