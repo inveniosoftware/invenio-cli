@@ -3,6 +3,7 @@
 
 """Invenio module to ease the creation and management of applications."""
 
+import os
 from pathlib import Path
 
 from ..commands import Commands
@@ -67,7 +68,7 @@ class TranslationsCommands(Commands):
         content = output_path.read_text()
         # Replace absolute paths with relative paths
         if project_path and str(project_path) in content:
-            normalized_content = content.replace(str(project_path) + "/", "")
+            normalized_content = content.replace(str(project_path) + os.sep, "")
             output_path.write_text(normalized_content)
 
     def init(self, output_dir, input_file, locale):
