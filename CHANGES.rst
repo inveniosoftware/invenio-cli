@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version v1.12.1 (released 2026-08-05)
+
+- fix(requirements): require pnpm v11.x
+- fix(config): default to NPM if `javascript_package_manager` is unset
+
 Version v1.12.0 (released 2026-07-29)
 
 - chore: require node v24 for InvenioRDM v14
