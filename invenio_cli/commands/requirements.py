@@ -302,7 +302,7 @@ class RequirementsCommands(object):
             ),
             FunctionStep(
                 func=cls.check_js_pkg_manager_version,
-                args={"npm_major": npm_version, "pnpm_major": 10},
+                args={"npm_major": npm_version, "pnpm_major": 11},
                 message="Checking if either PNPM or NPM are installed...",
             ),
             FunctionStep(
