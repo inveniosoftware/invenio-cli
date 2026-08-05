@@ -96,7 +96,7 @@ class CLIConfig(object):
         elif manager_name == PNPM.name:
             return PNPM()
 
-        return PNPM()
+        return NPM()
 
     def get_project_dir(self):
         """Returns path to project directory."""
