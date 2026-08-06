@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version v1.12.2 (released 2026-08-06)
+
+chore: make invenio-cli init rdm default to v14 cookiecutter
+
 Version v1.12.1 (released 2026-08-05)
 
 - fix(requirements): require pnpm v11.x
