@@ -142,6 +142,25 @@ class ServicesCommands(Commands):
             return "{}/data".format(self.cli_config.get_data_path())
         return "{}://default".format(self.cli_config.get_file_storage().lower())
 
+    def s3_create_default_bucket(self, bucket="default"):
+        """Steps to create the bucket used by default by Invenio's S3 storage.
+
+        Unlike MinIO, RustFS does not auto-create buckets from directories
+        present on its data volume at startup, so this replicates that
+        behaviour. Skippable, as older invenio-s3 versions lack the command.
+        """
+        pkg_man = self.cli_config.python_package_manager
+        steps = [
+            CommandStep(
+                cmd=pkg_man.run_command("invenio", "s3", "create-bucket", bucket),
+                env={"PIPENV_VERBOSITY": "-1"},
+                message="Creating default S3 bucket...",
+                skippable=True,
+            )
+        ]
+
+        return steps
+
     def _setup(self, demo_data=False):
         """Services initialization steps."""
         pkg_man = self.cli_config.python_package_manager
@@ -155,6 +174,11 @@ class ServicesCommands(Commands):
                 cmd=pkg_man.invenio_command("invenio", "db", "init", "create"),
                 env={"PIPENV_VERBOSITY": "-1"},
                 message="Creating database...",
+            ),
+            *(
+                self.s3_create_default_bucket()
+                if self.cli_config.get_file_storage().lower() == "s3"
+                else []
             ),
             CommandStep(
                 cmd=pkg_man.invenio_command(
