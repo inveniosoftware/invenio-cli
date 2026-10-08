@@ -8,6 +8,19 @@
 Changes
 =======
 
+Version v1.13.0 (released 2026-10-08)
+
+- chore(readme): improve customization text
+- refactor(rpc): drop the client-side ping
+- fix(versions): make cli_config optional in rdm_version
+- fix(services): stream docker compose output and fail on errors
+- feat(config): configure app-rdm version
+- feat: add data path
+- docs: add new features
+- fix: warning
+- feat: rpc-server
+- run: allow changing of celery pool implementation
+
 Version v1.12.2 (released 2026-08-06)
 
 chore: make invenio-cli init rdm default to v14 cookiecutter
