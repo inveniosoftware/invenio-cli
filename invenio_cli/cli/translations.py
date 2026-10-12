@@ -58,7 +58,11 @@ def init(cli_config, locale):
 
 
 @translations.command()
-@click.option("--fuzzy", "-f", default=True, is_flag=True, help="Use fuzzy matching.")
+@click.option(
+    "--fuzzy/--no-fuzzy",
+    default=True,
+    help="Enable or disable fuzzy matching.",
+)
 @pass_cli_config
 def update(cli_config, fuzzy):
     """Update messages catalog."""
@@ -66,7 +70,7 @@ def update(cli_config, fuzzy):
     steps = TranslationsCommands(cli_config).update(
         output_dir=cli_config.get_project_dir() / Path("translations/"),
         input_file=cli_config.get_project_dir() / Path("translations/messages.pot"),
-        fuzzy=fuzzy
+        fuzzy=fuzzy,
     )
     on_fail = "Failed to update message catalog."
     on_success = "Message catalog updated successfully."
@@ -75,7 +79,9 @@ def update(cli_config, fuzzy):
 
 
 @translations.command()
-@click.option("--fuzzy", "-f", default=True, is_flag=True, help="Include fuzzy translations.")
+@click.option(
+    "--fuzzy", "-f", default=True, is_flag=True, help="Include fuzzy translations."
+)
 @pass_cli_config
 def compile(cli_config, fuzzy):
     """Compile message catalog."""
