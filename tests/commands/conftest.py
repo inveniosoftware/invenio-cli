@@ -32,6 +32,9 @@ def mock_cli_config():
         def get_instance_path(self):
             return Path("instance_dir")
 
+        def get_data_path(self):
+            return self.get_instance_path()
+
         def get_services_setup(self):
             return self.services_setup
 
