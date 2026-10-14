@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version v1.13.1 (released 2026-10-14)
+
+- feat: add s3 bucket creation for rustfs
+
 Version v1.13.0 (released 2026-10-08)
 
 - chore(readme): improve customization text
