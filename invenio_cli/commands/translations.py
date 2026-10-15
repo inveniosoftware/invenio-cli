@@ -67,7 +67,7 @@ class TranslationsCommands(Commands):
             )
         ]
 
-    def update(self, output_dir, input_file):
+    def update(self, output_dir, input_file, fuzzy=False):
         """Update the message catalog."""
         pkg_man = self.cli_config.python_package_manager
         cmd = pkg_man.run_command(
@@ -76,6 +76,9 @@ class TranslationsCommands(Commands):
             f"--output-dir={output_dir}",
             f"--input-file={input_file}",
         )
+
+        if not fuzzy:
+            cmd.append("--no-fuzzy-matching")
 
         return [
             CommandStep(
