@@ -82,8 +82,9 @@ to the `invenio.cfg` file.
 It is possible to send `invenio` commands to a long running RPC server instead
 of starting a new Python process for each command. To enable this add the line
 `use_rpc = true` to the `[cli]` section of the `.invenio` file. The server
-listens on a Unix domain socket at `<instance_path>/rpc.sock` and is started
-automatically when needed; invenio-cli stops it again on exit.
+listens on a Unix domain socket at `<instance_path>/rpc.sock` (override it with
+`rpc_socket_path = PATH` in the `[cli]` section of `.invenio.private`) and is
+started automatically when needed; invenio-cli stops it again on exit.
 
 
 Containerized 'Production' environment

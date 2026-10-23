@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2026 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """RPC client tests."""
@@ -12,11 +13,13 @@ import sys
 import tempfile
 import threading
 import time
+from inspect import cleandoc
 from pathlib import Path
 
 import pytest
 
 from invenio_cli.commands.steps import CommandStep
+from invenio_cli.helpers.cli_config import CLIConfig
 from invenio_cli.helpers.package_managers import UV, LocalOp
 from invenio_cli.helpers.rpc import RPCClient, RPCOp
 
@@ -208,6 +211,28 @@ def test_invenio_command_picks_up_a_late_socket_path(short_tmp_path):
     assert isinstance(manager.invenio_command("invenio", "collect"), LocalOp)
     socket_path = short_tmp_path / "rpc.sock"
     assert isinstance(manager.invenio_command("invenio", "collect"), RPCOp)
+
+
+@pytest.mark.parametrize(
+    "private_config_content, expected_rpc_path",
+    [
+        # nothing or empty -> goes to instance path
+        ("", "/srv/rpc.sock"),
+        ("rpc_socket_path=", "/srv/rpc.sock"),
+        # set to value -> that exact value is used
+        ("rpc_socket_path=/run/x.sock", "/run/x.sock"),
+    ],
+)
+def test_rpc_socket_path(tmp_path, private_config_content, expected_rpc_path):
+    """rpc_socket_path overrides <instance_path>/rpc.sock; empty means unset."""
+    (tmp_path / CLIConfig.CONFIG_FILENAME).write_text("[cli]\n")
+    config_content = cleandoc(f"""
+        [cli]
+        instance_path = /srv
+        {private_config_content}
+    """)
+    (tmp_path / CLIConfig.PRIVATE_CONFIG_FILENAME).write_text(config_content)
+    assert CLIConfig(tmp_path).get_rpc_socket_path() == Path(expected_rpc_path)
 
 
 def test_invenio_command_without_rpc_builds_a_local_op():

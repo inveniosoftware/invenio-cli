@@ -3,6 +3,7 @@
 # SPDX-FileCopyrightText: 2021 Esteban J. G. Gabancho.
 # SPDX-FileCopyrightText: 2025-2026 KTH Royal Institute of Technology.
 # SPDX-FileCopyrightText: 2024-2026 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Invenio-cli configuration file."""
@@ -165,6 +166,16 @@ class CLIConfig(object):
 
     def get_rpc_socket_path(self):
         """Returns the RPC socket path (None until the instance path is set)."""
+        # private config's rpc_socket_path option takes precedence
+        # private config is used instead of .invenio because the path
+        # might be different in different environments
+        rpc_socket_path = self.private_config[CLIConfig.CLI_SECTION].get(
+            "rpc_socket_path",
+        )
+        if rpc_socket_path:
+            return Path(rpc_socket_path)
+
+        # instance path as a fallback
         instance_path = self.get_instance_path(throw=False)
         if instance_path:
             return instance_path / "rpc.sock"
