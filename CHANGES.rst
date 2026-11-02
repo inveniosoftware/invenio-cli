@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version v1.14.0 (released 2026-11-02)
+
+- feat(rpc): make rpc socket path configurable
+- feat(cli): normalize paths in extracted translation files
+
 Version v1.13.1 (released 2026-10-14)
 
 - feat: add s3 bucket creation for rustfs

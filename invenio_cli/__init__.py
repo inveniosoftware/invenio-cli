@@ -5,6 +5,6 @@
 
 """Invenio module to ease the creation and management of applications."""
 
-__version__ = "1.13.1"
+__version__ = "1.14.0"
 
 __all__ = ("__version__",)
