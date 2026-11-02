@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 CERN.
 # SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
+# SPDX-FileCopyrightText: 2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """RPC client tests."""
@@ -226,11 +227,12 @@ def test_invenio_command_picks_up_a_late_socket_path(short_tmp_path):
 def test_rpc_socket_path(tmp_path, private_config_content, expected_rpc_path):
     """rpc_socket_path overrides <instance_path>/rpc.sock; empty means unset."""
     (tmp_path / CLIConfig.CONFIG_FILENAME).write_text("[cli]\n")
-    config_content = cleandoc(f"""
+    doc = f"""
         [cli]
         instance_path = /srv
         {private_config_content}
-    """)
+    """
+    config_content = cleandoc(doc)
     (tmp_path / CLIConfig.PRIVATE_CONFIG_FILENAME).write_text(config_content)
     assert CLIConfig(tmp_path).get_rpc_socket_path() == Path(expected_rpc_path)
 
