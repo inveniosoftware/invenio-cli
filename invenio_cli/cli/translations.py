@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2022 CERN.
+# SPDX-FileCopyrightText: 2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio module to ease the creation and management of applications."""
@@ -73,7 +74,13 @@ def update(cli_config):
 
 
 @translations.command()
-@click.option("--fuzzy", "-f", default=True, is_flag=True, help="Use fuzzyness.")
+@click.option(
+    "--fuzzy",
+    "-f",
+    default=False,
+    is_flag=True,
+    help="Include translations marked as fuzzy (excluded by default).",
+)
 @pass_cli_config
 def compile(cli_config, fuzzy):
     """Compile message catalog."""
