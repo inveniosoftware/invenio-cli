@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2022 CERN.
+# SPDX-FileCopyrightText: 2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
 """Invenio module to ease the creation and management of applications."""
@@ -91,11 +92,12 @@ class TranslationsCommands(Commands):
         ]
 
     def update(self, output_dir, input_file):
-        """Update the message catalog."""
+        """Update the message catalog without fuzzy matching."""
         pkg_man = self.cli_config.python_package_manager
         cmd = pkg_man.run_command(
             "pybabel",
             "update",
+            "--no-fuzzy-matching",
             f"--output-dir={output_dir}",
             f"--input-file={input_file}",
         )
