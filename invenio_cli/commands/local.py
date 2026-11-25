@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2020 CERN.
 # SPDX-FileCopyrightText: 2022-2026 Graz University of Technology.
 # SPDX-FileCopyrightText: 2026 Northwestern University.
+# SPDX-FileCopyrightText: 2026 CESNET a.l.e.
 # SPDX-License-Identifier: MIT
 
 """Invenio module to ease the creation and management of applications."""
@@ -20,7 +21,6 @@ from ..helpers import env, filesystem
 from ..helpers.package_managers import LocalOp
 from ..helpers.process import ProcessResponse
 from ..helpers.rpc import RPCOp
-from ..helpers.versions import rdm_version
 from .commands import Commands
 
 
@@ -200,7 +200,6 @@ class LocalCommands(Commands):
             "--app",
             "invenio_app.celery",
             "worker",
-            "--beat",
             "--events",
             "--loglevel",
             celery_log_level,
@@ -233,18 +232,6 @@ class LocalCommands(Commands):
         self, celery_log_file=None, celery_log_level="INFO", celery_pool="prefork"
     ):
         """Run Celery beat scheduler for jobs."""
-        # Jobs scheduler is only available in RDM v13+
-        version = rdm_version(self.cli_config)
-        if version is None:
-            click.secho(
-                "RDM version couldn't be determined. Not running jobs scheduler.",
-                fg="yellow",
-                err=True,
-            )
-            return []
-        elif version[0] < 13:
-            return []
-
         click.secho("Starting jobs scheduler...", fg="green")
 
         pkg_man = self.cli_config.python_package_manager
@@ -257,8 +244,6 @@ class LocalCommands(Commands):
             "invenio_jobs.services.scheduler:RunScheduler",
             "--loglevel",
             celery_log_level,
-            "--pool",
-            celery_pool,
         )
 
         if celery_log_file:

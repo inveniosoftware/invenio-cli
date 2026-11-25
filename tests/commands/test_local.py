@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2019-2020 CERN.
 # SPDX-FileCopyrightText: 2019-2020 Northwestern University.
+# SPDX-FileCopyrightText: 2026 CESNET a.l.e.
 # SPDX-License-Identifier: MIT
 
 """Module commands/local.py's tests."""
@@ -389,15 +390,12 @@ def test_install_modules(p_run_cmd, mock_cli_config):
     """
 
 
-@patch("invenio_cli.commands.local.rdm_version")
 @patch("invenio_cli.commands.local.popen")
-def test_run_worker_with_jobs_scheduler(p_popen, p_rdm_version, mock_cli_config):
+def test_run_worker_with_jobs_scheduler(p_popen, mock_cli_config):
     """Test run_worker with jobs scheduler enabled."""
     commands = LocalCommands(mock_cli_config)
     mock_proc = MagicMock()
     p_popen.return_value = mock_proc
-    # Mock RDM version 13+
-    p_rdm_version.return_value = [13, 0, 0]
 
     # Test worker with jobs scheduler enabled
     result = commands.run_worker(jobs_scheduler=True)
@@ -410,10 +408,8 @@ def test_run_worker_with_jobs_scheduler(p_popen, p_rdm_version, mock_cli_config)
     # Verify both worker and jobs scheduler commands are called
     all_commands = [call[0][0] for call in p_popen.call_args_list]
 
-    # Should have one worker command with --beat
-    worker_commands = [
-        cmd for cmd in all_commands if "worker" in cmd and "--beat" in cmd
-    ]
+    # Should have one worker command
+    worker_commands = [cmd for cmd in all_commands if "worker" in cmd]
     assert len(worker_commands) == 1
 
     # Should have one jobs scheduler command
@@ -422,28 +418,3 @@ def test_run_worker_with_jobs_scheduler(p_popen, p_rdm_version, mock_cli_config)
     ]
     assert len(jobs_scheduler_commands) == 1
     assert "invenio_jobs.services.scheduler:RunScheduler" in jobs_scheduler_commands[0]
-
-
-@patch("invenio_cli.commands.local.rdm_version")
-@patch("invenio_cli.commands.local.popen")
-def test_run_worker_version_below_13(p_popen, p_rdm_version, mock_cli_config):
-    """Test run_worker with RDM version < 13."""
-    commands = LocalCommands(mock_cli_config)
-    mock_proc = MagicMock()
-    p_popen.return_value = mock_proc
-    # Mock RDM version 12
-    p_rdm_version.return_value = [12, 0, 0]
-
-    # Test worker with jobs scheduler enabled (but version < 13)
-    result = commands.run_worker(jobs_scheduler=True)
-
-    # Should have 1 process only: worker (no jobs scheduler for v12)
-    assert len(result) == 1
-    # popen should be called once (worker only)
-    assert p_popen.call_count == 1
-
-    # Verify only worker command is called
-    called_command = p_popen.call_args[0][0]
-    assert "worker" in called_command
-    assert "--beat" in called_command
-    assert "--scheduler" not in called_command
