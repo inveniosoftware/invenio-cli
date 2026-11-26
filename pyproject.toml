@@ -8,7 +8,7 @@
 name = "invenio-cli"
 description = "Invenio module to ease the creation and management of applications."
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = "MIT"
 authors = [
   { name = "CERN & Northwestern University", email = "info@inveniosoftware.org" },
